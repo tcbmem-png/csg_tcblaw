@@ -193,6 +193,19 @@ export function CalculatorInputs({
             ]}
           />
         </Field>
+        <Field
+          label="Age of youngest child"
+          help="Used only by the Comparison tab to project cumulative support through age 18."
+        >
+          <Radio
+            value={String(inputs.youngestChildAge)}
+            onChange={(v) => u({ youngestChildAge: parseInt(v) })}
+            options={Array.from({ length: 18 }, (_, i) => ({
+              value: String(i),
+              label: String(i),
+            }))}
+          />
+        </Field>
       </Section>
 
       <Section title="Parenting time" cite="Rule .04(7)">
