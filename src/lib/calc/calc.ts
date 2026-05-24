@@ -226,6 +226,7 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
   // schedule cell is shaded for that AGI.
   let ssrApplied = false;
   let ssrNote: string | null = null;
+  let minimumOrderApplied = false;
   let presumptiveAfterSsr = presumptiveFromA;
   if (
     bcsoLookup.source === "schedule" &&
