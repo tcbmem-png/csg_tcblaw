@@ -234,27 +234,40 @@ export function CalculatorInputs({
           </Field>
         )}
         {inputs.parentingType === "custom" && (
-          <Grid>
-            <Field
-              label={`${inputs.parentALabel} days/year`}
-              help="Total of both parents must = 365."
-            >
-              <NumInput
-                value={inputs.parentADays ?? 0}
-                onChange={(n) =>
-                  u({ parentADays: n, parentBDays: Math.max(0, 365 - n) })
-                }
-              />
-            </Field>
-            <Field label={`${inputs.parentBLabel} days/year`}>
-              <NumInput
-                value={inputs.parentBDays ?? 0}
-                onChange={(n) =>
-                  u({ parentBDays: n, parentADays: Math.max(0, 365 - n) })
-                }
-              />
-            </Field>
-          </Grid>
+          <>
+            <Grid>
+              <Field
+                label={`${inputs.parentALabel} days/year`}
+                help="Total of both parents must = 365."
+              >
+                <NumInput
+                  value={inputs.parentADays ?? 0}
+                  onChange={(n) =>
+                    u({ parentADays: n, parentBDays: Math.max(0, 365 - n) })
+                  }
+                />
+              </Field>
+              <Field label={`${inputs.parentBLabel} days/year`}>
+                <NumInput
+                  value={inputs.parentBDays ?? 0}
+                  onChange={(n) =>
+                    u({ parentBDays: n, parentADays: Math.max(0, 365 - n) })
+                  }
+                />
+              </Field>
+            </Grid>
+            {((inputs.parentADays ?? 0) <= 5 ||
+              (inputs.parentBDays ?? 0) <= 5 ||
+              (inputs.parentADays ?? 0) >= 360 ||
+              (inputs.parentBDays ?? 0) >= 360) && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Tennessee's guidelines (Rule .04(7)(i)) cap the upward
+                adjustment at about 19% over the ARP's standard pro-rata
+                share, even at 0 ARP days. Many sole-custody cases are still
+                entered at the standard 285/80 split.
+              </p>
+            )}
+          </>
         )}
       </Section>
 
