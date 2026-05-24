@@ -28,15 +28,15 @@ import {
 const ROW_W = PAGE_W - MARGIN * 2; // 540
 
 const GUTTER_X = MARGIN;        // 36
-const GUTTER_W = 124;
+const GUTTER_W = 108;
 const GUTTER_TEXT_W = GUTTER_W - 4;
 
-const NUM_X = MARGIN + GUTTER_W;     // 160
-const NUM_W = 22;
-const LBL_X = NUM_X + NUM_W;         // 182
-const LBL_W = 170;
-const A_X = LBL_X + LBL_W;           // 352
-const CELL_W = (PAGE_W - MARGIN - A_X) / 3; // ~74.66
+const NUM_X = MARGIN + GUTTER_W;     // 144
+const NUM_W = 18;
+const LBL_X = NUM_X + NUM_W;         // 162
+const LBL_W = 200;
+const A_X = LBL_X + LBL_W;           // 362
+const CELL_W = (PAGE_W - MARGIN - A_X) / 3; // ~71.33
 const B_X = A_X + CELL_W;
 const C_X = B_X + CELL_W;
 const END_X = PAGE_W - MARGIN;       // 576
