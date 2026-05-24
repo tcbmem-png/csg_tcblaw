@@ -81,7 +81,7 @@ function ResendPage() {
 
       <p className="mt-10 text-xs text-muted-foreground">
         Haven't bought one yet?{" "}
-        <Link to="/calculator" className="underline">
+        <Link to="/" className="underline">
           Go to the calculator
         </Link>
         .

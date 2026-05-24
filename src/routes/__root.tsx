@@ -66,7 +66,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-const SITE_URL = "https://tncsg.tcblaw.org";
+const SITE_URL = "https://csg.tcblaw.org";
 const SITE_NAME = "TN Child Support Calculator";
 const OG_IMAGE =
   "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6efdae8a-fea3-4e17-a327-e9a70200a8ce/id-preview-6e78522f--82e5e86b-e638-4ac3-85c4-a30e79254546.lovable.app-1779593142024.png";
