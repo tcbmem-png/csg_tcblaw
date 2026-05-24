@@ -123,7 +123,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: OG_IMAGE },
       { name: "google-site-verification", content: "Fb8iyeBlllQSRU1F9KwH7nvTsD1jInErSa1VujsNxiw" },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "shortcut icon", href: "/favicon.ico" },
+    ],
     scripts: [
       {
         type: "application/ld+json",
