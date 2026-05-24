@@ -475,6 +475,19 @@ export function CalculatorInputs({
               ]}
             />
           </Field>
+          <Field
+            label="Childcare payment method"
+            help="Payroll-deducted (Line 8c) vs paid out-of-pocket (Line 8d) on the official AOC worksheet. No effect on the calculation."
+          >
+            <Radio
+              value={inputs.childcarePayrollDeducted ? "yes" : "no"}
+              onChange={(v) => u({ childcarePayrollDeducted: v === "yes" })}
+              options={[
+                { value: "no", label: "Out-of-pocket (8d)" },
+                { value: "yes", label: "Payroll-deducted (8c)" },
+              ]}
+            />
+          </Field>
         </Grid>
       </Section>
 
