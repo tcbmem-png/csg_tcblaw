@@ -431,6 +431,8 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     warnings,
     pcsoExceedsStatutoryMax,
     pcsoStatutoryMax,
+    pcsoCapNote,
+
 
     scheduleEffectiveDate: SCHEDULE_EFFECTIVE_DATE,
     errors,
