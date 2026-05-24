@@ -120,9 +120,11 @@ export async function fulfillOrder(
     .update({
       status: "delivered",
       pdf_storage_path: storagePath,
+      pdf_official_storage_path: officialStoragePath,
       delivered_at: new Date().toISOString(),
     })
     .eq("id", order.id);
+
 
   return { ok: true, storagePath, messageId };
 }
