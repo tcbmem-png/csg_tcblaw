@@ -37,6 +37,7 @@ function CheckoutReturn() {
         setEmail(res.email);
         setUnlockToken(res.unlockToken);
         if (res.status === "delivered") {
+          if (res.unlockToken) setStoredUnlock(res.unlockToken, res.email ?? undefined);
           setStatus("delivered");
           return;
         }
