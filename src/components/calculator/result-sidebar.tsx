@@ -69,6 +69,12 @@ export function ResultSidebar({
         </div>
       </div>
 
+      {outputs.pcsoCapNote && (
+        <div className="mt-4 rounded-md border border-rule bg-cream p-3 text-xs leading-relaxed text-ink">
+          {outputs.pcsoCapNote}
+        </div>
+      )}
+
       {outputs.warnings.length > 0 && (
         <ul className="mt-4 space-y-2 rounded-md border border-accent/50 bg-accent/10 p-3 text-xs text-ink">
           {outputs.warnings.map((w, i) => (
