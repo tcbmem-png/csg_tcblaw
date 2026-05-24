@@ -18,9 +18,11 @@ export const Route = createFileRoute("/api/public/unlock/$token")({
         );
         const { data: order } = await sb
           .from("orders")
-          .select("id, status, pdf_storage_path, pdf_official_storage_path")
+          .select("id, status, pdf_storage_path, pdf_official_storage_path, payload_json")
           .eq("unlock_token", token)
           .maybeSingle();
+
+        const state = (order?.payload_json as any)?.state === "MS" ? "MS" : "TN";
 
         const path =
           variant === "official"
@@ -43,9 +45,11 @@ export const Route = createFileRoute("/api/public/unlock/$token")({
 
         const buf = await file.arrayBuffer();
         const filename =
-          variant === "official"
-            ? "tn-child-support-worksheet-official.pdf"
-            : "tn-child-support-worksheet.pdf";
+          state === "MS"
+            ? "ms-child-support-worksheet.pdf"
+            : variant === "official"
+              ? "tn-child-support-worksheet-official.pdf"
+              : "tn-child-support-worksheet.pdf";
         return new Response(buf, {
           status: 200,
           headers: {
