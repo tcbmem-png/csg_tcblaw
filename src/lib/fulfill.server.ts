@@ -150,6 +150,7 @@ export async function resendWorksheetEmail(
 
   const payload = order.payload_json as { inputs: any; outputs: any; caption: any };
   const downloadUrl = `${origin}/unlock/${order.unlock_token}`;
+  const officialDownloadUrl = `${origin}/unlock/${order.unlock_token}?variant=official`;
   const matterName = payload.caption?.matterName || undefined;
   const amountMonthly = payload.outputs?.allInMonthly
     ? Number(payload.outputs.allInMonthly).toLocaleString("en-US", { maximumFractionDigits: 0 })
@@ -162,7 +163,8 @@ export async function resendWorksheetEmail(
     : dir === "parent_b_to_a" ? `${b} → ${a}`
     : "No transfer";
 
-  const templateData = { matterName, downloadUrl, amountMonthly, amountFromLabel };
+  const templateData = { matterName, downloadUrl, officialDownloadUrl, amountMonthly, amountFromLabel };
+
   const element = React.createElement(worksheetReadyTemplate.component, templateData);
   const html = await render(element);
   const text = await render(element, { plainText: true });
