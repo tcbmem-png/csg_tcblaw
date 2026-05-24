@@ -489,6 +489,8 @@ export function defaultInputs(): CalcInputs {
     parentBPriorSupport: 0,
     parentAInhomeCredit: 0,
     parentBInhomeCredit: 0,
+    parentAFederalBenefit: 0,
+    parentBFederalBenefit: 0,
     numChildren: 1,
     parentingType: "standard",
     arpForStandard: "parent_b",
