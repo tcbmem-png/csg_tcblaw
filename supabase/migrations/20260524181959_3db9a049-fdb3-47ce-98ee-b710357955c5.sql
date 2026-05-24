@@ -1,0 +1,1 @@
+UPDATE orders SET status='paid', paid_at=now() - interval '3 minutes' WHERE id='3f704a3c-649f-47fe-9c42-86271ff7b10b';
