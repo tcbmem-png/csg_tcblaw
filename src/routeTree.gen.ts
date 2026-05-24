@@ -24,6 +24,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicUnlockTokenRouteImport } from './routes/api/public/unlock/$token'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicPaymentsRetryStuckRouteImport } from './routes/api/public/payments/retry-stuck'
 import { Route as ApiPublicAdminFulfillRouteImport } from './routes/api/public/admin/fulfill'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -105,6 +106,12 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsRetryStuckRoute =
+  ApiPublicPaymentsRetryStuckRouteImport.update({
+    id: '/api/public/payments/retry-stuck',
+    path: '/api/public/payments/retry-stuck',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAdminFulfillRoute = ApiPublicAdminFulfillRouteImport.update({
   id: '/api/public/admin/fulfill',
   path: '/api/public/admin/fulfill',
@@ -123,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
+  '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/unlock/$token': typeof ApiPublicUnlockTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -141,6 +149,7 @@ export interface FileRoutesByTo {
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
+  '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/unlock/$token': typeof ApiPublicUnlockTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -160,6 +169,7 @@ export interface FileRoutesById {
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
+  '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/unlock/$token': typeof ApiPublicUnlockTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/api/public/admin/fulfill'
+    | '/api/public/payments/retry-stuck'
     | '/api/public/payments/webhook'
     | '/api/public/unlock/$token'
     | '/lovable/email/queue/process'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/api/public/admin/fulfill'
+    | '/api/public/payments/retry-stuck'
     | '/api/public/payments/webhook'
     | '/api/public/unlock/$token'
     | '/lovable/email/queue/process'
@@ -216,6 +228,7 @@ export interface FileRouteTypes {
     | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/api/public/admin/fulfill'
+    | '/api/public/payments/retry-stuck'
     | '/api/public/payments/webhook'
     | '/api/public/unlock/$token'
     | '/lovable/email/queue/process'
@@ -235,6 +248,7 @@ export interface RootRouteChildren {
   UnlockTokenRoute: typeof UnlockTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicAdminFulfillRoute: typeof ApiPublicAdminFulfillRoute
+  ApiPublicPaymentsRetryStuckRoute: typeof ApiPublicPaymentsRetryStuckRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicUnlockTokenRoute: typeof ApiPublicUnlockTokenRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -349,6 +363,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/retry-stuck': {
+      id: '/api/public/payments/retry-stuck'
+      path: '/api/public/payments/retry-stuck'
+      fullPath: '/api/public/payments/retry-stuck'
+      preLoaderRoute: typeof ApiPublicPaymentsRetryStuckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/admin/fulfill': {
       id: '/api/public/admin/fulfill'
       path: '/api/public/admin/fulfill'
@@ -371,6 +392,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnlockTokenRoute: UnlockTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicAdminFulfillRoute: ApiPublicAdminFulfillRoute,
+  ApiPublicPaymentsRetryStuckRoute: ApiPublicPaymentsRetryStuckRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicUnlockTokenRoute: ApiPublicUnlockTokenRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
@@ -380,3 +402,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
