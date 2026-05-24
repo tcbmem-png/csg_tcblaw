@@ -124,8 +124,16 @@ export function SiteFooter() {
               TCB Law, PLLC &middot; Child Support Calculators
             </div>
             <div className="mt-1 max-w-xl">
-              Open-source implementations of the Tennessee (Rule 1240-02-04)
-              and Mississippi (Miss. Code Ann. § 43-19-101) child support
+              <a
+                href={GITHUB_URL}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="underline decoration-rule underline-offset-2 hover:text-primary hover:decoration-primary"
+              >
+                Open-source
+              </a>{" "}
+              implementations of the Tennessee (Rule 1240-02-04) and
+              Mississippi (Miss. Code Ann. § 43-19-101) child support
               guidelines.
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -143,7 +151,7 @@ export function SiteFooter() {
                 rel="noreferrer noopener"
                 className="inline-flex items-center gap-1.5 rounded-md border border-rule bg-background px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-ink transition-colors hover:border-primary hover:text-primary"
               >
-                <span>GitHub &rarr;</span>
+                <span>Source on GitHub &rarr;</span>
               </a>
             </div>
           </div>
