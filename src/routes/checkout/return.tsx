@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getOrderStatus } from "@/lib/checkout.functions";
+import { setStoredUnlock } from "@/lib/calc/unlock";
 
 export const Route = createFileRoute("/checkout/return")({
   validateSearch: (search: Record<string, unknown>) => ({
