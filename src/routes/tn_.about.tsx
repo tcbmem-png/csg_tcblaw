@@ -47,12 +47,17 @@ function About() {
       <ul className="mt-3 list-disc space-y-1 pl-6">
         <li>Split parenting (different children with different primary parents)</li>
         <li>Non-parent caretaker situations</li>
-        <li>Federal benefit offsets (SSA dependent benefits) — Rule .04(3)(a)(5)</li>
         <li>Alimony (separate analysis under T.C.A. § 36-5-121)</li>
         <li>Retroactive support at prior-period schedules</li>
         <li>Significant variance for modification (calculate both and compare manually)</li>
-        <li>Credit Worksheet for in-home and not-in-home children (accept user-provided credit)</li>
       </ul>
+
+      <h2 className="mt-8 font-serif text-2xl">Other states</h2>
+      <p className="mt-3">
+        A Mississippi calculator (Miss. Code Ann. § 43-19-101) is also
+        available on the{" "}
+        <a href="/" className="underline">state picker</a>.
+      </p>
 
       <h2 className="mt-8 font-serif text-2xl">Disclaimer</h2>
       <p className="mt-3 text-sm text-muted-foreground">
