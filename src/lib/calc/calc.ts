@@ -382,6 +382,46 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     }
   }
 
+  // === Non-earner ARP explainer (Rule .04(7)(f)) ===
+  // When the ARP has zero/negligible income, pro-rata BCSO yields ~$0 and the
+  // PRP (despite earning more) cannot be ordered to pay the ARP under the
+  // Guidelines. .04(7)(f) permits but does not require PRP→ARP support.
+  let nonEarnerArpNote: string | null = null;
+  if (
+    inputs.parentingType !== "equal" &&
+    Math.abs(presumptiveAfterSsr) < 1 &&
+    combinedAGI > 0
+  ) {
+    const arpAgi = arpIsA ? aAGI : bAGI;
+    const prpAgi = arpIsA ? bAGI : aAGI;
+    if (arpAgi <= 1 && prpAgi > 0) {
+      const arpLabel = arpIsA ? inputs.parentALabel : inputs.parentBLabel;
+      const prpLabel = arpIsA ? inputs.parentBLabel : inputs.parentALabel;
+      nonEarnerArpNote =
+        `Presumptive support is $0 because the alternate residential parent (${arpLabel}) has no income to pay from. ` +
+        `Under the Income Shares model, the ARP's pro-rata share of the BCSO is BCSO × (ARP income / combined income); with zero ARP income that share is zero. ` +
+        `Rule 1240-02-04-.04(7)(f) permits — but does not require — the primary residential parent (${prpLabel}) to be ordered to pay support to the ARP, and the Guidelines provide no formula for doing so. ` +
+        `Any such order is a discretionary deviation under Rule .07, supported by written findings explaining why it is in the children's best interest.`;
+    }
+  }
+
+  // === Zero-presumptive / floor-does-not-apply explainer (Rule .04(12)) ===
+  // The $100 minimum-order floor applies to an obligor who already has a
+  // presumptive obligation. When presumptive support is $0, there is no
+  // obligor and no obligation for the floor to lift.
+  let zeroPresumptiveNote: string | null = null;
+  if (
+    !meansTestedOnly &&
+    combinedAGI > 0 &&
+    Math.abs(presumptiveAfterSsr) < 1 &&
+    nonEarnerArpNote === null
+  ) {
+    zeroPresumptiveNote =
+      `Presumptive support is $0, so the $100/month minimum-order floor under Rule 1240-02-04-.04(12) does not apply. ` +
+      `The floor lifts a small calculated obligation up to $100; it does not create an obligation where the Guidelines produce none. ` +
+      `If the parties believe a non-zero order is warranted (e.g., a parent has unreported income, voluntarily underemployed), the path is to revisit the income inputs or request a written deviation under Rule .07.`;
+  }
+
 
 
 
