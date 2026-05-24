@@ -84,11 +84,18 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
         }
 
         const token = authHeader.slice('Bearer '.length).trim()
-        if (token !== supabaseServiceKey) {
+        const supabase: SupabaseClient<any, any> = createClient(supabaseUrl, supabaseServiceKey)
+
+        // Accept either the worker's service-role env key, or the token stored in the
+        // vault (which the pg_cron job uses). These can diverge after a key rotation.
+        let authorized = token === supabaseServiceKey
+        if (!authorized) {
+          const { data: vaultMatch } = await supabase.rpc('verify_email_queue_token', { token })
+          authorized = vaultMatch === true
+        }
+        if (!authorized) {
           return Response.json({ error: 'Forbidden' }, { status: 403 })
         }
-
-        const supabase: SupabaseClient<any, any> = createClient(supabaseUrl, supabaseServiceKey)
 
         // 1. Check rate-limit cooldown and read queue config
         const { data: state } = await supabase

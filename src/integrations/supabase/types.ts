@@ -200,6 +200,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      verify_email_queue_token: { Args: { token: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
