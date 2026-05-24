@@ -7,9 +7,15 @@ export interface CalcInputs {
   parentAGrossMonthly: number;
   parentBGrossMonthly: number;
 
-  /** Optional imputation: when true, parentBGrossMonthly is treated as imputed. */
+  /** Optional imputation. When true, the gross field above is the IMPUTED figure
+   *  and the *Actual* field is the parent's real income for comparison. */
+  useImputationForA: boolean;
+  parentAActualGrossMonthly?: number;
   useImputationForB: boolean;
   parentBActualGrossMonthly?: number;
+
+  /** Age of the youngest child (0–17). Drives the comparison-tab horizon. */
+  youngestChildAge: number;
 
   /** Means-tested only flag per Rule .04(3)(c)(2). */
   parentAMeansTestedOnly: boolean;
