@@ -1,6 +1,7 @@
 import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import { defaultCaption } from "@/lib/calc/share";
+import { useIsUnlocked } from "@/lib/calc/unlock";
 
 function fmt(n: number) {
   const abs = Math.abs(n);
