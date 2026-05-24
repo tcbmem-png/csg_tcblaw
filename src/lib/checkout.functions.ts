@@ -78,7 +78,6 @@ export const createUnlockCheckout = createServerFn({ method: "POST" })
       ui_mode: "embedded_page",
       return_url: data.returnUrl,
       customer_email: data.email,
-      managed_payments: { enabled: true } as any,
       payment_intent_data: {
         description: "TN Child Support Worksheet PDF",
       },
@@ -86,7 +85,10 @@ export const createUnlockCheckout = createServerFn({ method: "POST" })
         order_id: order.id as string,
         managed_payments: "true",
       },
-    });
+      // Stripe end-to-end compliance handling (tax + fraud + disputes + support).
+      // Not yet in the typed SessionCreateParams in stripe@22 — cast through any.
+      ...({ managed_payments: { enabled: true } } as any),
+    } as any);
 
     // Link session back to order.
     await sb
