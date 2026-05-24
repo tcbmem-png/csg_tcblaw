@@ -7,7 +7,8 @@ export const Route = createFileRoute("/api/public/admin/fulfill")({
     handlers: {
       POST: async ({ request }) => {
         const auth = request.headers.get("x-admin-secret");
-        if (!auth || auth !== process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const expectedSecret = process.env.ADMIN_FULFILL_SECRET;
+        if (!auth || !expectedSecret || auth !== expectedSecret) {
           return new Response("Unauthorized", { status: 401 });
         }
         const { orderId } = (await request.json()) as { orderId?: string };
