@@ -12,7 +12,7 @@ export const Route = createFileRoute("/unsubscribe")({
       },
       { name: "robots", content: "noindex, nofollow" },
     ],
-    links: [{ rel: "canonical", href: "https://tncsg.tcblaw.org/unsubscribe" }],
+    links: [{ rel: "canonical", href: "https://csg.tcblaw.org/unsubscribe" }],
   }),
   component: UnsubscribePage,
 });
