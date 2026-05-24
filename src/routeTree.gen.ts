@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResendRouteImport } from './routes/resend'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as AboutRouteImport } from './routes/about'
@@ -24,6 +25,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicUnlockTokenRouteImport } from './routes/api/public/unlock/$token'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicPaymentsRetryStuckRouteImport } from './routes/api/public/payments/retry-stuck'
 import { Route as ApiPublicAdminFulfillRouteImport } from './routes/api/public/admin/fulfill'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -34,6 +36,11 @@ const UnsubscribeRoute = UnsubscribeRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResendRoute = ResendRouteImport.update({
+  id: '/resend',
+  path: '/resend',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HowItWorksRoute = HowItWorksRouteImport.update({
@@ -105,6 +112,12 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsRetryStuckRoute =
+  ApiPublicPaymentsRetryStuckRouteImport.update({
+    id: '/api/public/payments/retry-stuck',
+    path: '/api/public/payments/retry-stuck',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAdminFulfillRoute = ApiPublicAdminFulfillRouteImport.update({
   id: '/api/public/admin/fulfill',
   path: '/api/public/admin/fulfill',
@@ -116,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/resend': typeof ResendRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -123,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
+  '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/unlock/$token': typeof ApiPublicUnlockTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -134,6 +149,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/resend': typeof ResendRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -141,6 +157,7 @@ export interface FileRoutesByTo {
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
+  '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/unlock/$token': typeof ApiPublicUnlockTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -153,6 +170,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/resend': typeof ResendRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -160,6 +178,7 @@ export interface FileRoutesById {
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
+  '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/unlock/$token': typeof ApiPublicUnlockTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -173,6 +192,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/calculator'
     | '/how-it-works'
+    | '/resend'
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/checkout/return'
@@ -180,6 +200,7 @@ export interface FileRouteTypes {
     | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/api/public/admin/fulfill'
+    | '/api/public/payments/retry-stuck'
     | '/api/public/payments/webhook'
     | '/api/public/unlock/$token'
     | '/lovable/email/queue/process'
@@ -191,6 +212,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/calculator'
     | '/how-it-works'
+    | '/resend'
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/checkout/return'
@@ -198,6 +220,7 @@ export interface FileRouteTypes {
     | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/api/public/admin/fulfill'
+    | '/api/public/payments/retry-stuck'
     | '/api/public/payments/webhook'
     | '/api/public/unlock/$token'
     | '/lovable/email/queue/process'
@@ -209,6 +232,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/calculator'
     | '/how-it-works'
+    | '/resend'
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/checkout/return'
@@ -216,6 +240,7 @@ export interface FileRouteTypes {
     | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/api/public/admin/fulfill'
+    | '/api/public/payments/retry-stuck'
     | '/api/public/payments/webhook'
     | '/api/public/unlock/$token'
     | '/lovable/email/queue/process'
@@ -228,6 +253,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CalculatorRoute: typeof CalculatorRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  ResendRoute: typeof ResendRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
@@ -235,6 +261,7 @@ export interface RootRouteChildren {
   UnlockTokenRoute: typeof UnlockTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicAdminFulfillRoute: typeof ApiPublicAdminFulfillRoute
+  ApiPublicPaymentsRetryStuckRoute: typeof ApiPublicPaymentsRetryStuckRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicUnlockTokenRoute: typeof ApiPublicUnlockTokenRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -256,6 +283,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resend': {
+      id: '/resend'
+      path: '/resend'
+      fullPath: '/resend'
+      preLoaderRoute: typeof ResendRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/how-it-works': {
@@ -349,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/retry-stuck': {
+      id: '/api/public/payments/retry-stuck'
+      path: '/api/public/payments/retry-stuck'
+      fullPath: '/api/public/payments/retry-stuck'
+      preLoaderRoute: typeof ApiPublicPaymentsRetryStuckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/admin/fulfill': {
       id: '/api/public/admin/fulfill'
       path: '/api/public/admin/fulfill'
@@ -364,6 +405,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   CalculatorRoute: CalculatorRoute,
   HowItWorksRoute: HowItWorksRoute,
+  ResendRoute: ResendRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
@@ -371,6 +413,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnlockTokenRoute: UnlockTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicAdminFulfillRoute: ApiPublicAdminFulfillRoute,
+  ApiPublicPaymentsRetryStuckRoute: ApiPublicPaymentsRetryStuckRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicUnlockTokenRoute: ApiPublicUnlockTokenRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
