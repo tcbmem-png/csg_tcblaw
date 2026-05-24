@@ -182,10 +182,10 @@ export async function fulfillOrder(
   const attachments =
     state === "TN" && officialPdfBuf
       ? [
-          { filename: "tn-child-support-worksheet-official.pdf", content: bufToBase64(officialPdfBuf) },
-          { filename: "tn-child-support-worksheet.pdf", content: bufToBase64(pdfBuf) },
+          { filename: "tn-child-support-worksheet-official.pdf", content: bufToBase64(officialPdfBuf), content_type: "application/pdf" },
+          { filename: "tn-child-support-worksheet.pdf", content: bufToBase64(pdfBuf), content_type: "application/pdf" },
         ]
-      : [{ filename: "ms-child-support-worksheet.pdf", content: bufToBase64(pdfBuf) }];
+      : [{ filename: "ms-child-support-worksheet.pdf", content: bufToBase64(pdfBuf), content_type: "application/pdf" }];
 
   const messageId = crypto.randomUUID();
   const unsubscribeToken = await getOrCreateUnsubscribeToken(sb, order.email);
