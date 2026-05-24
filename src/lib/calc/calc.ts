@@ -505,6 +505,7 @@ export function defaultInputs(): CalcInputs {
     uninsuredMedicalMonthly: 0,
     childcareMonthly: 0,
     childcarePaidBy: "parent_a",
+    childcarePayrollDeducted: false,
     includePrivateSchool: false,
     privateSchoolAnnual: 0,
     privateSchoolPaidBy: "split_pro_rata",
