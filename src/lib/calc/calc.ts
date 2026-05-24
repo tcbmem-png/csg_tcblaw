@@ -261,10 +261,16 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     piA,
     piB,
   );
-  // Uninsured medical is shared pro-rata; treat as split unless practitioners say otherwise.
-  // For v1 we treat it as split_pro_rata (no transfer); the line is informational on the worksheet.
-  // (Some courts add to the order — we expose the per-parent share in outputs.)
-  const addOnMedicalFromA = 0; // shown as informational; no enforced transfer
+  // Uninsured medical: pro-rata reimbursement when one parent pays out-of-pocket.
+  const addOnMedicalFromA =
+    inputs.uninsuredMedicalPaidBy === "split_pro_rata"
+      ? 0
+      : reimbursementFromA(
+          inputs.uninsuredMedicalMonthly,
+          inputs.uninsuredMedicalPaidBy,
+          piA,
+          piB,
+        );
   const addOnChildcareFromA = reimbursementFromA(
     inputs.childcareMonthly,
     inputs.childcarePaidBy,
