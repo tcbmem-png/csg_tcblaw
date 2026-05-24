@@ -89,11 +89,14 @@ export function ResultSidebar({
           type="button"
           onClick={() => {
             onViewWorksheet();
-            setTimeout(() => window.print(), 100);
+            if (unlocked) {
+              setTimeout(() => window.print(), 100);
+            }
           }}
+          title={unlocked ? undefined : "Unlock the PDF to print or export"}
           className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40"
         >
-          Print / Save PDF
+          {unlocked ? "Print / Save PDF" : "🔒 Print / Save PDF — Unlock"}
         </button>
         <CopyLinkButton />
       </div>
