@@ -614,7 +614,7 @@ export async function renderOfficialWorksheetPdf(args: {
   ctx.y = modTop;
   valueRow(ctx, {
     n: "13a",
-    label: "Current child support order amount for the obligor parent",
+    label: "Current child support order amount, obligor parent",
     a: "",
     b: "",
     c: undefined,
