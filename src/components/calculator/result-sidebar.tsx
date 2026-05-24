@@ -111,3 +111,30 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function CopyLinkButton() {
+  const [status, setStatus] = useState<"idle" | "copied" | "error">("idle");
+  const onClick = async () => {
+    if (typeof window === "undefined") return;
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setStatus("copied");
+    } catch {
+      setStatus("error");
+    }
+    setTimeout(() => setStatus("idle"), 1800);
+  };
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40"
+    >
+      {status === "copied"
+        ? "✓ Link copied"
+        : status === "error"
+          ? "Copy failed — select URL bar"
+          : "Copy shareable link"}
+    </button>
+  );
+}
