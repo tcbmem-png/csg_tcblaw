@@ -330,16 +330,33 @@ export async function renderOfficialWorksheetPdf(args: {
   });
   row(ctx, {
     n: "15",
-    label: "Final Child Support Order (FCSO)",
-    a: outputs.arpIdentity === "parent_a" ? `$ ${fmt(outputs.allInMonthly)}` : "",
-    b: outputs.arpIdentity === "parent_b" ? `$ ${fmt(outputs.allInMonthly)}` : "",
+    label: "Final Child Support Order (FCSO) before federal benefit",
+    a: outputs.arpIdentity === "parent_a" ? `$ ${fmt(outputs.allInMonthly + Math.abs(outputs.federalBenefitOffsetFromA))}` : "",
+    b: outputs.arpIdentity === "parent_b" ? `$ ${fmt(outputs.allInMonthly + Math.abs(outputs.federalBenefitOffsetFromA))}` : "",
     c: "",
     bold: true,
   });
-  row(ctx, { n: "16", label: "FCSO adjusted for federal benefit (Line 1a)", a: "", b: "", c: "" });
+  const fbApplied = Math.abs(outputs.federalBenefitOffsetFromA);
+  row(ctx, {
+    n: "16",
+    label: "FCSO adjusted for federal benefit (Line 1a offset)",
+    a: outputs.arpIdentity === "parent_a" ? `$ ${fmt(outputs.allInMonthly)}` : "",
+    b: outputs.arpIdentity === "parent_b" ? `$ ${fmt(outputs.allInMonthly)}` : "",
+    c: fbApplied > 0 ? `(- $${fmt(fbApplied)})` : "",
+    bold: true,
+  });
 
   ctx.y -= 6;
   blankBox(ctx, "Comments, calculations, or rebuttals to schedule:", 56);
+  if (caption.comments && caption.comments.trim()) {
+    const lines = wrapText(caption.comments.trim(), 9, ROW_W - 8);
+    // Re-position cursor inside the blank box we just drew (approx).
+    let yy = ctx.y + 56 + 2 - 4;
+    for (const line of lines.slice(0, 5)) {
+      draw(ctx, line, MARGIN + 4, yy, { size: 9 });
+      yy -= 10;
+    }
+  }
 
   ensure(ctx, 36);
   draw(ctx, "Preparer's Use Only", MARGIN, ctx.y - 10, { size: 9, bold: true });
