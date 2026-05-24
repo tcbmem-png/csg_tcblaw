@@ -517,38 +517,43 @@ export async function renderOfficialWorksheetPdf(args: {
   const hpB = inputs.healthPaidBy === "parent_b" ? inputs.healthPremiumMonthly : 0;
   const ccA = inputs.childcarePaidBy === "parent_a" ? inputs.childcareMonthly : 0;
   const ccB = inputs.childcarePaidBy === "parent_b" ? inputs.childcareMonthly : 0;
-  const umedA = inputs.uninsuredMedicalPaidBy === "parent_a" ? inputs.uninsuredMedicalMonthly : 0;
-  const umedB = inputs.uninsuredMedicalPaidBy === "parent_b" ? inputs.uninsuredMedicalMonthly : 0;
+  // Uninsured medical only enters the worksheet when one parent is paying
+  // out-of-pocket. When the policy is "split_pro_rata" (the default), each
+  // parent absorbs their PI share directly and nothing flows through the
+  // additional-expenses table. This mirrors src/lib/calc/calc.ts.
+  const umedIsSplit = inputs.uninsuredMedicalPaidBy === "split_pro_rata";
+  const umedA = !umedIsSplit && inputs.uninsuredMedicalPaidBy === "parent_a" ? inputs.uninsuredMedicalMonthly : 0;
+  const umedB = !umedIsSplit && inputs.uninsuredMedicalPaidBy === "parent_b" ? inputs.uninsuredMedicalMonthly : 0;
   valueRow(ctx, {
     n: "8a",
     label: "Children's portion of health insurance premium",
     a: dollar(hpA),
     b: dollar(hpB),
-    c: dollar(hpA + hpB),
+    c: undefined,
   });
   valueRow(ctx, {
     n: "8b",
     label: "Recurring Uninsured Medical Expenses",
     a: dollar(umedA),
     b: dollar(umedB),
-    c: dollar(inputs.uninsuredMedicalMonthly),
+    c: undefined,
   });
   valueRow(ctx, {
     n: "8c",
     label: "Work-related childcare",
     a: dollar(ccA),
     b: dollar(ccB),
-    c: dollar(ccA + ccB),
+    c: undefined,
   });
   const totalExpA = hpA + ccA + umedA;
   const totalExpB = hpB + ccB + umedB;
-  const totalExpAll = hpA + hpB + ccA + ccB + (inputs.uninsuredMedicalMonthly || 0);
+  const totalExpAll = totalExpA + totalExpB;
   valueRow(ctx, {
     n: "9",
     label: "Total expenses",
     a: dollar(totalExpA),
     b: dollar(totalExpB),
-    c: dollar(totalExpAll),
+    c: undefined,
     bold: true,
   });
   const shareA = outputs.piA * totalExpAll;
