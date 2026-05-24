@@ -132,6 +132,8 @@ export interface CalcOutputs {
   warnings: string[];
   pcsoExceedsStatutoryMax: boolean;
   pcsoStatutoryMax: number;
+  /** Neutral guideline note shown when PCSO is above the §36-5-101(e)(1)(B) cap. Not a warning. */
+  pcsoCapNote: string | null;
 
   // Metadata
   scheduleEffectiveDate: string;
