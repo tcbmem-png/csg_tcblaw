@@ -10,6 +10,7 @@ import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ComparisonView } from "@/components/calculator/comparison";
 import { CaseCaptionForm } from "@/components/calculator/case-caption";
 import { ComparisonAppendix } from "@/components/calculator/comparison-appendix";
+import { FilingDetailsForm } from "@/components/calculator/filing-details";
 import {
   defaultCaption,
   decodeShare,
@@ -114,6 +115,13 @@ function TNCalculatorPage() {
             <>
               <CaseCaptionForm caption={caption} setCaption={setCaption} />
               <CalculatorInputs inputs={inputs} setInputs={setInputs} />
+              <FilingDetailsForm
+                caption={caption}
+                setCaption={setCaption}
+                numChildren={inputs.numChildren}
+                parentALabel={inputs.parentALabel}
+                parentBLabel={inputs.parentBLabel}
+              />
             </>
           )}
           {tab === "comparison" && <ComparisonView inputs={inputs} />}

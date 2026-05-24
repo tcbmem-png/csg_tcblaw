@@ -62,6 +62,20 @@ const captionSchema = z.object({
   court: z.string().max(200),
   preparedBy: z.string().max(200),
   client: z.string().max(200),
+  comments: z.string().max(5000).optional(),
+  parentARole: z.enum(["mother", "father"]).optional(),
+  children: z
+    .array(
+      z.object({
+        name: z.string().max(200),
+        dob: z.string().max(40),
+        daysWithA: z.number().min(0).max(366),
+        daysWithB: z.number().min(0).max(366),
+      }),
+    )
+    .max(10)
+    .optional(),
+  deviationNarrative: z.string().max(2000).optional(),
 });
 
 const stateSchema = z.enum(["TN", "MS"]);
