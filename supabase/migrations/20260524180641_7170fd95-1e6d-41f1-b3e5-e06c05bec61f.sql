@@ -1,0 +1,1 @@
+UPDATE public.orders SET status='paid', delivered_at=NULL, pdf_storage_path=NULL, pdf_official_storage_path=NULL, paid_at=now() - interval '5 minutes' WHERE id='e327a75f-c29e-42af-84c7-813af09181fa';
