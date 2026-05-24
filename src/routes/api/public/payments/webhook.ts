@@ -2,10 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { render } from "@react-email/components";
 import * as React from "react";
-import { renderToBuffer } from "@react-pdf/renderer";
 import { Buffer } from "node:buffer";
 import { verifyWebhook, type StripeEnv } from "@/lib/stripe.server";
-import { WorksheetPdfDoc } from "@/lib/pdf/worksheet-pdf";
+import { renderWorksheetPdf } from "@/lib/pdf/worksheet-pdf";
 import { template as worksheetReadyTemplate } from "@/lib/email-templates/worksheet-ready";
 
 const SITE_NAME = "TN Child Support Helper";
@@ -53,13 +52,11 @@ async function fulfillOrder(orderId: string, origin: string) {
     outputs: any;
     caption: any;
   };
-  const pdfBuf = await renderToBuffer(
-    React.createElement(WorksheetPdfDoc, {
-      inputs: payload.inputs,
-      outputs: payload.outputs,
-      caption: payload.caption,
-    }) as any,
-  );
+  const pdfBuf = await renderWorksheetPdf({
+    inputs: payload.inputs,
+    outputs: payload.outputs,
+    caption: payload.caption,
+  });
 
   // Upload to private storage.
   const storagePath = `${order.id}/worksheet.pdf`;
