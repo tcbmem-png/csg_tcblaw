@@ -136,3 +136,34 @@ describe("MS calc — additional invariants", () => {
     expect(out.warnings.some((w) => w.includes("§ 43-19-103(g)"))).toBe(true);
   });
 });
+
+describe("MS — sole custody is the default presumption", () => {
+  it("custody arrangement is not an input to the formula", () => {
+    // Two identical runs, only sharedCustodyFlag differs. The award must
+    // be identical; only the warnings array differs (Factor (g) callout).
+    const base = withDefaults({
+      numChildren: 2,
+      obligorAnnualGross: 60000,
+      obligorAnnualTaxes: 10000,
+      obligorAnnualSocialSecurity: 3720,
+    });
+    const sole = calculateMS({ ...base, sharedCustodyFlag: false });
+    const shared = calculateMS({ ...base, sharedCustodyFlag: true });
+    expect(shared.presumptiveMonthly).toBe(sole.presumptiveMonthly);
+    expect(shared.proposedFinalMonthly).toBe(sole.proposedFinalMonthly);
+    expect(sole.warnings.some((w) => w.includes("§ 43-19-103(g)"))).toBe(false);
+    expect(shared.warnings.some((w) => w.includes("§ 43-19-103(g)"))).toBe(true);
+  });
+
+  it("Spec Test 1 holds with no custody-day inputs at all (sole custody is the default)", () => {
+    const out = calculateMS(
+      withDefaults({
+        numChildren: 2,
+        obligorAnnualGross: 30000,
+        obligorAnnualTaxes: 4000,
+        obligorAnnualSocialSecurity: 1860,
+      }),
+    );
+    expect(out.proposedFinalMonthly).toBeCloseTo(402.33, 2);
+  });
+});

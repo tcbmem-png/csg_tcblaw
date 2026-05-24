@@ -1,29 +1,46 @@
 ## Goal
 
-Stop calling the PCSO statutory-max message a "warning." It's not an error — it's a routine guideline note that explains *why* the all-in number is above the §36-5-101(e)(1)(B) cap and what the court needs to support it. Mention that documented deviations (especially private school as an Extraordinary Educational Expense under Rule .07(2)(d)1) are the typical justification.
+Lock in (with tests) and lightly document how each calculator behaves when one parent has 365 — or near 365 — days of custody. No formula changes; the two models are doing the right thing under their respective statutes. We just want regression coverage and a small bit of UX copy so users don't misread the TN output.
 
-## Copy changes
+## Findings (no code change needed for these)
 
-**Sidebar & on-screen worksheet (new wording, identical in both places):**
+- **MS** — single-obligor flat percentage; custody days never enter the formula. 365/0 is the statutory default. Already correct.
+- **TN** — Rule .04(7) "increase" band caps the upward bump at `(69 − ARP_days) / 365 ≈ 18.9 %` over the ARP's pro-rata BCSO at ARP = 0. There is no "sole-custody" multiplier in the guidelines; behavior is correct but undramatic, which can surprise users.
 
-> **Above the presumptive statutory cap.** The all-in transfer ($X,XXX/mo) exceeds the §36-5-101(e)(1)(B) presumptive maximum of $X,XXX/mo for N children. This is common when the order includes documented deviations — most often private-school tuition (Rule .07(2)(d)1) or other extraordinary educational expenses. The court must make written findings that the additional amount is reasonably necessary for the child; with those findings the order stands above the cap.
+## Changes
 
-If a private-school deviation is currently active in the inputs, append a second sentence:
+### 1. Tests — `src/lib/calc/__tests__/calc.test.ts`
 
-> Your private-school deviation of $X,XXX/mo is included in this total and is the typical basis for findings above the cap.
+Add a `describe("Sole / near-sole custody (TN)")` block with three cases:
+- **365/0, custom band**: parentADays = 0, parentBDays = 365. Assert ARP=A, band = "increase", presumptive ≈ proRataA × (1 + 69/365), direction A→B.
+- **Symmetry**: same inputs flipped (0/365) → direction flips, magnitude identical.
+- **Standard 285/80 vs custom 285/80 produces the same presumptive** — sanity that the "standard" preset is just a custom-days shortcut.
+- **Floor check**: very low-income obligor with 365/0 still subject to SSR / $100 minimum logic exactly as in the standard case.
 
-## Implementation
+### 2. Tests — `src/lib/calc/ms/__tests__/calc.test.ts`
 
-1. **`src/lib/calc/calc.ts`** — separate the PCSO-cap message from `warnings`. Add a new output field `pcsoCapNote: string | null` (and keep `pcsoExceedsStatutoryMax`/`pcsoStatutoryMax` as they are). Remove the existing `warnings.push(...)` for the cap. Compose the note text in the calc so it can include the live private-school deviation amount when present.
-2. **`src/lib/calc/types.ts`** — add `pcsoCapNote: string | null` to `CalcOutputs`.
-3. **`src/components/calculator/result-sidebar.tsx`** — render `pcsoCapNote` in its own neutral block (no ⚠, no amber alert styling) above or below the `warnings` list. Use a muted card style consistent with informational notes.
-4. **`src/components/calculator/official-worksheet.tsx`** — replace the existing "Statutory PCSO maximum exceeded" block (lines ~369–378) with the new note, using neutral styling (e.g. `border-rule bg-cream` like the footer) instead of `bg-accent/10`.
-5. **`src/lib/pdf/worksheet-pdf.ts`** — the footer currently dumps `warnings.join(" * ")`. Also render `pcsoCapNote` as its own footer line labeled "Note:" (not "Notes:") so it doesn't look like an error in the PDF.
-6. **`src/lib/pdf/official-worksheet-pdf.ts`** — if it currently renders the cap message, swap to the new note text the same way.
-7. Tests in `src/lib/calc/__tests__/calc.test.ts`: update any assertion that checks for the old warning string; add a small assertion that `pcsoCapNote` is non-null when over the cap and null otherwise, and that it mentions private school when `includePrivateSchool` is true with a non-zero deviation.
+Add a small `describe("MS — sole custody is the default presumption")` block:
+- **Asserts custody is not an input to the formula**: two runs with `sharedCustodyFlag` true vs false and otherwise identical inputs produce the same `presumptiveMonthly` and `proposedFinalMonthly`. Only `warnings` differ (Factor (g) callout appears once).
+- **Spec Test 1 re-asserted with an explicit "sole-custody by default" comment** so future readers see the assumption documented.
+
+### 3. UX note — TN custom-days input (`src/components/calculator/inputs.tsx`)
+
+In the "Parenting time → Custom days" sub-section, when either parent's day count is `≤ 5` or `≥ 360`, render a small muted hint under the day inputs:
+
+> Tennessee's guidelines (Rule .04(7)(i)) cap the upward adjustment at about 19% over the ARP's standard pro-rata share, even at 0 ARP days. Many sole-custody cases are still entered at the standard 285/80 split.
+
+Plain `<p className="text-xs text-muted-foreground">` under the existing day Grid — no new component.
+
+### 4. UX note — MS inputs (`src/components/calculator/ms/inputs.tsx`)
+
+In the header area (or right under the obligor income section), add a single sentence:
+
+> Mississippi assumes the obligor is the non-custodial parent and applies the statutory percentage to their AGI; the number of custody days is not an input. For 50/50 arrangements use the Factor (g) deviation.
+
+Same muted-text treatment. Not a banner, not a warning.
 
 ## Out of scope
 
-- No changes to the actual calculation, the cap value, or how deviations are applied.
-- No changes to the MS calculator (this is a TN-specific statutory cap).
-- Other entries in the `warnings` array (e.g., SSR notes, income thresholds) keep their current treatment.
+- No change to TN calc formulas, band thresholds, or the `(69 - arpDays)/365` increase factor.
+- No change to MS calc formulas or AGI handling.
+- No new "100% custody" toggle or preset — the existing standard preset + custom days cover it.
