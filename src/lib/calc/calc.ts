@@ -222,24 +222,21 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
   );
 
   // === SSR check (Rule .02(25) + .09 shaded area) ===
-  // Engages only if the obligor's pro-rata BCSO would reduce them below SSR.
-  // For high-income above-cap cases SSR never applies. For schedule cases,
-  // recompute with obligor-only AGI and pick the lower of the two if the
-  // schedule cell is shaded for that AGI.
+  // The shaded-cell test must key off the OBLIGOR's own AGI, not combined AGI:
+  // a combined-AGI cell can clear the threshold while the obligor-alone lookup
+  // is shaded — exactly the case the rule is meant to catch. For above-cap
+  // combined cases the obligor's own income can still be on the schedule, so
+  // we always perform the alt lookup whenever the obligor has positive AGI
+  // within the schedule range.
   let ssrApplied = false;
   let ssrNote: string | null = null;
   let minimumOrderApplied = false;
   let presumptiveAfterSsr = presumptiveFromA;
-  if (
-    bcsoLookup.source === "schedule" &&
-    bcsoLookup.isShaded &&
-    Math.abs(presumptiveFromA) > 0
-  ) {
-
+  if (Math.abs(presumptiveFromA) > 0) {
     // Identify obligor (the parent with positive outflow).
     const obligorIsA = presumptiveFromA > 0;
     const obligorAgi = obligorIsA ? aAGI : bAGI;
-    if (obligorAgi > 0 && obligorAgi <= 28250) {
+    if (obligorAgi > 0 && obligorAgi <= COMBINED_AGI_CAP) {
       const altLookup = lookupBcso(obligorAgi, inputs.numChildren);
       if (altLookup.isShaded) {
         // Use lower of pro-rata BCSO or alt BCSO for the obligor.
@@ -251,7 +248,7 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
           const final = Math.min(alt, allowed);
           presumptiveAfterSsr = obligorIsA ? final : -final;
           ssrApplied = true;
-          ssrNote = `Self-Support Reserve applied (Rule .02(25)): obligor-only BCSO ($${alt}) used in place of pro-rata BCSO.`;
+          ssrNote = `Self-Support Reserve applied (Rule .02(25)): obligor-only BCSO ($${alt}) used in place of pro-rata BCSO so the obligor retains the $${SSR_AMOUNT}/mo reserve.`;
         }
       }
     }
