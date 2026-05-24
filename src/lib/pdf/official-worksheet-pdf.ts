@@ -581,9 +581,17 @@ export async function renderOfficialWorksheetPdf(args: {
   // -----------------------------------------------------------------
   partHead(ctx, "Part V.  Presumptive Child Support / Modification of Current Support");
   columnHeader(ctx, { mergeAB: true, mergeABLabel: "Obligation Column" });
-  // Row 12 — PCSO in obligor column; non-parent caretaker column hatched
-  const pcsoA = outputs.arpIdentity === "parent_a" ? dollar(outputs.allInMonthly) : "";
-  const pcsoB = outputs.arpIdentity === "parent_b" ? dollar(outputs.allInMonthly) : "";
+  // Row 12 — PCSO in obligor column; non-parent caretaker column hatched.
+  // For equal-parenting cases (arpIdentity === "equal") fall back to
+  // allInDirection to identify the obligor.
+  const obligorIsA =
+    outputs.arpIdentity === "parent_a" ||
+    (outputs.arpIdentity === "equal" && outputs.allInDirection === "parent_a_to_b");
+  const obligorIsB =
+    outputs.arpIdentity === "parent_b" ||
+    (outputs.arpIdentity === "equal" && outputs.allInDirection === "parent_b_to_a");
+  const pcsoA = obligorIsA ? dollar(outputs.allInMonthly) : "";
+  const pcsoB = obligorIsB ? dollar(outputs.allInMonthly) : "";
   valueRow(ctx, {
     n: "12",
     label: "Presumptive Child Support Order (PCSO)",
