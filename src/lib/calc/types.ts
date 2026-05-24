@@ -110,6 +110,10 @@ export interface CalcOutputs {
   specialExpensesIncludedAsDeviation: number;
   specialExpensesDeviationFromA: number;
 
+  // Federal benefit offset (line 16). Signed from Parent A's perspective:
+  // negative => reduces A's outflow; positive => reduces B's outflow (increases A net).
+  federalBenefitOffsetFromA: number;
+
   // Final
   /** Net monthly flow. Positive => parent A pays parent B; negative => parent B pays A. */
   allInMonthlyFromA: number;
