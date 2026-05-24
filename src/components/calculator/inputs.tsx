@@ -387,6 +387,12 @@ export function CalculatorInputs({
               value={inputs.parentAPriorSupport}
               onChange={(n) => u({ parentAPriorSupport: n })}
             />
+            <TheoreticalCreditHelper
+              mode="notinhome"
+              parentLabel={inputs.parentALabel}
+              parentGrossMonthly={inputs.parentAGrossMonthly}
+              onApply={(n) => u({ parentAPriorSupport: n })}
+            />
           </Field>
           <Field
             label={`${inputs.parentBLabel} prior support / not-in-home credit / mo`}
@@ -395,6 +401,12 @@ export function CalculatorInputs({
             <NumInput
               value={inputs.parentBPriorSupport}
               onChange={(n) => u({ parentBPriorSupport: n })}
+            />
+            <TheoreticalCreditHelper
+              mode="notinhome"
+              parentLabel={inputs.parentBLabel}
+              parentGrossMonthly={inputs.parentBGrossMonthly}
+              onApply={(n) => u({ parentBPriorSupport: n })}
             />
           </Field>
           <Field
@@ -405,6 +417,12 @@ export function CalculatorInputs({
               value={inputs.parentAInhomeCredit}
               onChange={(n) => u({ parentAInhomeCredit: n })}
             />
+            <TheoreticalCreditHelper
+              mode="inhome"
+              parentLabel={inputs.parentALabel}
+              parentGrossMonthly={inputs.parentAGrossMonthly}
+              onApply={(n) => u({ parentAInhomeCredit: n })}
+            />
           </Field>
           <Field
             label={`${inputs.parentBLabel} in-home children credit / mo`}
@@ -413,6 +431,12 @@ export function CalculatorInputs({
             <NumInput
               value={inputs.parentBInhomeCredit}
               onChange={(n) => u({ parentBInhomeCredit: n })}
+            />
+            <TheoreticalCreditHelper
+              mode="inhome"
+              parentLabel={inputs.parentBLabel}
+              parentGrossMonthly={inputs.parentBGrossMonthly}
+              onApply={(n) => u({ parentBInhomeCredit: n })}
             />
           </Field>
           <Field
