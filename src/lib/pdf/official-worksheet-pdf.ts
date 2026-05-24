@@ -284,11 +284,25 @@ export async function renderOfficialWorksheetPdf(args: {
   const ccB = inputs.childcarePaidBy === "parent_b" ? inputs.childcareMonthly : 0;
   row(ctx, { n: "8a", label: "Children's portion of health insurance premium", a: fmt(hpA), b: fmt(hpB), c: "" });
   row(ctx, { n: "8b", label: "Recurring uninsured medical expenses", a: "", b: "", c: fmt(inputs.uninsuredMedicalMonthly) });
-  row(ctx, { n: "8c", label: "Work-related childcare", a: fmt(ccA), b: fmt(ccB), c: "" });
+  const payroll = inputs.childcarePayrollDeducted;
+  row(ctx, {
+    n: "8c",
+    label: "Work-related childcare (payroll-deducted)",
+    a: payroll ? fmt(ccA) : "",
+    b: payroll ? fmt(ccB) : "",
+    c: "",
+  });
+  row(ctx, {
+    n: "8d",
+    label: "Work-related childcare (non-payroll-deducted)",
+    a: payroll ? "" : fmt(ccA),
+    b: payroll ? "" : fmt(ccB),
+    c: "",
+  });
   const totalExpA = hpA + ccA;
   const totalExpB = hpB + ccB;
   const totalExpAll = totalExpA + totalExpB + (inputs.uninsuredMedicalMonthly || 0);
-  row(ctx, { n: "9", label: "Total expenses", a: fmt(totalExpA), b: fmt(totalExpB), c: fmt(totalExpAll), bold: true });
+  row(ctx, { n: "9", label: "Total additional expenses", a: fmt(totalExpA), b: fmt(totalExpB), c: fmt(totalExpAll), bold: true });
   // Share owed = each parent's PI × total combined add-ons
   const shareA = outputs.piA * totalExpAll;
   const shareB = outputs.piB * totalExpAll;
