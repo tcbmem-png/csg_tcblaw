@@ -219,3 +219,72 @@ describe("Means-tested only", () => {
     expect(out.allInMonthly).toBe(0);
   });
 });
+
+describe("Sole / near-sole custody (TN)", () => {
+  const base = {
+    ...defaultInputs(),
+    parentAGrossMonthly: 6000,
+    parentBGrossMonthly: 4000,
+    numChildren: 2,
+  };
+
+  it("365/0 puts ARP in the 'increase' band with a ~18.9% bump", () => {
+    const out = calculate({
+      ...base,
+      parentingType: "custom",
+      parentADays: 0,
+      parentBDays: 365,
+    });
+    // A has 0 days → A is ARP → A pays B.
+    expect(out.presumptiveDirection).toBe("parent_a_to_b");
+    // Expected: proRataA × (1 + 69/365)
+    const expected = out.bcso * out.piA * (1 + 69 / 365);
+    expect(out.netPresumptiveSupport).toBe(Math.round(expected));
+  });
+
+  it("is symmetric when flipped 0/365", () => {
+    const a = calculate({
+      ...base,
+      parentingType: "custom",
+      parentADays: 0,
+      parentBDays: 365,
+    });
+    const b = calculate({
+      ...base,
+      parentingType: "custom",
+      parentADays: 365,
+      parentBDays: 0,
+    });
+    expect(b.presumptiveDirection).toBe("parent_b_to_a");
+    expect(b.netPresumptiveSupport).toBe(a.netPresumptiveSupport);
+  });
+
+  it("standard 285/80 preset matches custom 285/80", () => {
+    const std = calculate({
+      ...base,
+      parentingType: "standard",
+      arpForStandard: "parent_b",
+    });
+    const cus = calculate({
+      ...base,
+      parentingType: "custom",
+      parentADays: 285,
+      parentBDays: 80,
+    });
+    expect(cus.netPresumptiveSupport).toBe(std.netPresumptiveSupport);
+    expect(cus.presumptiveDirection).toBe(std.presumptiveDirection);
+  });
+
+  it("low-income obligor at 0 days still respects the $100 minimum floor", () => {
+    const out = calculate({
+      ...defaultInputs(),
+      parentAGrossMonthly: 500,
+      parentBGrossMonthly: 4000,
+      numChildren: 1,
+      parentingType: "custom",
+      parentADays: 0,
+      parentBDays: 365,
+    });
+    expect(out.allInMonthly).toBeGreaterThanOrEqual(100);
+  });
+});
