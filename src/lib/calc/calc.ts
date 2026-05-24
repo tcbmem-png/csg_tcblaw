@@ -322,20 +322,70 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     STATUTORY_PCSO_MAX[inputs.numChildren as 1 | 2 | 3 | 4 | 5] ?? 0;
   const pcsoMagnitude = Math.abs(presumptiveAfterSsr) + Math.abs(addOnsTotalFromA);
   const pcsoExceedsStatutoryMax = pcsoMagnitude > pcsoStatutoryMax;
+  const pcsoExcessOverCap = pcsoExceedsStatutoryMax
+    ? r$(pcsoMagnitude - pcsoStatutoryMax)
+    : 0;
+  const childWord = inputs.numChildren === 1 ? "child" : "children";
   let pcsoCapNote: string | null = null;
+  let pcsoBelowCapNote: string | null = null;
   if (pcsoExceedsStatutoryMax) {
-    const childWord = inputs.numChildren === 1 ? "child" : "children";
+    const excessPct = pcsoStatutoryMax > 0 ? (pcsoExcessOverCap / pcsoStatutoryMax) * 100 : 0;
+    const magnitudeLabel =
+      excessPct < 5
+        ? "trivial — routinely approved with brief written findings"
+        : excessPct < 25
+          ? "moderate — typically requires a short written explanation of the children's needs"
+          : excessPct < 50
+            ? "substantial — recipient should document the children's actual needs in detail"
+            : "very substantial — detailed evidentiary record of the children's actual needs is typically required";
+    const annualExcess = pcsoExcessOverCap * 12;
     const privSchoolDev = Math.abs(r$(privateSchoolDeviationFromA));
     const base =
-      `Above the presumptive statutory cap. The presumptive obligation ($${r$(pcsoMagnitude)}/mo) is above the §36-5-101(e)(1)(B) presumptive maximum of $${pcsoStatutoryMax}/mo for ${inputs.numChildren} ${childWord}. ` +
-      `This is common when the order includes documented deviations — most often private-school tuition (Rule .07(2)(d)1) or other extraordinary educational expenses. ` +
-      `The court must make written findings that the additional amount is reasonably necessary for the child; with those findings the order stands above the cap.`;
+      `Above the statutory presumptive cap (Tenn. Code Ann. §36-5-101(e)(1)(B)). ` +
+      `Calculated PCSO is $${r$(pcsoMagnitude)}/mo; the cap for ${inputs.numChildren} ${childWord} is $${pcsoStatutoryMax}/mo — an excess of $${pcsoExcessOverCap}/mo ($${annualExcess.toLocaleString("en-US")}/yr). ` +
+      `This is a rebuttable presumption, not a hard cap: the parent receiving support has the burden to prove by a preponderance of the evidence that the additional amount is reasonably necessary for the children's actual needs (Hugger v. Hugger, Tenn. Ct. App. 1999; Smith v. Smith, Tenn. Ct. App. 2007; Nash v. Mulle, 846 S.W.2d 803 (Tenn. 1993)). ` +
+      `If that burden is not met, the order would be capped at $${pcsoStatutoryMax}/mo. ` +
+      `The size of this excess is ${magnitudeLabel}.`;
     const privLine =
       inputs.includePrivateSchool && privSchoolDev > 0
-        ? ` Your private-school deviation of $${privSchoolDev}/mo is included in this total and is the typical basis for findings above the cap.`
+        ? ` Your private-school deviation of $${privSchoolDev}/mo is included in this total and is a common basis for findings above the cap.`
         : "";
     pcsoCapNote = base + privLine;
+  } else if (pcsoMagnitude > 0 && pcsoStatutoryMax > 0) {
+    pcsoBelowCapNote =
+      `This calculation falls below the statutory presumptive cap of $${pcsoStatutoryMax}/mo for ${inputs.numChildren} ${childWord} (Tenn. Code Ann. §36-5-101(e)(1)(B)). The guideline amount is presumed appropriate.`;
   }
+
+  // === Above-schedule-cap BCSO breakdown (Rule .09(2)(d)) ===
+  const bcsoAboveCapBreakdown =
+    bcsoLookup.source === "above_cap"
+      ? (() => {
+          const cfg = ABOVE_CAP[inputs.numChildren as 1 | 2 | 3 | 4 | 5];
+          const excessAGI = combinedAGI - COMBINED_AGI_CAP;
+          return {
+            topOfSchedule: cfg.bcsoAtCap,
+            excessAGI: r$(excessAGI),
+            rate: cfg.rate,
+            addition: r$(excessAGI * cfg.rate),
+          };
+        })()
+      : null;
+
+  // === 50/50 low-support explainer (Rule .04(7)(b)(2)(i)) ===
+  let equalParentingLowSupportNote: string | null = null;
+  if (inputs.parentingType === "equal") {
+    const piDiff = Math.abs(piA - piB);
+    if (piDiff < 0.25) {
+      equalParentingLowSupportNote =
+        `In 50/50 parenting cases, presumptive support depends on the difference in parental income shares, not the absolute level. ` +
+        `Per Rule 1240-02-04-.04(7)(b)(2)(i), net support = BCSO × |Parent A's PI − Parent B's PI|. ` +
+        `Here the income shares differ by ${(piDiff * 100).toFixed(1)} percentage points, producing a small presumptive obligation. ` +
+        `At identical incomes the presumptive support would be zero, regardless of how high those incomes are — the Income Shares model assumes two similarly-situated parents can each provide a comparable lifestyle for the children. ` +
+        `Differences in non-income resources (private school paid directly, separate property, disproportionate expense-sharing) are handled as deviations under Rule .07, not in the base calculation.`;
+    }
+  }
+
+
 
 
   // === Final ===
