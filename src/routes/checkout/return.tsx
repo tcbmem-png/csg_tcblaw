@@ -41,6 +41,9 @@ function CheckoutReturn() {
           setStatus("delivered");
           return;
         }
+        if (res.status === "paid" && res.unlockToken) {
+          setStoredUnlock(res.unlockToken, res.email ?? undefined);
+        }
         setStatus(res.status === "paid" ? "paid" : "pending");
         if (++attempts < 40) setTimeout(poll, 2000);
       } catch (e) {
