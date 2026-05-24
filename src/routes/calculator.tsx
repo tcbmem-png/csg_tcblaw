@@ -5,6 +5,7 @@ import type { CalcInputs } from "@/lib/calc/types";
 import { CalculatorInputs } from "@/components/calculator/inputs";
 import { ResultSidebar } from "@/components/calculator/result-sidebar";
 import { OfficialWorksheet } from "@/components/calculator/official-worksheet";
+import { ComparisonView } from "@/components/calculator/comparison";
 
 export const Route = createFileRoute("/calculator")({
   head: () => ({
@@ -20,9 +21,11 @@ export const Route = createFileRoute("/calculator")({
   component: CalculatorPage,
 });
 
+type Tab = "inputs" | "comparison" | "worksheet";
+
 function CalculatorPage() {
   const [inputs, setInputs] = useState<CalcInputs>(() => defaultInputs());
-  const [tab, setTab] = useState<"inputs" | "worksheet">("inputs");
+  const [tab, setTab] = useState<Tab>("inputs");
   const outputs = useMemo(() => calculate(inputs), [inputs]);
 
   return (
@@ -44,6 +47,12 @@ function CalculatorPage() {
               Inputs
             </TabBtn>
             <TabBtn
+              active={tab === "comparison"}
+              onClick={() => setTab("comparison")}
+            >
+              Imputed vs Actual
+            </TabBtn>
+            <TabBtn
               active={tab === "worksheet"}
               onClick={() => setTab("worksheet")}
             >
@@ -54,6 +63,7 @@ function CalculatorPage() {
           {tab === "inputs" && (
             <CalculatorInputs inputs={inputs} setInputs={setInputs} />
           )}
+          {tab === "comparison" && <ComparisonView inputs={inputs} />}
           {tab === "worksheet" && (
             <OfficialWorksheet inputs={inputs} outputs={outputs} />
           )}
