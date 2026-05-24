@@ -1,6 +1,15 @@
 import type { CalcInputs } from "./types";
 import { defaultInputs } from "./calc";
 
+export interface ChildEntry {
+  name: string;
+  /** Free-form date of birth; printed verbatim on the AOC form. */
+  dob: string;
+  /** Days/year with Parent A. Independent of which parent is the Mother. */
+  daysWithA: number;
+  daysWithB: number;
+}
+
 export interface CaseCaption {
   matterName: string;
   docketNumber: string;
@@ -9,6 +18,12 @@ export interface CaseCaption {
   client: string;
   /** Free-text comments rendered in the official PDF's comments block. */
   comments: string;
+  /** Which calculator parent fills the AOC's "Mother" row. Default: Parent A. */
+  parentARole: "mother" | "father";
+  /** Per-child entries for the AOC Part I sub-table. Length is synced to inputs.numChildren. */
+  children: ChildEntry[];
+  /** Free-text narrative printed in Part VI deviation rows. */
+  deviationNarrative: string;
 }
 
 export function defaultCaption(): CaseCaption {
@@ -19,7 +34,14 @@ export function defaultCaption(): CaseCaption {
     preparedBy: "",
     client: "",
     comments: "",
+    parentARole: "mother",
+    children: [],
+    deviationNarrative: "",
   };
+}
+
+export function defaultChildEntry(): ChildEntry {
+  return { name: "", dob: "", daysWithA: 0, daysWithB: 0 };
 }
 
 interface SharePayload {
