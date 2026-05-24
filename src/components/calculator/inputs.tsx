@@ -378,28 +378,58 @@ export function CalculatorInputs({
               onChange={(n) => u({ parentBSECredit: n })}
             />
           </Field>
-          <Field label={`${inputs.parentALabel} prior support paid / mo`}>
+          <Field
+            label={`${inputs.parentALabel} prior support / not-in-home credit / mo`}
+            help="Court-ordered prior child support actually being paid, OR documented support for other (not-in-home) qualified children. Maps to Line 1e on the official worksheet."
+          >
             <NumInput
               value={inputs.parentAPriorSupport}
               onChange={(n) => u({ parentAPriorSupport: n })}
             />
           </Field>
-          <Field label={`${inputs.parentBLabel} prior support paid / mo`}>
+          <Field
+            label={`${inputs.parentBLabel} prior support / not-in-home credit / mo`}
+            help="Court-ordered prior child support actually being paid, OR documented support for other (not-in-home) qualified children. Maps to Line 1e on the official worksheet."
+          >
             <NumInput
               value={inputs.parentBPriorSupport}
               onChange={(n) => u({ parentBPriorSupport: n })}
             />
           </Field>
-          <Field label={`${inputs.parentALabel} in-home children credit / mo`}>
+          <Field
+            label={`${inputs.parentALabel} in-home children credit / mo`}
+            help="Theoretical support for qualified bio/adopted children who live in this parent's home and are not before the court. Line 1d."
+          >
             <NumInput
               value={inputs.parentAInhomeCredit}
               onChange={(n) => u({ parentAInhomeCredit: n })}
             />
           </Field>
-          <Field label={`${inputs.parentBLabel} in-home children credit / mo`}>
+          <Field
+            label={`${inputs.parentBLabel} in-home children credit / mo`}
+            help="Theoretical support for qualified bio/adopted children who live in this parent's home and are not before the court. Line 1d."
+          >
             <NumInput
               value={inputs.parentBInhomeCredit}
               onChange={(n) => u({ parentBInhomeCredit: n })}
+            />
+          </Field>
+          <Field
+            label={`${inputs.parentALabel} SSA/VA benefit paid to child / mo`}
+            help="Federal benefit paid to the child on this parent's disability/retirement record. Offsets that parent's final order at Line 16 (does not reduce AGI). Per TCA §36-5-101(a)(6) & Rule .04(10)."
+          >
+            <NumInput
+              value={inputs.parentAFederalBenefit}
+              onChange={(n) => u({ parentAFederalBenefit: n })}
+            />
+          </Field>
+          <Field
+            label={`${inputs.parentBLabel} SSA/VA benefit paid to child / mo`}
+            help="Federal benefit paid to the child on this parent's disability/retirement record. Offsets that parent's final order at Line 16."
+          >
+            <NumInput
+              value={inputs.parentBFederalBenefit}
+              onChange={(n) => u({ parentBFederalBenefit: n })}
             />
           </Field>
         </Grid>

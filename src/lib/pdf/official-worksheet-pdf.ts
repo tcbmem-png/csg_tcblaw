@@ -237,11 +237,11 @@ export async function renderOfficialWorksheetPdf(args: {
   partHead(ctx, "Part II. Adjusted Gross Income");
   colHeader(ctx, {});
   row(ctx, { n: "1", label: "Monthly Gross Income", a: `$ ${fmt(inputs.parentAGrossMonthly)}`, b: `$ ${fmt(inputs.parentBGrossMonthly)}`, c: "" });
-  row(ctx, { n: "1a", label: "Federal benefit for child (+)", a: "", b: "", c: "" });
+  row(ctx, { n: "1a", label: "Federal benefit for child (+)", a: fmt(inputs.parentAFederalBenefit), b: fmt(inputs.parentBFederalBenefit), c: "" });
   row(ctx, { n: "1b", label: "Self-employment tax paid (-)", a: fmt(inputs.parentASECredit), b: fmt(inputs.parentBSECredit), c: "" });
-  // Subtotal 1c
-  const subA = inputs.parentAGrossMonthly - (inputs.parentASECredit || 0);
-  const subB = inputs.parentBGrossMonthly - (inputs.parentBSECredit || 0);
+  // Subtotal 1c — per TN rule, 1a adds back to gross (then 1d/1e subtract).
+  const subA = inputs.parentAGrossMonthly + (inputs.parentAFederalBenefit || 0) - (inputs.parentASECredit || 0);
+  const subB = inputs.parentBGrossMonthly + (inputs.parentBFederalBenefit || 0) - (inputs.parentBSECredit || 0);
   row(ctx, { n: "1c", label: "Subtotal", a: `$ ${fmt(subA)}`, b: `$ ${fmt(subB)}`, c: "" });
   row(ctx, { n: "1d", label: "Credit for In-Home Children (-)", a: fmt(inputs.parentAInhomeCredit), b: fmt(inputs.parentBInhomeCredit), c: "" });
   row(ctx, { n: "1e", label: "Credit for Not-In-Home Children (-)", a: fmt(inputs.parentAPriorSupport), b: fmt(inputs.parentBPriorSupport), c: "" });
@@ -330,16 +330,33 @@ export async function renderOfficialWorksheetPdf(args: {
   });
   row(ctx, {
     n: "15",
-    label: "Final Child Support Order (FCSO)",
-    a: outputs.arpIdentity === "parent_a" ? `$ ${fmt(outputs.allInMonthly)}` : "",
-    b: outputs.arpIdentity === "parent_b" ? `$ ${fmt(outputs.allInMonthly)}` : "",
+    label: "Final Child Support Order (FCSO) before federal benefit",
+    a: outputs.arpIdentity === "parent_a" ? `$ ${fmt(outputs.allInMonthly + Math.abs(outputs.federalBenefitOffsetFromA))}` : "",
+    b: outputs.arpIdentity === "parent_b" ? `$ ${fmt(outputs.allInMonthly + Math.abs(outputs.federalBenefitOffsetFromA))}` : "",
     c: "",
     bold: true,
   });
-  row(ctx, { n: "16", label: "FCSO adjusted for federal benefit (Line 1a)", a: "", b: "", c: "" });
+  const fbApplied = Math.abs(outputs.federalBenefitOffsetFromA);
+  row(ctx, {
+    n: "16",
+    label: "FCSO adjusted for federal benefit (Line 1a offset)",
+    a: outputs.arpIdentity === "parent_a" ? `$ ${fmt(outputs.allInMonthly)}` : "",
+    b: outputs.arpIdentity === "parent_b" ? `$ ${fmt(outputs.allInMonthly)}` : "",
+    c: fbApplied > 0 ? `(- $${fmt(fbApplied)})` : "",
+    bold: true,
+  });
 
   ctx.y -= 6;
   blankBox(ctx, "Comments, calculations, or rebuttals to schedule:", 56);
+  if (caption.comments && caption.comments.trim()) {
+    const lines = wrapText(caption.comments.trim(), 9, ROW_W - 8);
+    // Re-position cursor inside the blank box we just drew (approx).
+    let yy = ctx.y + 56 + 2 - 4;
+    for (const line of lines.slice(0, 5)) {
+      draw(ctx, line, MARGIN + 4, yy, { size: 9 });
+      yy -= 10;
+    }
+  }
 
   ensure(ctx, 36);
   draw(ctx, "Preparer's Use Only", MARGIN, ctx.y - 10, { size: 9, bold: true });

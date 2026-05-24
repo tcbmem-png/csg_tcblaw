@@ -325,6 +325,26 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     privateSchoolDeviationFromA +
     specialExpensesDeviationFromA;
 
+  // === Federal benefit offset (Line 16 / TCA §36-5-101(a)(6) / Rule .04(10)) ===
+  // SSA/VA derivative benefit paid TO child on a parent's record offsets that
+  // parent's FCSO dollar-for-dollar (capped at their obligation; excess does
+  // not flip the order direction).
+  let federalBenefitOffsetFromA = 0;
+  const fbA = Math.max(0, inputs.parentAFederalBenefit || 0);
+  const fbB = Math.max(0, inputs.parentBFederalBenefit || 0);
+  if (allInMonthlyFromA > 0 && fbA > 0) {
+    // A is obligor; A's federal benefit reduces A's outflow.
+    const offset = Math.min(fbA, allInMonthlyFromA);
+    federalBenefitOffsetFromA = -offset;
+    allInMonthlyFromA -= offset;
+  } else if (allInMonthlyFromA < 0 && fbB > 0) {
+    // B is obligor; B's federal benefit reduces B's outflow (A's inflow).
+    const obligation = -allInMonthlyFromA;
+    const offset = Math.min(fbB, obligation);
+    federalBenefitOffsetFromA = offset;
+    allInMonthlyFromA += offset;
+  }
+
   if (meansTestedOnly) {
     allInMonthlyFromA = 0;
     warnings.push(
@@ -382,6 +402,8 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     specialExpensesIncludedAsDeviation: r$(specialExpensesIncludedAsDeviation),
     specialExpensesDeviationFromA: r$(specialExpensesDeviationFromA),
 
+    federalBenefitOffsetFromA: r$(federalBenefitOffsetFromA),
+
     allInMonthlyFromA: r$(allInMonthlyFromA),
     allInMonthly,
     allInDirection,
@@ -434,6 +456,7 @@ function emptyOutputs(opts: {
     specialExpensesThresholdAmount: 0,
     specialExpensesIncludedAsDeviation: 0,
     specialExpensesDeviationFromA: 0,
+    federalBenefitOffsetFromA: 0,
     allInMonthlyFromA: 0,
     allInMonthly: 0,
     allInDirection: "none",
@@ -466,6 +489,8 @@ export function defaultInputs(): CalcInputs {
     parentBPriorSupport: 0,
     parentAInhomeCredit: 0,
     parentBInhomeCredit: 0,
+    parentAFederalBenefit: 0,
+    parentBFederalBenefit: 0,
     numChildren: 1,
     parentingType: "standard",
     arpForStandard: "parent_b",

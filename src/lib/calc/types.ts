@@ -29,6 +29,12 @@ export interface CalcInputs {
   parentAInhomeCredit: number;
   parentBInhomeCredit: number;
 
+  /** Monthly SSA/VA derivative benefit paid TO the child on this parent's disability/retirement
+   *  record. Per TCA §36-5-101(a)(6) & Rule .04(10), this OFFSETS that parent's FCSO at line 16
+   *  (does NOT reduce AGI). Leave 0 if none. */
+  parentAFederalBenefit: number;
+  parentBFederalBenefit: number;
+
   /** 1–5. */
   numChildren: number;
 
@@ -103,6 +109,10 @@ export interface CalcOutputs {
   specialExpensesThresholdAmount: number;
   specialExpensesIncludedAsDeviation: number;
   specialExpensesDeviationFromA: number;
+
+  // Federal benefit offset (line 16). Signed from Parent A's perspective:
+  // negative => reduces A's outflow; positive => reduces B's outflow (increases A net).
+  federalBenefitOffsetFromA: number;
 
   // Final
   /** Net monthly flow. Positive => parent A pays parent B; negative => parent B pays A. */
