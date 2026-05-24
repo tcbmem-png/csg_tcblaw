@@ -84,7 +84,7 @@ async function main() {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-admin-secret": SERVICE_ROLE,
+      "x-admin-secret": ADMIN_FULFILL_SECRET,
     },
     body: JSON.stringify({ orderId: order.id }),
   });
