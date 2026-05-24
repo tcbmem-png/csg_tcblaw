@@ -47,20 +47,20 @@ export async function fulfillOrder(
     .neq("status", "delivered");
 
   const payload = order.payload_json as { inputs: any; outputs: any; caption: any };
-  const pdfBuf = await renderWorksheetPdf({
-    inputs: payload.inputs,
-    outputs: payload.outputs,
-    caption: payload.caption,
-  });
+  const [pdfBuf, officialPdfBuf] = await Promise.all([
+    renderWorksheetPdf({ inputs: payload.inputs, outputs: payload.outputs, caption: payload.caption }),
+    renderOfficialWorksheetPdf({ inputs: payload.inputs, outputs: payload.outputs, caption: payload.caption }),
+  ]);
 
   const storagePath = `${order.id}/worksheet.pdf`;
-  const { error: upErr } = await sb.storage
-    .from("worksheet-pdfs")
-    .upload(storagePath, pdfBuf, {
-      contentType: "application/pdf",
-      upsert: true,
-    });
+  const officialStoragePath = `${order.id}/worksheet-official.pdf`;
+  const [{ error: upErr }, { error: upErrOfficial }] = await Promise.all([
+    sb.storage.from("worksheet-pdfs").upload(storagePath, pdfBuf, { contentType: "application/pdf", upsert: true }),
+    sb.storage.from("worksheet-pdfs").upload(officialStoragePath, officialPdfBuf, { contentType: "application/pdf", upsert: true }),
+  ]);
   if (upErr) return { ok: false, error: `upload: ${upErr.message}` };
+  if (upErrOfficial) return { ok: false, error: `upload official: ${upErrOfficial.message}` };
+
 
   const downloadUrl = `${origin}/unlock/${order.unlock_token}`;
   const matterName = payload.caption?.matterName || undefined;
