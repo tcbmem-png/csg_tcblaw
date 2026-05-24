@@ -19,6 +19,7 @@
  * BASE_URL defaults to the published Lovable URL.
  */
 import { createClient } from "@supabase/supabase-js";
+import { calculate, defaultInputs } from "../src/lib/calc/calc";
 
 const BASE_URL = process.env.BASE_URL ?? "https://tn-child-support-helper.lovable.app";
 const SUPABASE_URL = process.env.SUPABASE_URL!;
@@ -43,23 +44,16 @@ function step(msg: string) {
 
 const TEST_EMAIL = `e2e+${Date.now()}@example.com`;
 
+const inputs = {
+  ...defaultInputs(),
+  parentAGrossMonthly: 6000,
+  parentBGrossMonthly: 4000,
+  numChildren: 2,
+};
+const outputs = calculate(inputs);
 const payload = {
-  inputs: {
-    parentALabel: "Parent A",
-    parentBLabel: "Parent B",
-    parentAGrossMonthly: 6000,
-    parentBGrossMonthly: 4000,
-    childrenCount: 2,
-    parentingDaysA: 200,
-    parentingDaysB: 165,
-  },
-  outputs: {
-    allInMonthly: 850,
-    allInDirection: "parent_a_to_b",
-    baseSupport: 720,
-    healthInsurance: 80,
-    workRelatedChildcare: 50,
-  },
+  inputs,
+  outputs,
   caption: { matterName: "E2E Test Matter" },
 };
 
