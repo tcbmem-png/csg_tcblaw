@@ -43,10 +43,8 @@ interface SendArgs {
 }
 
 async function sendViaResend(args: SendArgs): Promise<{ ok: boolean; error?: string; response?: string }> {
-  const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
-  const RESEND_API_KEY = process.env.RESEND_API_KEY;
-  if (!LOVABLE_API_KEY) return { ok: false, error: "LOVABLE_API_KEY not configured" };
-  if (!RESEND_API_KEY) return { ok: false, error: "RESEND_API_KEY not configured" };
+  const RESEND_API_KEY = process.env.CSG_Resend_API_Key || process.env.RESEND_API_KEY;
+  if (!RESEND_API_KEY) return { ok: false, error: "CSG_Resend_API_Key not configured" };
 
   const body = {
     from: `${SITE_NAME} <${FROM_EMAIL}>`,
@@ -67,12 +65,11 @@ async function sendViaResend(args: SendArgs): Promise<{ ok: boolean; error?: str
     attachmentSizes: args.attachments.map((a) => ({ filename: a.filename, base64Bytes: a.content.length })),
   });
 
-  const res = await fetch(`${RESEND_GATEWAY}/emails`, {
+  const res = await fetch(`${RESEND_API_URL}/emails`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": RESEND_API_KEY,
+      Authorization: `Bearer ${RESEND_API_KEY}`,
     },
     body: JSON.stringify(body),
   });
