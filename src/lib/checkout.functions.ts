@@ -12,10 +12,14 @@ const captionSchema = z.object({
   client: z.string().max(200),
 });
 
+const stateSchema = z.enum(["TN", "MS"]);
+
 const inputSchema = z.object({
   email: z.string().email().max(320),
   returnUrl: z.string().url().max(1000),
   environment: envSchema,
+  /** Which state's calculator this order is for. Defaults to TN for backward compat. */
+  state: stateSchema.optional(),
   // Pass through the full calculator state. Validate as object — calculator
   // schema is large and already produced by trusted client code; we only
   // re-render it server-side at delivery time.
@@ -45,16 +49,19 @@ export const createUnlockCheckout = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const sb = admin();
 
-    // Stable hash of the worksheet payload (canonical-ish JSON).
-    const worksheetHash = await sha256Hex(JSON.stringify(data.payload));
+    const state = data.state ?? "TN";
 
-    // Create pending order.
+    // Stable hash of the worksheet payload (canonical-ish JSON).
+    const worksheetHash = await sha256Hex(JSON.stringify({ state, payload: data.payload }));
+
+    // Create pending order. Persist state on payload_json so fulfillment
+    // can branch on it without a schema change.
     const { data: order, error: orderErr } = await sb
       .from("orders")
       .insert({
         email: data.email.toLowerCase(),
         worksheet_hash: worksheetHash,
-        payload_json: data.payload,
+        payload_json: { ...data.payload, state },
         status: "pending",
         amount_cents: 9900,
       })
