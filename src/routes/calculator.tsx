@@ -7,6 +7,7 @@ import { ResultSidebar } from "@/components/calculator/result-sidebar";
 import { OfficialWorksheet } from "@/components/calculator/official-worksheet";
 import { ComparisonView } from "@/components/calculator/comparison";
 import { CaseCaptionForm } from "@/components/calculator/case-caption";
+import { ComparisonAppendix } from "@/components/calculator/comparison-appendix";
 import {
   defaultCaption,
   decodeShare,
@@ -101,11 +102,14 @@ function CalculatorPage() {
           )}
           {tab === "comparison" && <ComparisonView inputs={inputs} />}
           {tab === "worksheet" && (
-            <OfficialWorksheet
-              inputs={inputs}
-              outputs={outputs}
-              caption={caption}
-            />
+            <>
+              <OfficialWorksheet
+                inputs={inputs}
+                outputs={outputs}
+                caption={caption}
+              />
+              <ComparisonAppendix inputs={inputs} caption={caption} />
+            </>
           )}
         </div>
 
