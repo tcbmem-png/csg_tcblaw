@@ -349,8 +349,25 @@ export async function renderOfficialWorksheetPdf(args: {
   caption: CaseCaption;
 }): Promise<Uint8Array> {
   const { inputs, outputs, caption } = args;
-  const motherName = inputs.parentALabel || "Parent A";
-  const fatherName = inputs.parentBLabel || "Parent B";
+
+  // Mother/Father swap. The AOC worksheet hardcodes "Mother / Column A" and
+  // "Father / Column B" headers; our calculator only knows Parent A / Parent B.
+  // caption.parentARole tells us which calculator parent fills the Mother row.
+  // When parentARole === "father", Column A receives Parent B's data and vice
+  // versa, so the printed worksheet matches the form's labels.
+  const aIsMother = (caption.parentARole ?? "mother") !== "father";
+  const motherName = (aIsMother ? inputs.parentALabel : inputs.parentBLabel) || (aIsMother ? "Parent A" : "Parent B");
+  const fatherName = (aIsMother ? inputs.parentBLabel : inputs.parentALabel) || (aIsMother ? "Parent B" : "Parent A");
+  /** Pick the value for column A (Mother). */
+  const mV = <T>(av: T, bv: T): T => (aIsMother ? av : bv);
+  /** Pick the value for column B (Father). */
+  const fV = <T>(av: T, bv: T): T => (aIsMother ? bv : av);
+
+  const motherKey: "parent_a" | "parent_b" = aIsMother ? "parent_a" : "parent_b";
+  const fatherKey: "parent_a" | "parent_b" = aIsMother ? "parent_b" : "parent_a";
+  const motherIsArp = outputs.arpIdentity === motherKey;
+  const fatherIsArp = outputs.arpIdentity === fatherKey;
+  const isEqualArp = outputs.arpIdentity === "equal";
 
   const pdf = new SimplePdf(caption.matterName || "TN Child Support Worksheet (Official)");
   const ctx: Ctx = { pdf, y: PAGE_H - MARGIN, pageNum: 1 };
@@ -365,17 +382,21 @@ export async function renderOfficialWorksheetPdf(args: {
     ctx,
     "Indicate the status of each parent or caretaker by placing an \"X\" in the appropriate column.",
   );
-  // Reserve right-side
   ctx.y = partITop;
-  identTable(ctx, motherName, fatherName, outputs.arpIdentity);
-  // Caption lines (TCSES, Docket, Court)
+  identTable(ctx, motherName, fatherName, { motherIsArp, fatherIsArp, isEqual: isEqualArp });
   ctx.y -= 4;
   captionLine(ctx, "TCSES case #:", "");
   captionLine(ctx, "Docket #:", caption.docketNumber || "");
   captionLine(ctx, "Court name:", caption.court || "");
-  // Children sub-table
   ctx.y -= 6;
-  childrenSubtable(ctx, inputs.numChildren);
+  // Map per-child days from A/B-relative to mother/father-relative.
+  const childRows: ChildRowData[] = (caption.children ?? []).map((c) => ({
+    name: c.name ?? "",
+    dob: c.dob ?? "",
+    daysMother: aIsMother ? c.daysWithA ?? 0 : c.daysWithB ?? 0,
+    daysFather: aIsMother ? c.daysWithB ?? 0 : c.daysWithA ?? 0,
+  }));
+  childrenSubtable(ctx, inputs.numChildren, childRows);
 
   // -----------------------------------------------------------------
   // Part II — Adjusted Gross Income
@@ -389,50 +410,55 @@ export async function renderOfficialWorksheetPdf(args: {
   valueRow(ctx, {
     n: "1",
     label: "Monthly Gross Income",
-    a: dollar(inputs.parentAGrossMonthly),
-    b: dollar(inputs.parentBGrossMonthly),
+    a: dollar(mV(inputs.parentAGrossMonthly, inputs.parentBGrossMonthly)),
+    b: dollar(fV(inputs.parentAGrossMonthly, inputs.parentBGrossMonthly)),
     c: undefined,
   });
   valueRow(ctx, {
     n: "1a",
     label: "Federal benefit for child",
-    a: `+ ${fmt(inputs.parentAFederalBenefit)}`,
-    b: `+ ${fmt(inputs.parentBFederalBenefit)}`,
+    a: `+ ${fmt(mV(inputs.parentAFederalBenefit, inputs.parentBFederalBenefit))}`,
+    b: `+ ${fmt(fV(inputs.parentAFederalBenefit, inputs.parentBFederalBenefit))}`,
     c: undefined,
   });
   valueRow(ctx, {
     n: "1b",
     label: "Self-employment tax paid",
-    a: `- ${fmt(inputs.parentASECredit)}`,
-    b: `- ${fmt(inputs.parentBSECredit)}`,
+    a: `- ${fmt(mV(inputs.parentASECredit, inputs.parentBSECredit))}`,
+    b: `- ${fmt(fV(inputs.parentASECredit, inputs.parentBSECredit))}`,
     c: undefined,
   });
   const subA = inputs.parentAGrossMonthly + (inputs.parentAFederalBenefit || 0) - (inputs.parentASECredit || 0);
   const subB = inputs.parentBGrossMonthly + (inputs.parentBFederalBenefit || 0) - (inputs.parentBSECredit || 0);
-  valueRow(ctx, { n: "1c", label: "Subtotal", a: dollar(subA), b: dollar(subB), c: undefined });
+  valueRow(ctx, {
+    n: "1c",
+    label: "Subtotal",
+    a: dollar(mV(subA, subB)),
+    b: dollar(fV(subA, subB)),
+    c: undefined,
+  });
   valueRow(ctx, {
     n: "1d",
     label: "Credit for In-Home Children",
-    a: `- ${fmt(inputs.parentAInhomeCredit)}`,
-    b: `- ${fmt(inputs.parentBInhomeCredit)}`,
+    a: `- ${fmt(mV(inputs.parentAInhomeCredit, inputs.parentBInhomeCredit))}`,
+    b: `- ${fmt(fV(inputs.parentAInhomeCredit, inputs.parentBInhomeCredit))}`,
     c: undefined,
   });
   valueRow(ctx, {
     n: "1e",
     label: "Credit for Not In Home Children",
-    a: `- ${fmt(inputs.parentAPriorSupport)}`,
-    b: `- ${fmt(inputs.parentBPriorSupport)}`,
+    a: `- ${fmt(mV(inputs.parentAPriorSupport, inputs.parentBPriorSupport))}`,
+    b: `- ${fmt(fV(inputs.parentAPriorSupport, inputs.parentBPriorSupport))}`,
     c: undefined,
   });
   valueRow(ctx, {
     n: "2",
     label: "Adjusted Gross Income (AGI)",
-    a: dollar(outputs.parentAAGI),
-    b: dollar(outputs.parentBAGI),
+    a: dollar(mV(outputs.parentAAGI, outputs.parentBAGI)),
+    b: dollar(fV(outputs.parentAAGI, outputs.parentBAGI)),
     c: undefined,
     bold: true,
   });
-  // 2a — Combined AGI spans A+B
   spanRow(ctx, {
     n: "2a",
     label: "Combined Adjusted Gross Income",
@@ -441,7 +467,6 @@ export async function renderOfficialWorksheetPdf(args: {
     to: B_X + CELL_W,
     bold: true,
   });
-  // Hatch the C cell for 2a (re-position cursor briefly)
   {
     const yBot = ctx.y;
     pdf.hatchRect(C_X, yBot, CELL_W, 14, HATCH, 3, 0.3);
@@ -450,8 +475,8 @@ export async function renderOfficialWorksheetPdf(args: {
   valueRow(ctx, {
     n: "3",
     label: "Percentage Share of Income (PI)",
-    a: pct(outputs.piA),
-    b: pct(outputs.piB),
+    a: pct(mV(outputs.piA, outputs.piB)),
+    b: pct(fV(outputs.piA, outputs.piB)),
     c: undefined,
   });
 
@@ -461,7 +486,6 @@ export async function renderOfficialWorksheetPdf(args: {
   partHead(ctx, "Part III.  Parents' Share of BCSO");
   columnHeader(ctx);
 
-  // Row 4 — BCSO allotted to primary parent's household: only in C
   valueRow(ctx, {
     n: "4",
     label: "BCSO allotted to primary parent's household",
@@ -472,11 +496,10 @@ export async function renderOfficialWorksheetPdf(args: {
   valueRow(ctx, {
     n: "4a",
     label: "Share of BCSO owed to primary parent",
-    a: dollar(outputs.parentABcsoShare),
-    b: dollar(outputs.parentBBcsoShare),
+    a: dollar(mV(outputs.parentABcsoShare, outputs.parentBBcsoShare)),
+    b: dollar(fV(outputs.parentABcsoShare, outputs.parentBBcsoShare)),
     c: undefined,
   });
-  // Row 5 — ARP avg parenting time (days) — single value, place in ARP column
   const arpDays =
     outputs.arpIdentity === "parent_a"
       ? inputs.parentADays ?? null
@@ -486,8 +509,8 @@ export async function renderOfficialWorksheetPdf(args: {
   valueRow(ctx, {
     n: "5",
     label: "ARP parent's average parenting time",
-    a: outputs.arpIdentity === "parent_a" ? (arpDays !== null ? String(arpDays) : "") : undefined,
-    b: outputs.arpIdentity === "parent_b" ? (arpDays !== null ? String(arpDays) : "") : undefined,
+    a: motherIsArp ? (arpDays !== null ? String(arpDays) : "") : undefined,
+    b: fatherIsArp ? (arpDays !== null ? String(arpDays) : "") : undefined,
     c: undefined,
   });
   const ptAdjFromArp = Math.max(
@@ -498,8 +521,8 @@ export async function renderOfficialWorksheetPdf(args: {
   valueRow(ctx, {
     n: "6",
     label: "Parenting time adjustment",
-    a: outputs.arpIdentity === "parent_a" ? dollar(arpAdj) : undefined,
-    b: outputs.arpIdentity === "parent_b" ? dollar(arpAdj) : undefined,
+    a: motherIsArp ? dollar(arpAdj) : undefined,
+    b: fatherIsArp ? dollar(arpAdj) : undefined,
     c: undefined,
   });
   const adjA = outputs.parentABcsoShare - (outputs.arpIdentity === "parent_a" ? arpAdj : 0);
@@ -507,8 +530,8 @@ export async function renderOfficialWorksheetPdf(args: {
   valueRow(ctx, {
     n: "7",
     label: "Adjusted BCSO",
-    a: dollar(adjA),
-    b: dollar(adjB),
+    a: dollar(mV(adjA, adjB)),
+    b: dollar(fV(adjA, adjB)),
     c: undefined,
     bold: true,
   });
@@ -522,32 +545,28 @@ export async function renderOfficialWorksheetPdf(args: {
   const hpB = inputs.healthPaidBy === "parent_b" ? inputs.healthPremiumMonthly : 0;
   const ccA = inputs.childcarePaidBy === "parent_a" ? inputs.childcareMonthly : 0;
   const ccB = inputs.childcarePaidBy === "parent_b" ? inputs.childcareMonthly : 0;
-  // Uninsured medical only enters the worksheet when one parent is paying
-  // out-of-pocket. When the policy is "split_pro_rata" (the default), each
-  // parent absorbs their PI share directly and nothing flows through the
-  // additional-expenses table. This mirrors src/lib/calc/calc.ts.
   const umedIsSplit = inputs.uninsuredMedicalPaidBy === "split_pro_rata";
   const umedA = !umedIsSplit && inputs.uninsuredMedicalPaidBy === "parent_a" ? inputs.uninsuredMedicalMonthly : 0;
   const umedB = !umedIsSplit && inputs.uninsuredMedicalPaidBy === "parent_b" ? inputs.uninsuredMedicalMonthly : 0;
   valueRow(ctx, {
     n: "8a",
     label: "Children's portion of health insurance premium",
-    a: dollar(hpA),
-    b: dollar(hpB),
+    a: dollar(mV(hpA, hpB)),
+    b: dollar(fV(hpA, hpB)),
     c: undefined,
   });
   valueRow(ctx, {
     n: "8b",
     label: "Recurring Uninsured Medical Expenses",
-    a: dollar(umedA),
-    b: dollar(umedB),
+    a: dollar(mV(umedA, umedB)),
+    b: dollar(fV(umedA, umedB)),
     c: undefined,
   });
   valueRow(ctx, {
     n: "8c",
     label: "Work-related childcare",
-    a: dollar(ccA),
-    b: dollar(ccB),
+    a: dollar(mV(ccA, ccB)),
+    b: dollar(fV(ccA, ccB)),
     c: undefined,
   });
   const totalExpA = hpA + ccA + umedA;
@@ -556,8 +575,8 @@ export async function renderOfficialWorksheetPdf(args: {
   valueRow(ctx, {
     n: "9",
     label: "Total expenses",
-    a: dollar(totalExpA),
-    b: dollar(totalExpB),
+    a: dollar(mV(totalExpA, totalExpB)),
+    b: dollar(fV(totalExpA, totalExpB)),
     c: undefined,
     bold: true,
   });
@@ -566,8 +585,8 @@ export async function renderOfficialWorksheetPdf(args: {
   valueRow(ctx, {
     n: "10",
     label: "Share of additional expenses owed",
-    a: dollar(shareA),
-    b: dollar(shareB),
+    a: dollar(mV(shareA, shareB)),
+    b: dollar(fV(shareA, shareB)),
     c: undefined,
   });
   const asoA = adjA + (shareA - totalExpA);
@@ -575,8 +594,8 @@ export async function renderOfficialWorksheetPdf(args: {
   valueRow(ctx, {
     n: "11",
     label: "Adjusted Support Obligation (ASO)",
-    a: dollar(asoA),
-    b: dollar(asoB),
+    a: dollar(mV(asoA, asoB)),
+    b: dollar(fV(asoA, asoB)),
     c: undefined,
     bold: true,
   });
@@ -586,17 +605,16 @@ export async function renderOfficialWorksheetPdf(args: {
   // -----------------------------------------------------------------
   partHead(ctx, "Part V.  Presumptive Child Support / Modification of Current Support");
   columnHeader(ctx, { mergeAB: true, mergeABLabel: "Obligation Column" });
-  // Row 12 — PCSO in obligor column; non-parent caretaker column hatched.
-  // For equal-parenting cases (arpIdentity === "equal") fall back to
-  // allInDirection to identify the obligor.
-  const obligorIsA =
+  const obligorIsParentA =
     outputs.arpIdentity === "parent_a" ||
     (outputs.arpIdentity === "equal" && outputs.allInDirection === "parent_a_to_b");
-  const obligorIsB =
+  const obligorIsParentB =
     outputs.arpIdentity === "parent_b" ||
     (outputs.arpIdentity === "equal" && outputs.allInDirection === "parent_b_to_a");
-  const pcsoA = obligorIsA ? dollar(outputs.allInMonthly) : "";
-  const pcsoB = obligorIsB ? dollar(outputs.allInMonthly) : "";
+  const obligorIsMother = aIsMother ? obligorIsParentA : obligorIsParentB;
+  const obligorIsFather = aIsMother ? obligorIsParentB : obligorIsParentA;
+  const pcsoA = obligorIsMother ? dollar(outputs.allInMonthly) : "";
+  const pcsoB = obligorIsFather ? dollar(outputs.allInMonthly) : "";
   valueRow(ctx, {
     n: "12",
     label: "Presumptive Child Support Order (PCSO)",
@@ -605,7 +623,6 @@ export async function renderOfficialWorksheetPdf(args: {
     c: undefined,
     bold: true,
   });
-  // small-print note + low-income / flat% prompts (rendered as a single span row each)
   ensure(ctx, 12);
   draw(
     ctx,
@@ -626,31 +643,12 @@ export async function renderOfficialWorksheetPdf(args: {
   draw(ctx, "(N / Y)", LBL_X + 168, ctx.y - 9, { size: 8, color: MUTED });
   ctx.y -= 14;
 
-  // Modification block 13a/b/c — gutter label
   const modTop = ctx.y;
   gutter(ctx, "Modification of Current Child Support Order");
   ctx.y = modTop;
-  valueRow(ctx, {
-    n: "13a",
-    label: "Current child support order amount, obligor parent",
-    a: "",
-    b: "",
-    c: undefined,
-  });
-  valueRow(ctx, {
-    n: "13b",
-    label: "Amount required for significant variance to exist",
-    a: "",
-    b: "",
-    c: undefined,
-  });
-  valueRow(ctx, {
-    n: "13c",
-    label: "Actual variance vs PCSO / BCSO",
-    a: "",
-    b: "",
-    c: undefined,
-  });
+  valueRow(ctx, { n: "13a", label: "Current child support order amount, obligor parent", a: "", b: "", c: undefined });
+  valueRow(ctx, { n: "13b", label: "Amount required for significant variance to exist", a: "", b: "", c: undefined });
+  valueRow(ctx, { n: "13c", label: "Actual variance vs PCSO / BCSO", a: "", b: "", c: undefined });
 
   // -----------------------------------------------------------------
   // Part VI — Deviations and Final Child Support Order
@@ -664,19 +662,27 @@ export async function renderOfficialWorksheetPdf(args: {
   ctx.y = partVITop;
   columnHeader(ctx);
 
-  const devTotal = outputs.privateSchoolDeviationFromA + outputs.specialExpensesDeviationFromA;
+  // devTotal is signed from Parent A's perspective; flip if A is the father.
+  const devFromA = outputs.privateSchoolDeviationFromA + outputs.specialExpensesDeviationFromA;
+  const devFromMother = aIsMother ? devFromA : -devFromA;
   valueRow(ctx, {
     n: "14",
     label: "Deviations (Specify):",
-    a: devTotal > 0 ? dollar(devTotal) : "",
-    b: devTotal < 0 ? dollar(-devTotal) : "",
+    a: devFromMother > 0 ? dollar(devFromMother) : "",
+    b: devFromMother < 0 ? dollar(-devFromMother) : "",
     c: undefined,
   });
-  // 3 blank narrative rows (no #/label, just ruled spans across the body)
+  // Up to 3 narrative rows — populated from caption.deviationNarrative.
+  const narrativeLines = caption.deviationNarrative
+    ? wrapText(caption.deviationNarrative.trim(), 9, END_X - LBL_X - 8)
+    : [];
   for (let i = 0; i < 3; i += 1) {
     ensure(ctx, 14);
     const yBot = ctx.y - 14;
     ctx.pdf.strokeRect(LBL_X, yBot, END_X - LBL_X, 14, RULE, 0.35);
+    if (narrativeLines[i]) {
+      draw(ctx, narrativeLines[i], LBL_X + 4, yBot + 4, { size: 9, maxWidth: END_X - LBL_X - 8 });
+    }
     ctx.y -= 14;
   }
   const fbApplied = Math.abs(outputs.federalBenefitOffsetFromA);
@@ -684,19 +690,20 @@ export async function renderOfficialWorksheetPdf(args: {
   valueRow(ctx, {
     n: "15",
     label: "Final Child Support Order (FCSO)",
-    a: obligorIsA ? dollar(fcsoBeforeFb) : "",
-    b: obligorIsB ? dollar(fcsoBeforeFb) : "",
+    a: obligorIsMother ? dollar(fcsoBeforeFb) : "",
+    b: obligorIsFather ? dollar(fcsoBeforeFb) : "",
     c: undefined,
     bold: true,
   });
   valueRow(ctx, {
     n: "16",
     label: "FCSO adjusted for federal benefit (Line 1a)",
-    a: obligorIsA ? dollar(outputs.allInMonthly) : "",
-    b: obligorIsB ? dollar(outputs.allInMonthly) : "",
+    a: obligorIsMother ? dollar(outputs.allInMonthly) : "",
+    b: obligorIsFather ? dollar(outputs.allInMonthly) : "",
     c: undefined,
     bold: true,
   });
+
 
   // -----------------------------------------------------------------
   // Comments + Preparer's Use Only
