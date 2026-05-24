@@ -21,6 +21,7 @@ export function ResultSidebar({
   outputs: CalcOutputs;
   onViewWorksheet: () => void;
 }) {
+  const unlocked = useIsUnlocked();
   return (
     <div className="rounded-lg border border-rule bg-card p-5 shadow-sm">
       <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
