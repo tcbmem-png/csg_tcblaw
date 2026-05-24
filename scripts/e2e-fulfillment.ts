@@ -24,8 +24,11 @@ import { calculate, defaultInputs } from "../src/lib/calc/calc";
 const BASE_URL = process.env.BASE_URL ?? "https://tn-child-support-helper.lovable.app";
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-if (!SUPABASE_URL || !SERVICE_ROLE) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars.");
+const ADMIN_FULFILL_SECRET = process.env.ADMIN_FULFILL_SECRET!;
+if (!SUPABASE_URL || !SERVICE_ROLE || !ADMIN_FULFILL_SECRET) {
+  console.error(
+    "Missing SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, or ADMIN_FULFILL_SECRET env vars.",
+  );
   process.exit(1);
 }
 
@@ -81,7 +84,7 @@ async function main() {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-admin-secret": SERVICE_ROLE,
+      "x-admin-secret": ADMIN_FULFILL_SECRET,
     },
     body: JSON.stringify({ orderId: order.id }),
   });
