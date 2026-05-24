@@ -456,6 +456,7 @@ function emptyOutputs(opts: {
     specialExpensesThresholdAmount: 0,
     specialExpensesIncludedAsDeviation: 0,
     specialExpensesDeviationFromA: 0,
+    federalBenefitOffsetFromA: 0,
     allInMonthlyFromA: 0,
     allInMonthly: 0,
     allInDirection: "none",
