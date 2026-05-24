@@ -357,6 +357,7 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     if (absPresumptive > 0 && absPresumptive < MIN_SUPPORT_MONTHLY) {
       const adjust = MIN_SUPPORT_MONTHLY - absPresumptive;
       allInMonthlyFromA += presumptiveAfterSsr > 0 ? adjust : -adjust;
+      minimumOrderApplied = true;
       warnings.push(
         `Minimum support floor of $${MIN_SUPPORT_MONTHLY}/month applied per Rule .04(12).`,
       );
