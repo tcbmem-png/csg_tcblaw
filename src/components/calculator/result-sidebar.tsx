@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
 
 function fmt(n: number) {
@@ -92,6 +93,7 @@ export function ResultSidebar({
         >
           Print / Save PDF
         </button>
+        <CopyLinkButton />
       </div>
 
       <p className="mt-3 text-[10px] text-muted-foreground">
