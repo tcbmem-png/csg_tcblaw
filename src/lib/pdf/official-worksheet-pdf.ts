@@ -250,11 +250,10 @@ function captionLine(ctx: Ctx, label: string, value: string) {
   ensure(ctx, h);
   const yBot = ctx.y - h;
   draw(ctx, label, NUM_X, yBot + 4, { size: 9, bold: true });
-  // Underline for value
-  const lineX1 = LBL_X + 4;
+  const lineX1 = NUM_X + 80;
   const lineX2 = END_X;
   ctx.pdf.line(lineX1, yBot, lineX2, yBot, RULE, 0.4);
-  draw(ctx, value, lineX1, yBot + 4, { size: 9, maxWidth: lineX2 - lineX1 - 4 });
+  draw(ctx, value, lineX1 + 2, yBot + 4, { size: 9, maxWidth: lineX2 - lineX1 - 4 });
   ctx.y -= h;
 }
 
