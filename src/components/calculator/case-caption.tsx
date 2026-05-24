@@ -81,8 +81,6 @@ export function CaseCaptionForm({
   );
 }
 
-function _Spacer() {
-  return null;
 
 function Field({
   label,
