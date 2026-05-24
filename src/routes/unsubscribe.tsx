@@ -2,7 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/unsubscribe")({
-  head: () => ({ meta: [{ title: "Unsubscribe — TN Child Support" }] }),
+  head: () => ({
+    meta: [
+      { title: "Unsubscribe — TN Child Support" },
+      {
+        name: "description",
+        content:
+          "Unsubscribe from TN Child Support Calculator transactional and notification emails.",
+      },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+    links: [{ rel: "canonical", href: "https://tncsg.tcblaw.org/unsubscribe" }],
+  }),
   component: UnsubscribePage,
 });
 
