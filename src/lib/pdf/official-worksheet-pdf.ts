@@ -237,11 +237,11 @@ export async function renderOfficialWorksheetPdf(args: {
   partHead(ctx, "Part II. Adjusted Gross Income");
   colHeader(ctx, {});
   row(ctx, { n: "1", label: "Monthly Gross Income", a: `$ ${fmt(inputs.parentAGrossMonthly)}`, b: `$ ${fmt(inputs.parentBGrossMonthly)}`, c: "" });
-  row(ctx, { n: "1a", label: "Federal benefit for child (+)", a: "", b: "", c: "" });
+  row(ctx, { n: "1a", label: "Federal benefit for child (+)", a: fmt(inputs.parentAFederalBenefit), b: fmt(inputs.parentBFederalBenefit), c: "" });
   row(ctx, { n: "1b", label: "Self-employment tax paid (-)", a: fmt(inputs.parentASECredit), b: fmt(inputs.parentBSECredit), c: "" });
-  // Subtotal 1c
-  const subA = inputs.parentAGrossMonthly - (inputs.parentASECredit || 0);
-  const subB = inputs.parentBGrossMonthly - (inputs.parentBSECredit || 0);
+  // Subtotal 1c — per TN rule, 1a adds back to gross (then 1d/1e subtract).
+  const subA = inputs.parentAGrossMonthly + (inputs.parentAFederalBenefit || 0) - (inputs.parentASECredit || 0);
+  const subB = inputs.parentBGrossMonthly + (inputs.parentBFederalBenefit || 0) - (inputs.parentBSECredit || 0);
   row(ctx, { n: "1c", label: "Subtotal", a: `$ ${fmt(subA)}`, b: `$ ${fmt(subB)}`, c: "" });
   row(ctx, { n: "1d", label: "Credit for In-Home Children (-)", a: fmt(inputs.parentAInhomeCredit), b: fmt(inputs.parentBInhomeCredit), c: "" });
   row(ctx, { n: "1e", label: "Credit for Not-In-Home Children (-)", a: fmt(inputs.parentAPriorSupport), b: fmt(inputs.parentBPriorSupport), c: "" });
