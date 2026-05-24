@@ -118,32 +118,32 @@ export function ComparisonView({ inputs }: { inputs: CalcInputs }) {
             >
               <defs>
                 <linearGradient id="gImp" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.5} />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.05} />
                 </linearGradient>
                 <linearGradient id="gAct" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.05} />
+                  <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.5} />
+                  <stop offset="100%" stopColor="var(--accent)" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="hsl(var(--rule))" strokeDasharray="3 3" />
+              <CartesianGrid stroke="var(--rule)" strokeDasharray="3 3" />
               <XAxis
                 dataKey="year"
                 tickFormatter={(v) => `${v}y`}
-                stroke="hsl(var(--muted-foreground))"
+                stroke="var(--muted-foreground)"
                 fontSize={11}
               />
               <YAxis
                 tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                stroke="hsl(var(--muted-foreground))"
+                stroke="var(--muted-foreground)"
                 fontSize={11}
               />
               <Tooltip
                 formatter={(v: number) => `$${fmt$(v)}`}
                 labelFormatter={(v) => `Year ${v}`}
                 contentStyle={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--rule))",
+                  background: "var(--card)",
+                  border: "1px solid var(--rule)",
                   borderRadius: 6,
                   fontSize: 12,
                 }}
@@ -153,7 +153,7 @@ export function ComparisonView({ inputs }: { inputs: CalcInputs }) {
                 type="monotone"
                 dataKey="imputed"
                 name="Imputed scenario"
-                stroke="hsl(var(--primary))"
+                stroke="var(--primary)"
                 fill="url(#gImp)"
                 strokeWidth={2}
               />
@@ -161,7 +161,7 @@ export function ComparisonView({ inputs }: { inputs: CalcInputs }) {
                 type="monotone"
                 dataKey="actual"
                 name="Actual scenario"
-                stroke="hsl(var(--accent))"
+                stroke="var(--accent)"
                 fill="url(#gAct)"
                 strokeWidth={2}
               />
