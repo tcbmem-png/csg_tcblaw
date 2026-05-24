@@ -121,5 +121,16 @@ const button = {
   textDecoration: "none",
   display: "inline-block",
 };
+const buttonSecondary = {
+  backgroundColor: "#ffffff",
+  color: "#1a1a1a",
+  padding: "11px 21px",
+  borderRadius: "4px",
+  fontSize: "14px",
+  fontWeight: 600,
+  textDecoration: "none",
+  display: "inline-block",
+  border: "1px solid #1a1a1a",
+};
 const small = { fontSize: "13px", color: "#666", lineHeight: "1.5", margin: "16px 0 0" };
 const footer = { fontSize: "12px", color: "#888", margin: "20px 0 0", lineHeight: "1.5" };
