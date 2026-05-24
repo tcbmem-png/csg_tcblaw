@@ -76,6 +76,7 @@ export function OfficialWorksheet({
 }) {
   const a = inputs.parentALabel;
   const b = inputs.parentBLabel;
+  const unlocked = useIsUnlocked();
   const hasCaption =
     caption.matterName ||
     caption.docketNumber ||
