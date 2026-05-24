@@ -205,6 +205,7 @@ export async function renderWorksheetPdf(args: {
 
   ctx.y -= 8;
   if (outputs.ssrApplied) footerNote(ctx, `Self-support reserve applied: ${outputs.ssrNote}`);
+  if (outputs.pcsoCapNote) footerNote(ctx, `Note: ${outputs.pcsoCapNote}`);
   if (outputs.warnings?.length) footerNote(ctx, `Notes: ${outputs.warnings.join(" * ")}`);
   footerNote(
     ctx,

@@ -319,11 +319,21 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     STATUTORY_PCSO_MAX[inputs.numChildren as 1 | 2 | 3 | 4 | 5] ?? 0;
   const pcsoMagnitude = Math.abs(presumptiveAfterSsr) + Math.abs(addOnsTotalFromA);
   const pcsoExceedsStatutoryMax = pcsoMagnitude > pcsoStatutoryMax;
+  let pcsoCapNote: string | null = null;
   if (pcsoExceedsStatutoryMax) {
-    warnings.push(
-      `PCSO ($${r$(pcsoMagnitude)}) exceeds the statutory maximum of $${pcsoStatutoryMax} for ${inputs.numChildren} child(ren) per Tenn. Code Ann. § 36-5-101(e)(1)(B). The recipient bears the burden to prove additional need is reasonably necessary; otherwise the order may be capped at the threshold.`,
-    );
+    const childWord = inputs.numChildren === 1 ? "child" : "children";
+    const privSchoolDev = Math.abs(r$(privateSchoolDeviationFromA));
+    const base =
+      `Above the presumptive statutory cap. The presumptive obligation ($${r$(pcsoMagnitude)}/mo) is above the §36-5-101(e)(1)(B) presumptive maximum of $${pcsoStatutoryMax}/mo for ${inputs.numChildren} ${childWord}. ` +
+      `This is common when the order includes documented deviations — most often private-school tuition (Rule .07(2)(d)1) or other extraordinary educational expenses. ` +
+      `The court must make written findings that the additional amount is reasonably necessary for the child; with those findings the order stands above the cap.`;
+    const privLine =
+      inputs.includePrivateSchool && privSchoolDev > 0
+        ? ` Your private-school deviation of $${privSchoolDev}/mo is included in this total and is the typical basis for findings above the cap.`
+        : "";
+    pcsoCapNote = base + privLine;
   }
+
 
   // === Final ===
   let allInMonthlyFromA =
@@ -421,6 +431,8 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     warnings,
     pcsoExceedsStatutoryMax,
     pcsoStatutoryMax,
+    pcsoCapNote,
+
 
     scheduleEffectiveDate: SCHEDULE_EFFECTIVE_DATE,
     errors,
@@ -474,6 +486,7 @@ function emptyOutputs(opts: {
     warnings: opts.warnings,
     pcsoExceedsStatutoryMax: false,
     pcsoStatutoryMax: 0,
+    pcsoCapNote: null,
     scheduleEffectiveDate: SCHEDULE_EFFECTIVE_DATE,
     errors: opts.errors,
   };

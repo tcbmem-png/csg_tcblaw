@@ -89,9 +89,16 @@ describe("Verification Test 2 — Above-cap 50/50", () => {
       privateSchoolAnnual: 85000,
       privateSchoolPaidBy: "parent_a",
     });
-    // Statutory max for 3 children = $4,100. PCSO will be lower since deviation reduces A's net.
-    // We just verify the calc runs and pcsoStatutoryMax is set.
+    // Statutory max for 3 children = $4,100.
     expect(out.pcsoStatutoryMax).toBe(4100);
+    if (out.pcsoExceedsStatutoryMax) {
+      expect(out.pcsoCapNote).not.toBeNull();
+      expect(out.pcsoCapNote).toMatch(/private-school/);
+    } else {
+      expect(out.pcsoCapNote).toBeNull();
+    }
+    // The old wording must not appear anywhere in warnings.
+    expect(out.warnings.some((w) => /exceeds the statutory maximum/i.test(w))).toBe(false);
   });
 });
 
