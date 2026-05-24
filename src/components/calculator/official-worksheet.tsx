@@ -243,6 +243,23 @@ export function OfficialWorksheet({
             label={`Schedule row used: $${fmt(outputs.scheduleAgiUsed)} combined AGI / ${inputs.numChildren} children`}
           />
         )}
+        {outputs.bcsoAboveCapBreakdown && (
+          <>
+            <Line
+              label={`Top of schedule (${inputs.numChildren} ${inputs.numChildren === 1 ? "child" : "children"} at $28,250 combined AGI)`}
+              total={`$${fmt(outputs.bcsoAboveCapBreakdown.topOfSchedule)}`}
+            />
+            <Line
+              label="Combined AGI in excess of schedule cap"
+              total={`$${fmt(outputs.bcsoAboveCapBreakdown.excessAGI)}`}
+            />
+            <Line
+              label={`Above-cap rate × excess (${(outputs.bcsoAboveCapBreakdown.rate * 100).toFixed(2)}%)`}
+              cite="Rule .09(2)(d)"
+              total={`+ $${fmt(outputs.bcsoAboveCapBreakdown.addition)}`}
+            />
+          </>
+        )}
         <Line
           n="7"
           label="Pro-rata share of BCSO"
