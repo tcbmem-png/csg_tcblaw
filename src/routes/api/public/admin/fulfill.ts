@@ -65,6 +65,7 @@ export const Route = createFileRoute("/api/public/admin/fulfill")({
             : worksheetReadyTemplate.subject;
 
         const messageId = crypto.randomUUID();
+        const unsubscribeToken = await getOrCreateUnsubscribeToken(sb, order.email);
         await sb.from("email_send_log").insert({
           message_id: messageId,
           template_name: "worksheet-ready",
@@ -84,6 +85,7 @@ export const Route = createFileRoute("/api/public/admin/fulfill")({
             purpose: "transactional",
             label: "worksheet-ready",
             idempotency_key: `worksheet-ready-${order.id}`,
+            unsubscribe_token: unsubscribeToken,
             queued_at: new Date().toISOString(),
           },
         });
