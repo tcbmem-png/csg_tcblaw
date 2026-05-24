@@ -509,6 +509,7 @@ export function defaultInputs(): CalcInputs {
     healthPremiumMonthly: 0,
     healthPaidBy: "parent_a",
     uninsuredMedicalMonthly: 0,
+    uninsuredMedicalPaidBy: "split_pro_rata",
     childcareMonthly: 0,
     childcarePaidBy: "parent_a",
     childcarePayrollDeducted: false,
