@@ -131,30 +131,6 @@ function Index() {
   );
 }
 
-function Row({
-  label,
-  value,
-  emphasis,
-}: {
-  label: string;
-  value: string;
-  emphasis?: boolean;
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-4">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd
-        className={
-          emphasis
-            ? "font-serif text-lg text-primary"
-            : "font-mono text-ink"
-        }
-      >
-        {value}
-      </dd>
-    </div>
-  );
-}
 
 function Feature({
   title,
