@@ -242,19 +242,21 @@ describe("Sole / near-sole custody (TN)", () => {
     expect(out.netPresumptiveSupport).toBe(Math.round(expected));
   });
 
-  it("is symmetric when flipped 0/365", () => {
+  it("is symmetric when flipped 0/365 with equal incomes", () => {
+    const equalIncome = { ...base, parentAGrossMonthly: 5000, parentBGrossMonthly: 5000 };
     const a = calculate({
-      ...base,
+      ...equalIncome,
       parentingType: "custom",
       parentADays: 0,
       parentBDays: 365,
     });
     const b = calculate({
-      ...base,
+      ...equalIncome,
       parentingType: "custom",
       parentADays: 365,
       parentBDays: 0,
     });
+    expect(a.presumptiveDirection).toBe("parent_a_to_b");
     expect(b.presumptiveDirection).toBe("parent_b_to_a");
     expect(b.netPresumptiveSupport).toBe(a.netPresumptiveSupport);
   });
