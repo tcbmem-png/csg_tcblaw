@@ -50,27 +50,22 @@ function Index() {
           <div className="hidden rounded-lg border border-rule bg-background p-6 shadow-sm md:block">
             <div className="border-b border-rule pb-3">
               <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                Verification benchmark
+                What you get
               </div>
               <div className="mt-1 font-serif text-base text-ink">
-                Berger above-cap, 50/50
+                Official-format TN worksheet
               </div>
             </div>
-            <dl className="mt-4 space-y-2 text-sm">
-              <Row label="Combined AGI" value="$79,417/mo" />
-              <Row label="Children" value="3" />
-              <Row label="Parenting" value="182.5 / 182.5" />
-              <Row label="BCSO (above-cap)" value="$6,930" />
-              <Row label="PI difference" value="29.06%" />
-              <div className="my-2 border-t border-rule" />
-              <Row
-                label="Net presumptive"
-                value="$2,014 A → B"
-                emphasis
-              />
-            </dl>
+            <ul className="mt-4 space-y-2 text-sm text-ink">
+              <li>• Schedule + above-cap BCSO lookup</li>
+              <li>• Standard, 50/50, and custom parenting bands</li>
+              <li>• Health, childcare, private-school, and special-expense add-ons</li>
+              <li>• Self-Support Reserve and PCSO statutory-cap checks</li>
+              <li>• Imputed vs. actual income comparison</li>
+              <li>• Shareable URL and printable PDF</li>
+            </ul>
             <p className="mt-4 text-xs text-muted-foreground">
-              Matches the official TN DHS Excel worksheet within $1.
+              Validated against the official TN DHS Excel worksheet.
             </p>
           </div>
         </div>
@@ -136,30 +131,6 @@ function Index() {
   );
 }
 
-function Row({
-  label,
-  value,
-  emphasis,
-}: {
-  label: string;
-  value: string;
-  emphasis?: boolean;
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-4">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd
-        className={
-          emphasis
-            ? "font-serif text-lg text-primary"
-            : "font-mono text-ink"
-        }
-      >
-        {value}
-      </dd>
-    </div>
-  );
-}
 
 function Feature({
   title,

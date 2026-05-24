@@ -61,7 +61,7 @@ describe("Verification Test 1 — Mid-income 50/50 (CSV scenario)", () => {
   });
 });
 
-describe("Verification Test 2 — Berger above-cap 50/50", () => {
+describe("Verification Test 2 — Above-cap 50/50", () => {
   it("net presumptive ≈ $2,014/mo, A → B (no add-ons)", () => {
     const out = calculate({
       ...defaultInputs(),

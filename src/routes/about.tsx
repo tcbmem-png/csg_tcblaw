@@ -63,9 +63,7 @@ function About() {
       </p>
 
       <h2 className="mt-8 font-serif text-2xl">Maintained by</h2>
-      <p className="mt-3">
-        TCB Law, PLLC — Taylor C. Berger, Esq. (Mississippi Bar #103232).
-      </p>
+      <p className="mt-3">TCB Law, PLLC.</p>
     </div>
   );
 }

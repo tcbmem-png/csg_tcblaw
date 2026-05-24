@@ -27,7 +27,7 @@ export function CaseCaptionForm({
             type="text"
             value={caption.matterName}
             onChange={(e) => u({ matterName: e.target.value })}
-            placeholder="In re: Smith v. Smith"
+            placeholder="In re: [Petitioner] v. [Respondent]"
             className={cls}
           />
         </Field>
@@ -63,7 +63,7 @@ export function CaseCaptionForm({
             type="text"
             value={caption.preparedBy}
             onChange={(e) => u({ preparedBy: e.target.value })}
-            placeholder="J. Doe, Esq. — TCB Law"
+            placeholder="Counsel of record"
             className={cls}
           />
         </Field>
