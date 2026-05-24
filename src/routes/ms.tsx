@@ -58,10 +58,14 @@ function MSCalculatorPage() {
 
   useEffect(() => {
     if (typeof window === "undefined" || !hydratedRef.current) return;
-    const encoded = encodeMSShare(inputs, caption);
-    const url = new URL(window.location.href);
-    url.searchParams.set("s", encoded);
-    window.history.replaceState({}, "", url.toString());
+    const handle = window.setTimeout(() => {
+      const encoded = encodeMSShare(inputs, caption);
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("s") === encoded) return;
+      url.searchParams.set("s", encoded);
+      window.history.replaceState(window.history.state, "", url.toString());
+    }, 600);
+    return () => window.clearTimeout(handle);
   }, [inputs, caption]);
 
   return (
