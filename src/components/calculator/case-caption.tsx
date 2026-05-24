@@ -67,10 +67,22 @@ export function CaseCaptionForm({
             className={cls}
           />
         </Field>
+        <Field label="Comments / rebuttal notes (optional)">
+          <textarea
+            value={caption.comments}
+            onChange={(e) => u({ comments: e.target.value })}
+            placeholder="Notes printed on the official worksheet's comments block."
+            rows={3}
+            className={cls + " font-mono text-xs"}
+          />
+        </Field>
       </div>
     </section>
   );
 }
+
+function _Spacer() {
+  return null;
 
 function Field({
   label,
