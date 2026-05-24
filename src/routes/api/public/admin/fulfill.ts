@@ -4,6 +4,7 @@ import { render } from "@react-email/components";
 import * as React from "react";
 import { renderWorksheetPdf } from "@/lib/pdf/worksheet-pdf";
 import { template as worksheetReadyTemplate } from "@/lib/email-templates/worksheet-ready";
+import { getOrCreateUnsubscribeToken } from "@/lib/email/unsubscribe-token.server";
 
 const SITE_NAME = "TN Child Support Helper";
 const SENDER_DOMAIN = "notify.tncsg.tcblaw.org";
