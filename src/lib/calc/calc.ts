@@ -587,6 +587,8 @@ function emptyOutputs(opts: {
     pcsoBelowCapNote: null,
     bcsoAboveCapBreakdown: null,
     equalParentingLowSupportNote: null,
+    nonEarnerArpNote: null,
+    zeroPresumptiveNote: null,
     scheduleEffectiveDate: SCHEDULE_EFFECTIVE_DATE,
     errors: opts.errors,
   };
