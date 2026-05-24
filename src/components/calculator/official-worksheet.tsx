@@ -366,14 +366,10 @@ export function OfficialWorksheet({
           total={`$${fmt(outputs.allInAnnual)}`}
         />
 
-        {/* PCSO warning */}
-        {outputs.pcsoExceedsStatutoryMax && (
-          <div className="border-t border-rule bg-accent/10 px-6 py-4 text-[11px] text-ink">
-            <strong>Statutory PCSO maximum exceeded.</strong> Per T.C.A.
-            § 36-5-101(e)(1)(B), the recipient bears the burden to prove
-            additional support is reasonably necessary; otherwise the order
-            may be capped at ${fmt(outputs.pcsoStatutoryMax)}/mo for{" "}
-            {inputs.numChildren} child{inputs.numChildren > 1 ? "ren" : ""}.
+        {/* PCSO statutory-cap note (informational, not a warning) */}
+        {outputs.pcsoCapNote && (
+          <div className="border-t border-rule bg-cream px-6 py-4 text-[11px] leading-relaxed text-ink">
+            {outputs.pcsoCapNote}
           </div>
         )}
 
