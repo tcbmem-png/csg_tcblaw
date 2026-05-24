@@ -6,6 +6,7 @@ import { Buffer } from "node:buffer";
 import { verifyWebhook, type StripeEnv } from "@/lib/stripe.server";
 import { renderWorksheetPdf } from "@/lib/pdf/worksheet-pdf";
 import { template as worksheetReadyTemplate } from "@/lib/email-templates/worksheet-ready";
+import { getOrCreateUnsubscribeToken } from "@/lib/email/unsubscribe-token.server";
 
 const SITE_NAME = "TN Child Support Helper";
 const SENDER_DOMAIN = "notify.tncsg.tcblaw.org";
@@ -109,6 +110,7 @@ async function fulfillOrder(orderId: string, origin: string) {
       : worksheetReadyTemplate.subject;
 
   const messageId = crypto.randomUUID();
+  const unsubscribeToken = await getOrCreateUnsubscribeToken(sb, order.email);
   await sb.from("email_send_log").insert({
     message_id: messageId,
     template_name: "worksheet-ready",
@@ -128,6 +130,7 @@ async function fulfillOrder(orderId: string, origin: string) {
       purpose: "transactional",
       label: "worksheet-ready",
       idempotency_key: `worksheet-ready-${order.id}`,
+      unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
     },
   });

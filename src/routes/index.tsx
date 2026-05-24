@@ -101,7 +101,7 @@ function Index() {
           />
           <Feature
             title="Private school as a deviation"
-            body="Treats private school as the discretionary deviation it is, allocated pro-rata if granted — never 75/25 or 80/20."
+            body="Treats private school as the discretionary deviation it is, allocated pro-rata if granted."
             cite="Rule .07(2)(d)"
           />
           <Feature

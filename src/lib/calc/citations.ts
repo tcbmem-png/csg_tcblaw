@@ -58,7 +58,7 @@ export const CITATIONS: Record<string, Citation> = {
     rule: "1240-02-04-.04(8)",
     name: "Add-Ons (pro-rata)",
     plain:
-      "Health insurance premium (children's portion), recurring uninsured medical, and work-related childcare are added on top of the BCSO and allocated pro-rata to income share — never 75/25 or 80/20.",
+      "Health insurance premium (children's portion), recurring uninsured medical, and work-related childcare are added on top of the BCSO and allocated pro-rata to income share.",
   },
   private_school: {
     rule: "1240-02-04-.07(2)(d)",
