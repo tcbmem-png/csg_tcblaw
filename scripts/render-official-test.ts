@@ -1,5 +1,5 @@
 import { renderOfficialWorksheetPdf } from "@/lib/pdf/official-worksheet-pdf";
-import { computeCalc } from "@/lib/calc/compute";
+import { calculate } from "@/lib/calc/calc";
 import type { CalcInputs } from "@/lib/calc/types";
 import { writeFileSync } from "fs";
 
@@ -40,7 +40,7 @@ const inputs: CalcInputs = {
   specialExpensesPaidBy: "parent_b",
 };
 
-const outputs = computeCalc(inputs);
+const outputs = calculate(inputs);
 const bytes = await renderOfficialWorksheetPdf({
   inputs,
   outputs,
