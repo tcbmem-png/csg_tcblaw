@@ -342,18 +342,26 @@ export async function renderOfficialWorksheetPdf(args: {
     b: devTotal < 0 ? fmt(-devTotal) : "",
     c: "",
   });
+  const fbApplied = Math.abs(outputs.federalBenefitOffsetFromA);
+  const fcsoBeforeFb = outputs.allInMonthly + fbApplied;
   row(ctx, {
     n: "15",
-    label: "Final Child Support Order (FCSO) before federal benefit",
-    a: outputs.arpIdentity === "parent_a" ? `$ ${fmt(outputs.allInMonthly + Math.abs(outputs.federalBenefitOffsetFromA))}` : "",
-    b: outputs.arpIdentity === "parent_b" ? `$ ${fmt(outputs.allInMonthly + Math.abs(outputs.federalBenefitOffsetFromA))}` : "",
+    label: "Adjusted for Minimum Order (Y/N)",
+    a: outputs.minimumOrderApplied ? "Y" : "N",
+    b: outputs.minimumOrderApplied ? "Y" : "N",
+    c: "",
+  });
+  row(ctx, {
+    n: "16",
+    label: "Final Child Support Order (FCSO)",
+    a: outputs.arpIdentity === "parent_a" ? `$ ${fmt(fcsoBeforeFb)}` : "",
+    b: outputs.arpIdentity === "parent_b" ? `$ ${fmt(fcsoBeforeFb)}` : "",
     c: "",
     bold: true,
   });
-  const fbApplied = Math.abs(outputs.federalBenefitOffsetFromA);
   row(ctx, {
-    n: "16",
-    label: "FCSO adjusted for federal benefit (Line 1a offset)",
+    n: "17",
+    label: "FCSO adjusted for federal benefit (Line 1a, obligor's column)",
     a: outputs.arpIdentity === "parent_a" ? `$ ${fmt(outputs.allInMonthly)}` : "",
     b: outputs.arpIdentity === "parent_b" ? `$ ${fmt(outputs.allInMonthly)}` : "",
     c: fbApplied > 0 ? `(- $${fmt(fbApplied)})` : "",
