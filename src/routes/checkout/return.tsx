@@ -66,7 +66,7 @@ function CheckoutReturn() {
       {status === "missing" && (
         <p className="mt-4 text-sm text-muted-foreground">
           We could not find your order. Please check your email for the download link, or{" "}
-          <Link to="/calculator" className="underline">
+          <Link to="/" className="underline">
             return to the calculator
           </Link>
           .
@@ -96,7 +96,7 @@ function CheckoutReturn() {
             Download PDF
           </a>
           <div>
-            <Link to="/calculator" className="text-sm underline text-muted-foreground">
+            <Link to="/" className="text-sm underline text-muted-foreground">
               Back to calculator
             </Link>
           </div>
