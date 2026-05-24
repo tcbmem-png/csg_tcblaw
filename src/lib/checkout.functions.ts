@@ -1,7 +1,59 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { createStripeClient, type StripeEnv } from "@/lib/stripe.server";
+
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_MAX = 10;
+
+function clientIp(): string {
+  try {
+    const req = getRequest();
+    const h = req?.headers;
+    if (!h) return "unknown";
+    const fwd =
+      h.get("cf-connecting-ip") ||
+      h.get("x-real-ip") ||
+      h.get("x-forwarded-for");
+    if (!fwd) return "unknown";
+    return fwd.split(",")[0]!.trim().slice(0, 64) || "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
+async function enforceCheckoutRateLimit(
+  sb: any,
+  ip: string,
+): Promise<void> {
+  if (ip === "unknown") return; // fail open rather than block legitimate traffic
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - RATE_LIMIT_WINDOW_MS);
+
+  const { data: existing } = await (sb as any)
+    .from("checkout_rate_limits")
+    .select("ip, window_start, attempts")
+    .eq("ip", ip)
+    .maybeSingle();
+
+  const withinWindow =
+    existing && new Date(existing.window_start as string) > cutoff;
+
+  if (withinWindow) {
+    if ((existing.attempts as number) >= RATE_LIMIT_MAX) {
+      throw new Error("Too many checkout attempts. Please try again later.");
+    }
+    await (sb as any)
+      .from("checkout_rate_limits")
+      .update({ attempts: (existing.attempts as number) + 1 })
+      .eq("ip", ip);
+  } else {
+    await (sb as any)
+      .from("checkout_rate_limits")
+      .upsert({ ip, window_start: now.toISOString(), attempts: 1 });
+  }
+}
 
 const envSchema = z.enum(["sandbox", "live"]);
 const captionSchema = z.object({
@@ -48,6 +100,8 @@ export const createUnlockCheckout = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => inputSchema.parse(d))
   .handler(async ({ data }) => {
     const sb = admin();
+
+    await enforceCheckoutRateLimit(sb, clientIp());
 
     const state = data.state ?? "TN";
 

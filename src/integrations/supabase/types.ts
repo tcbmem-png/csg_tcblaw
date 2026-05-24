@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      checkout_rate_limits: {
+        Row: {
+          attempts: number
+          ip: string
+          window_start: string
+        }
+        Insert: {
+          attempts?: number
+          ip: string
+          window_start?: string
+        }
+        Update: {
+          attempts?: number
+          ip?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
