@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SCHEDULE_EFFECTIVE_DATE } from "@/lib/calc/bcso";
 
-export const Route = createFileRoute("/tn/about")({
+export const Route = createFileRoute("/tn_/about")({
   head: () => ({
     meta: [
       { title: "About — TN Child Support Calculator" },
