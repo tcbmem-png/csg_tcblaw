@@ -461,7 +461,7 @@ export function CalculatorInputs({
           <Grid>
             <Field
               label="Annual tuition (combined)"
-              help="Pro-rata to income share if granted. NOT 75/25 or 80/20."
+              help="Pro-rata to income share if granted."
             >
               <NumInput
                 value={inputs.privateSchoolAnnual}
