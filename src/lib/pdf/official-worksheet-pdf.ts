@@ -679,16 +679,16 @@ export async function renderOfficialWorksheetPdf(args: {
   valueRow(ctx, {
     n: "15",
     label: "Final Child Support Order (FCSO)",
-    a: outputs.arpIdentity === "parent_a" ? dollar(fcsoBeforeFb) : "",
-    b: outputs.arpIdentity === "parent_b" ? dollar(fcsoBeforeFb) : "",
+    a: obligorIsA ? dollar(fcsoBeforeFb) : "",
+    b: obligorIsB ? dollar(fcsoBeforeFb) : "",
     c: undefined,
     bold: true,
   });
   valueRow(ctx, {
     n: "16",
     label: "FCSO adjusted for federal benefit (Line 1a)",
-    a: outputs.arpIdentity === "parent_a" ? dollar(outputs.allInMonthly) : "",
-    b: outputs.arpIdentity === "parent_b" ? dollar(outputs.allInMonthly) : "",
+    a: obligorIsA ? dollar(outputs.allInMonthly) : "",
+    b: obligorIsB ? dollar(outputs.allInMonthly) : "",
     c: undefined,
     bold: true,
   });
