@@ -100,6 +100,9 @@ export interface CalcOutputs {
   ssrApplied: boolean;
   ssrNote: string | null;
 
+  // Minimum-order floor (official Line 15 Y/N).
+  minimumOrderApplied: boolean;
+
   // Add-ons (signed from Parent A's perspective: positive => A owes more)
   addOnHealthFromA: number;
   addOnMedicalFromA: number;
