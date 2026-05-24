@@ -7,6 +7,8 @@ export interface CaseCaption {
   court: string;
   preparedBy: string;
   client: string;
+  /** Free-text comments rendered in the official PDF's comments block. */
+  comments: string;
 }
 
 export function defaultCaption(): CaseCaption {
@@ -16,6 +18,7 @@ export function defaultCaption(): CaseCaption {
     court: "",
     preparedBy: "",
     client: "",
+    comments: "",
   };
 }
 
