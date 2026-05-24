@@ -31,7 +31,7 @@ async function enforceCheckoutRateLimit(
   const now = new Date();
   const cutoff = new Date(now.getTime() - RATE_LIMIT_WINDOW_MS);
 
-  const { data: existing } = await sb
+  const { data: existing } = await (sb as any)
     .from("checkout_rate_limits")
     .select("ip, window_start, attempts")
     .eq("ip", ip)
@@ -41,15 +41,15 @@ async function enforceCheckoutRateLimit(
     existing && new Date(existing.window_start as string) > cutoff;
 
   if (withinWindow) {
-    if ((existing!.attempts as number) >= RATE_LIMIT_MAX) {
+    if ((existing.attempts as number) >= RATE_LIMIT_MAX) {
       throw new Error("Too many checkout attempts. Please try again later.");
     }
-    await sb
+    await (sb as any)
       .from("checkout_rate_limits")
-      .update({ attempts: (existing!.attempts as number) + 1 })
+      .update({ attempts: (existing.attempts as number) + 1 })
       .eq("ip", ip);
   } else {
-    await sb
+    await (sb as any)
       .from("checkout_rate_limits")
       .upsert({ ip, window_start: now.toISOString(), attempts: 1 });
   }
