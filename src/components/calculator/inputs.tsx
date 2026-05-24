@@ -1,5 +1,6 @@
 import type { CalcInputs } from "@/lib/calc/types";
 import { IMPUTATION_DEFAULT_ANNUAL } from "@/lib/calc/data/constants";
+import { TheoreticalCreditHelper } from "./theoretical-credit-modal";
 
 type Setter = (next: CalcInputs) => void;
 
