@@ -16,6 +16,12 @@ export const Route = createFileRoute("/api/public/payments/retry-stuck")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const apiKey = request.headers.get("apikey");
+        const expectedApiKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+        if (!apiKey || !expectedApiKey || apiKey !== expectedApiKey) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
         const origin = new URL(request.url).origin;
         const sb = createClient(
           process.env.SUPABASE_URL!,
