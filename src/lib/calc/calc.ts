@@ -36,20 +36,19 @@ function computePresumptive(
   const proRataA = bcso * piA;
   const proRataB = bcso * piB;
 
-  if (band === "equal") {
-    // Interpretation A — File 1: net = |BCSO × (PI_A − PI_B)|, paid by higher earner.
-    // Signed from A: BCSO × (PI_A − PI_B) (positive when A earns more).
-    return { netFromA: bcso * (piA - piB), multiplier: 2.0 };
-  }
-
   if (band === "neutral" || band === "standard") {
     // ARP pays PRP their full pro-rata BCSO.
     if (arpIsA) return { netFromA: proRataA, multiplier: null };
     return { netFromA: -proRataB, multiplier: null };
   }
 
-  if (band === "reduction") {
-    // Rule .04(7)(h)(4) worked example, applied to whichever parent is ARP.
+  if (band === "reduction" || band === "equal") {
+    // Rule .04(7)(h)(4) variable multiplier — applies at arpDays ≥ 92.
+    // For 50/50 (equal), Rule .04(7)(b)(2)(i) deems Parent 2 (B) the ARP at
+    // 182.5 days, which yields multiplier = 2.0 and the same formula.
+    // If the result is negative (PRP earns more than ARP), Rule .04(7)(f)
+    // permits PRP→ARP support; we return the signed value and let the
+    // caller derive direction.
     const multiplier = PARENTING_TIME.VARIABLE_MULTIPLIER_CONSTANT * arpDays;
     const adjustedBcso = bcso * multiplier;
     const additional = adjustedBcso - bcso;
@@ -76,6 +75,7 @@ function computePresumptive(
     return { netFromA: -adjusted, multiplier: null };
   }
 }
+
 
 /** Sign convention: each helper returns the amount added to Parent A's net outflow.
  * If A pays a third-party expense, B owes A their pro-rata share — that REDUCES A's net outflow,
@@ -231,8 +231,9 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
   if (
     bcsoLookup.source === "schedule" &&
     bcsoLookup.isShaded &&
-    band !== "equal"
+    Math.abs(presumptiveFromA) > 0
   ) {
+
     // Identify obligor (the parent with positive outflow).
     const obligorIsA = presumptiveFromA > 0;
     const obligorAgi = obligorIsA ? aAGI : bAGI;
