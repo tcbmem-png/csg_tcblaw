@@ -27,8 +27,10 @@ function readState(payload: any): OrderState {
 }
 
 function publicOrigin(fallback: string): string {
-  const env = process.env.PUBLIC_SITE_ORIGIN;
-  return env && /^https?:\/\//.test(env) ? env.replace(/\/+$/, "") : fallback;
+  const env = process.env.PUBLIC_SITE_ORIGIN?.trim();
+  if (!env) return fallback;
+  const withScheme = /^https?:\/\//i.test(env) ? env : `https://${env}`;
+  return withScheme.replace(/\/+$/, "");
 }
 
 interface SendArgs {
