@@ -73,12 +73,20 @@ export function SiteHeader() {
                 How it works
               </Link>
               <Link
+                to="/tn/why-we-built-this"
+                className="text-muted-foreground transition-colors hover:text-primary"
+                activeProps={{ className: "text-primary font-medium" }}
+              >
+                Why we built this
+              </Link>
+              <Link
                 to="/tn/about"
                 className="text-muted-foreground transition-colors hover:text-primary"
                 activeProps={{ className: "text-primary font-medium" }}
               >
                 About
               </Link>
+
             </>
           ) : (
             <>
