@@ -392,6 +392,7 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
 
     ssrApplied,
     ssrNote,
+    minimumOrderApplied,
 
     addOnHealthFromA: r$(addOnHealthFromA),
     addOnMedicalFromA: r$(addOnMedicalFromA),
