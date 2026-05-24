@@ -526,6 +526,8 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     pcsoBelowCapNote,
     bcsoAboveCapBreakdown,
     equalParentingLowSupportNote,
+    nonEarnerArpNote,
+    zeroPresumptiveNote,
 
 
     scheduleEffectiveDate: SCHEDULE_EFFECTIVE_DATE,
