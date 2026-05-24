@@ -204,7 +204,7 @@ function identTable(
   ctx: Ctx,
   motherName: string,
   fatherName: string,
-  arpIs: "parent_a" | "parent_b" | "equal",
+  arp: { motherIsArp: boolean; fatherIsArp: boolean; isEqual: boolean },
 ) {
   // Three columns: PRP / ARP / SPLIT — anchored to A_X..END_X
   const colW = CELL_W;
@@ -215,8 +215,6 @@ function identTable(
   drawCenter(ctx, "SPLIT", C_X + colW / 2, ctx.y - 9, { size: 8, bold: true });
   ctx.y -= colHdrH;
 
-  // Inside the label block (NUM_X..A_X) we reserve the LEFT ~150pt for the
-  // printed label and the RIGHT ~50pt for an underlined value field.
   const labelLeftX = NUM_X;
   const valueLeftX = NUM_X + 154;
   const valueRightX = A_X - 4;
@@ -225,11 +223,9 @@ function identTable(
     const h = 14;
     ensure(ctx, h);
     const yBot = ctx.y - h;
-    // Underline for the name value
     ctx.pdf.line(valueLeftX, yBot, valueRightX, yBot, RULE, 0.5);
     draw(ctx, label, labelLeftX, yBot + 4, { size: 9, bold: true, maxWidth: valueLeftX - labelLeftX - 2 });
     draw(ctx, value, valueLeftX + 2, yBot + 4, { size: 9, maxWidth: valueRightX - valueLeftX - 4 });
-    // Three X-boxes
     [A_X, B_X, C_X].forEach((x) => {
       ctx.pdf.strokeRect(x, yBot, colW, h, RULE, 0.4);
     });
@@ -238,10 +234,8 @@ function identTable(
     ctx.y -= h;
   };
 
-  const motherIsArp = arpIs === "parent_a";
-  const fatherIsArp = arpIs === "parent_b";
-  drawNameRow("Name of Mother:", motherName, !motherIsArp && arpIs !== "equal", motherIsArp);
-  drawNameRow("Name of Father:", fatherName, !fatherIsArp && arpIs !== "equal", fatherIsArp);
+  drawNameRow("Name of Mother:", motherName, !arp.motherIsArp && !arp.isEqual, arp.motherIsArp);
+  drawNameRow("Name of Father:", fatherName, !arp.fatherIsArp && !arp.isEqual, arp.fatherIsArp);
   drawNameRow("Name of non-parent Caretaker:", "", false, false);
 }
 
@@ -258,7 +252,13 @@ function captionLine(ctx: Ctx, label: string, value: string) {
 }
 
 // ---------- Section: Part I child(ren) sub-table ----------
-function childrenSubtable(ctx: Ctx, numChildren: number) {
+interface ChildRowData {
+  name: string;
+  dob: string;
+  daysMother: number;
+  daysFather: number;
+}
+function childrenSubtable(ctx: Ctx, numChildren: number, children: ChildRowData[]) {
   const h = 14;
   const cols = [
     { label: "Name(s) of Child(ren)", x: NUM_X, w: 170 },
@@ -267,7 +267,6 @@ function childrenSubtable(ctx: Ctx, numChildren: number) {
     { label: "Days with Father", x: NUM_X + 305, w: 55 },
     { label: "Days with Caretaker", x: NUM_X + 360, w: 56 },
   ];
-  // Header
   ensure(ctx, h);
   let yBot = ctx.y - h;
   cols.forEach((c) => {
@@ -275,7 +274,6 @@ function childrenSubtable(ctx: Ctx, numChildren: number) {
     drawCenter(ctx, c.label, c.x + c.w / 2, yBot + 4, { size: 7, bold: true });
   });
   ctx.y -= h;
-  // 5 blank rows (more than max children)
   const rows = Math.max(5, numChildren);
   for (let i = 0; i < rows; i += 1) {
     ensure(ctx, h);
@@ -283,6 +281,13 @@ function childrenSubtable(ctx: Ctx, numChildren: number) {
     cols.forEach((c) => {
       ctx.pdf.strokeRect(c.x, yBot, c.w, h, RULE, 0.4);
     });
+    const data = children[i];
+    if (data) {
+      if (data.name) draw(ctx, data.name, cols[0].x + 4, yBot + 4, { size: 9, maxWidth: cols[0].w - 8 });
+      if (data.dob) draw(ctx, data.dob, cols[1].x + 4, yBot + 4, { size: 9, maxWidth: cols[1].w - 8 });
+      if (data.daysMother) drawRight(ctx, String(data.daysMother), cols[2].x + cols[2].w - 4, yBot + 4, { size: 9 });
+      if (data.daysFather) drawRight(ctx, String(data.daysFather), cols[3].x + cols[3].w - 4, yBot + 4, { size: 9 });
+    }
     ctx.y -= h;
   }
 }
