@@ -24,7 +24,7 @@ function clientIp(): string {
 }
 
 async function enforceCheckoutRateLimit(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   ip: string,
 ): Promise<void> {
   if (ip === "unknown") return; // fail open rather than block legitimate traffic
