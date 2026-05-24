@@ -1,62 +1,129 @@
 
-## What I found
+# Add Mississippi Calculator — Multi-State Architecture
 
-### 1. Our PDF vs. the official AOC Child Support Worksheet
+Ship MS as a second state in the existing app. Rename the canonical domain to `csg.tcblaw.org` and keep `tncsg.tcblaw.org` as a 301-style redirect. TN behavior and URLs stay 100% intact.
 
-I parsed the form you uploaded (the official State of Tennessee – Child Support Worksheet) and compared it to `src/lib/pdf/worksheet-pdf.ts`. They are not the same document:
+## 1. Routing & landing
 
-| Section | Official form | Ours |
-|---|---|---|
-| Part I — Identification | Mother / Father / Non-parent Caretaker columns, PRP/ARP/SPLIT checkboxes, TCSES #, Docket #, Court, child names + DOBs + days with each parent | Generic "Parent A / Parent B" caption box, no PRP/ARP checkbox, no per-child rows |
-| Line numbers | 1, 1a (federal benefit for child), 1b (SE tax paid), 1c subtotal, 1d in-home credit, 1e not-in-home credit, 2 AGI, 2a combined, 3 PI | 1–4 with different labels, no 1a/1b/1e |
-| Part III | 4 BCSO to PRP household, 4a share owed, 5 ARP avg parenting time, 6 parenting time adjustment, 7 Adjusted BCSO | 7 BCSO, 8 share, 9 ARP/band string, 10 net presumptive |
-| Part IV | 8a/8b/8c + 9 total + 10 share + 11 ASO | 11/12/13/14 |
-| Part V | 12 PCSO, low-income 7.5%/15% flag, 13a/b/c modification variance | Not present |
-| Part VI | 14 deviations, 15 FCSO, 16 FCSO adjusted for federal benefit, Comments, Preparer block | Custom "Final monthly order" block, no preparer/comments box |
+```
+/                       → state picker landing (TN | MS, brief blurbs, "Pick your state")
+/tn                     → current TN calculator (moved from /calculator)
+/tn/how-it-works        → current /how-it-works
+/tn/about               → current /about
+/ms                     → MS calculator (new)
+/ms/how-it-works        → MS "Behind the Scenes" (new)
+/ms/about               → shared about, MS-flavored intro
+/calculator             → 301 → /tn   (preserve old links / emails / SEO)
+/how-it-works           → 301 → /tn/how-it-works
+/about                  → 301 → /tn/about
+/unlock/$token          → unchanged (PDFs are state-agnostic at the URL level)
+/checkout/return        → unchanged
+```
 
-So ours is a clean, lawyer-friendly summary — better-looking but **not** the AOC form a clerk will accept. Your instinct is right: ship both.
+State-aware header: shows current state name + a "Switch state" affordance. Sitemap + robots updated. Per-route `head()` metadata is state-specific (titles mention "Mississippi" or "Tennessee" — never share copy).
 
-### 2. Logic gaps worth flagging (not fixing in this turn unless you say so)
+Domain swap: user adds `csg.tcblaw.org` as primary in Project Settings → Domains; `tncsg.tcblaw.org` stays connected and we wire a server-level redirect from `tncsg.tcblaw.org/*` → `csg.tcblaw.org/tn/*` (preserving path tails where they map). Until DNS propagates, both work.
 
-Inputs the AOC form has but our calculator does not capture:
-- **Line 1a — Federal benefit paid for child** (offset against obligor's share, line 16). Currently ignored.
-- **Line 1e — Credit for not-in-home qualified children** (separate from in-home credit).
-- **Non-parent caretaker** scenarios (Column C). We assume two parents.
-- **Low-income flag** (7.5% variance threshold instead of 15%) for modifications.
-- **Modification flow** (13a/b/c) — current order amount + significant variance test. We only price initial calculations.
-- **Per-child days** breakdown — we take a single "days for parent A / parent B" total, not per-child days.
+## 2. Engine — new file, zero TN refactor
 
-None of these break a typical initial-order calculation, but the official worksheet will show blanks where a clerk expects entries. I'll note this on the PDF for now and we can extend the calculator inputs later if you want full AOC parity.
+New `src/lib/calc/ms/` directory mirroring TN:
 
-### 3. Other site logic spot-checks
+```
+src/lib/calc/ms/
+  types.ts          # MSInputs, MSOutputs, MSDeviation
+  calc.ts           # ~30 lines: AGI → percentage → presumptive → +/- deviations
+  share.ts          # encodeShare / decodeShare for MS payload
+  data/percentages.ts   # frozen statutory table from § 43-19-101
+  __tests__/calc.test.ts # the 4 verification tests from spec §7
+```
 
-- BCSO lookup, pro-rata, parenting-time bands, SSR, add-ons math in `src/lib/calc/calc.ts` + `bcso.ts` match Rule 1240-02-04 and the 2022 schedule. ✓
-- Fulfillment, retry sweep, /resend recovery, unlock token all wired correctly. ✓
-- `/howitworks` and citations text already cleaned of the "75/25" relic last turn. ✓
-- One thing I want to double-check while I'm in there: the admin fulfill route uses the service-role key as the `x-admin-secret` bearer — works, but I'd like to swap it for a dedicated `ADMIN_FULFILL_SECRET` so rotating service-role doesn't break the admin tool. Low priority; flagging only.
+Calc shape:
+- `grossAnnual − taxes − ss − mandatoryRetirement − preexistingSupportAnnual − (inHomeMonthly × 12) = adjustedAnnual`
+- `adjustedAnnual / 12 = monthlyAGI`
+- `monthlyAGI × pct[numChildren] = presumptiveMonthly`
+- Health insurance: if obligee provides → add to presumptive; if obligor provides → already credited via AGI (per spec §3.9 interpretation, with on-screen note)
+- Threshold flags: `requiresFindingHighIncome` (annual AGI > $100K), `requiresFindingLowIncome` (annual AGI < $10K)
+- Sum of applicable deviations → `proposedFinalMonthly = presumptive + Σ deviations + healthInsuranceAddOn`
 
-## Plan
+The shared `CaseCaption` (matter/docket/preparedBy/etc.) stays in `src/lib/calc/share.ts` and is reused. TN's existing `share.ts` payload prefix (`v: 1`) stays untouched; MS payloads carry `v: 1, s: "MS"` so the two formats never collide.
 
-### A. Add an "official form" PDF renderer
-- New file `src/lib/pdf/official-worksheet-pdf.ts` that mirrors the AOC form layout exactly: Part I identification table (Mother/Father columns, PRP/ARP checkboxes derived from inputs, docket/court/TCSES from caption, child-count rows), Parts II–VI with the official line numbers (1, 1a, 1b, 1c, 1d, 1e, 2, 2a, 3, 4, 4a, 5, 6, 7, 8a-c, 9, 10, 11, 12, 13a-c, 14, 15, 16), Comments box, Preparer's block.
-- Uses the same `SimplePdf` Helvetica primitive we already have (Worker-safe, no WASM, no native deps).
-- Fields we don't collect (1a federal benefit, 1e not-in-home, 13a–c modification, Column C caretaker) render as blanks/dashes — clerk-fillable.
-- Mother/Father mapping: if `parentALabel` / `parentBLabel` look like names we'll use them; otherwise label as Parent A / Parent B in the Mother column / Father column slots. PRP/ARP X marks derived from `outputs.arpIdentity`.
+## 3. UI — parallel components, no shared form
 
-### B. Wire both PDFs into fulfillment
-- `fulfillOrder` renders **two** PDFs and uploads both:
-  - `${order.id}/worksheet.pdf` — current branded version (unchanged)
-  - `${order.id}/worksheet-official.pdf` — new AOC-format version
-- Add column `pdf_official_storage_path text` to `orders` via migration.
-- Update `/api/public/unlock/$token` to accept an optional `?variant=official` query param and serve the official one; default unchanged for back-compat.
-- Update `worksheet-ready` email template to include both download links: "Download the branded summary" + "Download the official AOC form".
-- Update `/resend` and `resendWorksheetEmail` — no code changes needed beyond the new template (it pulls both links from order data).
+New `src/components/calculator/ms/`:
+- `inputs.tsx` — obligor income, statutory deductions, # children, pre-existing support, in-home deduction, health insurance section (radio: obligor / obligee / neither), 50/50 flag
+- `result-sidebar.tsx` — presumptive amount, threshold warning banners, proposed-final-with-deviations summary
+- `deviations.tsx` — 10 collapsible cards (a)–(j); each has Applicable toggle, description textarea, proposed monthly $ input (signed). Running total at bottom. Factor (g) has the prominent "no MS 50/50 formula" callout from spec §4.3.
+- `case-caption.tsx` — reuse TN's (already generic)
+- `unlock-pdf-panel.tsx` — reuse TN's, passes `state: "MS"` to checkout
 
-### C. Light verification
-- After the build settles, hit the e2e script against the dev server (the published Workers run pdfkit-free SimplePdf, so this will work in production too — no WASM).
-- Convert both PDFs to images and eyeball them per the QA rule before claiming done.
+`src/routes/ms.tsx` composes these. TN files untouched.
 
-## Out of scope (call out only)
+## 4. PDF — MS-specific renderer
 
-- Capturing federal benefit, not-in-home credit, modification, and caretaker inputs in the calculator UI — separate feature. Want me to queue it?
-- Swapping the admin fulfill bearer to its own secret — 5-min change, want me to do it in this same turn?
+New `src/lib/pdf/ms-worksheet-pdf.ts` — single PDF (not two — MS has no AOC official form to mirror). Contents:
+- Case caption block
+- AGI computation (gross, each deduction line, monthly AGI)
+- Percentage application (% × monthly AGI = presumptive)
+- Threshold finding callout (if triggered)
+- Health insurance treatment
+- Deviation worksheet: one row per applicable factor with letter, description, amount; total
+- Proposed final monthly award
+- Statutory citations footer (§ 43-19-101, § 43-19-103)
+- Same TCB branding shell as TN
+
+`fulfill.server.ts` branches on `payload.state`: TN → render both summary + official; MS → render the single MS PDF. Storage path stays `${order.id}/worksheet.pdf` for MS (single file); the existing `pdf_official_storage_path` stays null for MS orders, and the unlock route already handles a missing official variant. Email template stays the same template name — it adapts copy when `officialDownloadUrl` is absent.
+
+## 5. Checkout
+
+`createUnlockCheckout` payload gains an optional `state: "TN" | "MS"` field (defaults to `"TN"` for backward-compat with any in-flight TN sessions). `payload_json` carries it through; webhook + `fulfill.server.ts` switch PDF renderer on it. Same Stripe product, same $99 price — no new Stripe setup needed.
+
+## 6. Database
+
+`orders` table is unchanged structurally — `payload_json.state` carries the discriminator. No migration needed for orders.
+
+The spec proposes `ms_deviations` as a normalized table, but since deviations live inside `payload_json` (alongside everything else needed to re-render the PDF), no separate table is necessary for v1. If you later want analytics across deviation factors, that's a v2 ALTER. **No database migration in this build.**
+
+## 7. Landing page
+
+New `/` is a 2-card chooser:
+- "Tennessee — Income Shares model" → /tn
+- "Mississippi — Flat-percentage model" → /ms
+
+Existing TN landing content moves to `/tn`. SEO: `/` gets generic "TCB Law Child Support Calculators" title; each state route owns its own keyword-rich title and description.
+
+## 8. Behind-the-Scenes for MS
+
+New `/ms/how-it-works` with the 11 sections from spec §9, including the MS-specific emancipation callout (age 21 vs TN's 18). Existing TN page stays at `/tn/how-it-works` unchanged.
+
+## 9. Tests
+
+Add MS calc tests covering all 4 verification cases from spec §7. TN's existing 17 tests stay green (no shared code is touched).
+
+## 10. Out of scope (matches spec §8)
+
+No imputation engine, no alimony, no retroactive support, no split parenting, no emancipation modeling, no SB 2505 health-insurance amendment until/unless it passes.
+
+---
+
+## Technical notes
+
+- TN's `share.ts` accepts unknown extra fields gracefully (it merges with defaults), so old TN share links keep working after the `state` field is added to the discriminator.
+- The state picker landing is intentionally simple — no marketing redesign. Brand/typography/color tokens already in `src/styles.css` are reused as-is for MS.
+- The 301 redirects (`/calculator` → `/tn`, etc.) are implemented as TanStack routes that `throw redirect(...)` in `beforeLoad` so existing email/order links from current customers continue to work indefinitely.
+- Both domains stay verified in Lovable Cloud — `tncsg.tcblaw.org` becomes a connected domain that serves the same app and the per-request redirect maps it to the `/tn` prefix on `csg.tcblaw.org`.
+- DNS for `csg.tcblaw.org` and `mscsg.tcblaw.org` (if you also want a MS-direct vanity domain later) can be added through Project Settings → Domains; no code change needed.
+
+## What you'll need to do outside the chat
+
+1. Add `csg.tcblaw.org` in Project Settings → Domains and set it as Primary.
+2. Leave `tncsg.tcblaw.org` connected (don't remove it) — the redirect route handles old links.
+3. Optionally add `mscsg.tcblaw.org` later if you want a direct MS vanity URL; not required for launch.
+
+## Build order (when you say go)
+
+1. New MS engine + tests (pure logic, no UI)
+2. MS PDF renderer
+3. MS routes + components + landing page
+4. TN route moves + redirects
+5. Checkout/fulfillment branching
+6. SEO: per-route head(), updated sitemap, robots unchanged
