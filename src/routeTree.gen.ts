@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResendRouteImport } from './routes/resend'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as AboutRouteImport } from './routes/about'
@@ -35,6 +36,11 @@ const UnsubscribeRoute = UnsubscribeRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResendRoute = ResendRouteImport.update({
+  id: '/resend',
+  path: '/resend',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HowItWorksRoute = HowItWorksRouteImport.update({
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/resend': typeof ResendRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/resend': typeof ResendRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/resend': typeof ResendRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -183,6 +192,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/calculator'
     | '/how-it-works'
+    | '/resend'
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/checkout/return'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/calculator'
     | '/how-it-works'
+    | '/resend'
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/checkout/return'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/calculator'
     | '/how-it-works'
+    | '/resend'
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/checkout/return'
@@ -241,6 +253,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CalculatorRoute: typeof CalculatorRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  ResendRoute: typeof ResendRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
@@ -270,6 +283,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resend': {
+      id: '/resend'
+      path: '/resend'
+      fullPath: '/resend'
+      preLoaderRoute: typeof ResendRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/how-it-works': {
@@ -385,6 +405,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   CalculatorRoute: CalculatorRoute,
   HowItWorksRoute: HowItWorksRoute,
+  ResendRoute: ResendRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
@@ -402,3 +423,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
