@@ -245,8 +245,17 @@ export function CalculatorInputs({
       </Section>
 
       <Section title={`Income — ${inputs.parentALabel}`} cite="Rule .04(3)">
+        <Toggle
+          checked={inputs.useImputationForA}
+          onChange={(b) => u({ useImputationForA: b })}
+          label="Impute income (voluntary underemployment)"
+        />
         <Field
-          label="Gross monthly income"
+          label={
+            inputs.useImputationForA
+              ? "Imputed gross monthly income"
+              : "Gross monthly income"
+          }
           help="Use W-2 Box 5 (Medicare wages), NOT Box 1. Include all income from all sources before taxes and voluntary retirement."
         >
           <NumInput
@@ -254,6 +263,39 @@ export function CalculatorInputs({
             onChange={(n) => u({ parentAGrossMonthly: n })}
           />
         </Field>
+        {inputs.useImputationForA && (
+          <>
+            <Field
+              label="Actual gross monthly income"
+              help="The parent's real earnings. Used for the Comparison tab."
+            >
+              <NumInput
+                value={inputs.parentAActualGrossMonthly ?? 0}
+                onChange={(n) => u({ parentAActualGrossMonthly: n })}
+              />
+            </Field>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="rounded-md border border-input bg-background px-3 py-1.5 text-xs text-ink hover:bg-accent/40"
+                onClick={() =>
+                  u({ parentAGrossMonthly: IMPUTATION_DEFAULT_ANNUAL.female / 12 })
+                }
+              >
+                TN default (female): ${fmt$(IMPUTATION_DEFAULT_ANNUAL.female)}/yr
+              </button>
+              <button
+                type="button"
+                className="rounded-md border border-input bg-background px-3 py-1.5 text-xs text-ink hover:bg-accent/40"
+                onClick={() =>
+                  u({ parentAGrossMonthly: IMPUTATION_DEFAULT_ANNUAL.male / 12 })
+                }
+              >
+                TN default (male): ${fmt$(IMPUTATION_DEFAULT_ANNUAL.male)}/yr
+              </button>
+            </div>
+          </>
+        )}
       </Section>
 
       <Section title={`Income — ${inputs.parentBLabel}`} cite="Rule .04(3)">
@@ -262,38 +304,50 @@ export function CalculatorInputs({
           onChange={(b) => u({ useImputationForB: b })}
           label="Impute income (voluntary underemployment)"
         />
-        <Field label="Gross monthly income">
+        <Field
+          label={
+            inputs.useImputationForB
+              ? "Imputed gross monthly income"
+              : "Gross monthly income"
+          }
+        >
           <NumInput
             value={inputs.parentBGrossMonthly}
             onChange={(n) => u({ parentBGrossMonthly: n })}
           />
         </Field>
         {inputs.useImputationForB && (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="rounded-md border border-input bg-background px-3 py-1.5 text-xs text-ink hover:bg-accent/40"
-              onClick={() =>
-                u({
-                  parentBGrossMonthly:
-                    IMPUTATION_DEFAULT_ANNUAL.female / 12,
-                })
-              }
+          <>
+            <Field
+              label="Actual gross monthly income"
+              help="The parent's real earnings. Used for the Comparison tab."
             >
-              Use TN default (female): ${fmt$(IMPUTATION_DEFAULT_ANNUAL.female)}/yr
-            </button>
-            <button
-              type="button"
-              className="rounded-md border border-input bg-background px-3 py-1.5 text-xs text-ink hover:bg-accent/40"
-              onClick={() =>
-                u({
-                  parentBGrossMonthly: IMPUTATION_DEFAULT_ANNUAL.male / 12,
-                })
-              }
-            >
-              Use TN default (male): ${fmt$(IMPUTATION_DEFAULT_ANNUAL.male)}/yr
-            </button>
-          </div>
+              <NumInput
+                value={inputs.parentBActualGrossMonthly ?? 0}
+                onChange={(n) => u({ parentBActualGrossMonthly: n })}
+              />
+            </Field>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="rounded-md border border-input bg-background px-3 py-1.5 text-xs text-ink hover:bg-accent/40"
+                onClick={() =>
+                  u({ parentBGrossMonthly: IMPUTATION_DEFAULT_ANNUAL.female / 12 })
+                }
+              >
+                TN default (female): ${fmt$(IMPUTATION_DEFAULT_ANNUAL.female)}/yr
+              </button>
+              <button
+                type="button"
+                className="rounded-md border border-input bg-background px-3 py-1.5 text-xs text-ink hover:bg-accent/40"
+                onClick={() =>
+                  u({ parentBGrossMonthly: IMPUTATION_DEFAULT_ANNUAL.male / 12 })
+                }
+              >
+                TN default (male): ${fmt$(IMPUTATION_DEFAULT_ANNUAL.male)}/yr
+              </button>
+            </div>
+          </>
         )}
       </Section>
 
