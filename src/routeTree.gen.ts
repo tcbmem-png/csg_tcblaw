@@ -23,6 +23,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicUnlockTokenRouteImport } from './routes/api/public/unlock/$token'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicAdminFulfillRouteImport } from './routes/api/public/admin/fulfill'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
@@ -98,6 +99,11 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicAdminFulfillRoute = ApiPublicAdminFulfillRouteImport.update({
+  id: '/api/public/admin/fulfill',
+  path: '/api/public/admin/fulfill',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/unlock/$token': typeof ApiPublicUnlockTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/unlock/$token': typeof ApiPublicUnlockTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/unlock/$token': typeof ApiPublicUnlockTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/unlock/$token'
     | '/lovable/email/suppression'
+    | '/api/public/admin/fulfill'
     | '/api/public/payments/webhook'
     | '/api/public/unlock/$token'
     | '/lovable/email/queue/process'
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/unlock/$token'
     | '/lovable/email/suppression'
+    | '/api/public/admin/fulfill'
     | '/api/public/payments/webhook'
     | '/api/public/unlock/$token'
     | '/lovable/email/queue/process'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/unlock/$token'
     | '/lovable/email/suppression'
+    | '/api/public/admin/fulfill'
     | '/api/public/payments/webhook'
     | '/api/public/unlock/$token'
     | '/lovable/email/queue/process'
@@ -209,6 +221,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   UnlockTokenRoute: typeof UnlockTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicAdminFulfillRoute: typeof ApiPublicAdminFulfillRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicUnlockTokenRoute: typeof ApiPublicUnlockTokenRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -316,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/admin/fulfill': {
+      id: '/api/public/admin/fulfill'
+      path: '/api/public/admin/fulfill'
+      fullPath: '/api/public/admin/fulfill'
+      preLoaderRoute: typeof ApiPublicAdminFulfillRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -329,6 +349,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   UnlockTokenRoute: UnlockTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicAdminFulfillRoute: ApiPublicAdminFulfillRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicUnlockTokenRoute: ApiPublicUnlockTokenRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
