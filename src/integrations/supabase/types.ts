@@ -110,6 +110,7 @@ export type Database = {
           id: string
           paid_at: string | null
           payload_json: Json
+          pdf_official_storage_path: string | null
           pdf_storage_path: string | null
           status: string
           stripe_session_id: string | null
@@ -124,6 +125,7 @@ export type Database = {
           id?: string
           paid_at?: string | null
           payload_json: Json
+          pdf_official_storage_path?: string | null
           pdf_storage_path?: string | null
           status?: string
           stripe_session_id?: string | null
@@ -138,6 +140,7 @@ export type Database = {
           id?: string
           paid_at?: string | null
           payload_json?: Json
+          pdf_official_storage_path?: string | null
           pdf_storage_path?: string | null
           status?: string
           stripe_session_id?: string | null

@@ -2,8 +2,10 @@ import { render } from "@react-email/components";
 import * as React from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { renderWorksheetPdf } from "@/lib/pdf/worksheet-pdf";
+import { renderOfficialWorksheetPdf } from "@/lib/pdf/official-worksheet-pdf";
 import { template as worksheetReadyTemplate } from "@/lib/email-templates/worksheet-ready";
 import { getOrCreateUnsubscribeToken } from "@/lib/email/unsubscribe-token.server";
+
 
 const SITE_NAME = "TN Child Support Helper";
 const SENDER_DOMAIN = "notify.tncsg.tcblaw.org";
@@ -45,22 +47,23 @@ export async function fulfillOrder(
     .neq("status", "delivered");
 
   const payload = order.payload_json as { inputs: any; outputs: any; caption: any };
-  const pdfBuf = await renderWorksheetPdf({
-    inputs: payload.inputs,
-    outputs: payload.outputs,
-    caption: payload.caption,
-  });
+  const [pdfBuf, officialPdfBuf] = await Promise.all([
+    renderWorksheetPdf({ inputs: payload.inputs, outputs: payload.outputs, caption: payload.caption }),
+    renderOfficialWorksheetPdf({ inputs: payload.inputs, outputs: payload.outputs, caption: payload.caption }),
+  ]);
 
   const storagePath = `${order.id}/worksheet.pdf`;
-  const { error: upErr } = await sb.storage
-    .from("worksheet-pdfs")
-    .upload(storagePath, pdfBuf, {
-      contentType: "application/pdf",
-      upsert: true,
-    });
+  const officialStoragePath = `${order.id}/worksheet-official.pdf`;
+  const [{ error: upErr }, { error: upErrOfficial }] = await Promise.all([
+    sb.storage.from("worksheet-pdfs").upload(storagePath, pdfBuf, { contentType: "application/pdf", upsert: true }),
+    sb.storage.from("worksheet-pdfs").upload(officialStoragePath, officialPdfBuf, { contentType: "application/pdf", upsert: true }),
+  ]);
   if (upErr) return { ok: false, error: `upload: ${upErr.message}` };
+  if (upErrOfficial) return { ok: false, error: `upload official: ${upErrOfficial.message}` };
+
 
   const downloadUrl = `${origin}/unlock/${order.unlock_token}`;
+  const officialDownloadUrl = `${origin}/unlock/${order.unlock_token}?variant=official`;
   const matterName = payload.caption?.matterName || undefined;
   const amountMonthly = payload.outputs?.allInMonthly
     ? Number(payload.outputs.allInMonthly).toLocaleString("en-US", { maximumFractionDigits: 0 })
@@ -73,7 +76,8 @@ export async function fulfillOrder(
     : dir === "parent_b_to_a" ? `${b} → ${a}`
     : "No transfer";
 
-  const templateData = { matterName, downloadUrl, amountMonthly, amountFromLabel };
+  const templateData = { matterName, downloadUrl, officialDownloadUrl, amountMonthly, amountFromLabel };
+
   const element = React.createElement(worksheetReadyTemplate.component, templateData);
   const html = await render(element);
   const text = await render(element, { plainText: true });
@@ -116,9 +120,11 @@ export async function fulfillOrder(
     .update({
       status: "delivered",
       pdf_storage_path: storagePath,
+      pdf_official_storage_path: officialStoragePath,
       delivered_at: new Date().toISOString(),
     })
     .eq("id", order.id);
+
 
   return { ok: true, storagePath, messageId };
 }
@@ -144,6 +150,7 @@ export async function resendWorksheetEmail(
 
   const payload = order.payload_json as { inputs: any; outputs: any; caption: any };
   const downloadUrl = `${origin}/unlock/${order.unlock_token}`;
+  const officialDownloadUrl = `${origin}/unlock/${order.unlock_token}?variant=official`;
   const matterName = payload.caption?.matterName || undefined;
   const amountMonthly = payload.outputs?.allInMonthly
     ? Number(payload.outputs.allInMonthly).toLocaleString("en-US", { maximumFractionDigits: 0 })
@@ -156,7 +163,8 @@ export async function resendWorksheetEmail(
     : dir === "parent_b_to_a" ? `${b} → ${a}`
     : "No transfer";
 
-  const templateData = { matterName, downloadUrl, amountMonthly, amountFromLabel };
+  const templateData = { matterName, downloadUrl, officialDownloadUrl, amountMonthly, amountFromLabel };
+
   const element = React.createElement(worksheetReadyTemplate.component, templateData);
   const html = await render(element);
   const text = await render(element, { plainText: true });

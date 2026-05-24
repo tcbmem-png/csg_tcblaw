@@ -8,6 +8,7 @@ const SITE_NAME = "TN Child Support Helper";
 interface WorksheetReadyProps {
   matterName?: string;
   downloadUrl?: string;
+  officialDownloadUrl?: string;
   amountFromLabel?: string;
   amountMonthly?: string;
 }
@@ -15,19 +16,21 @@ interface WorksheetReadyProps {
 const WorksheetReadyEmail = ({
   matterName,
   downloadUrl,
+  officialDownloadUrl,
   amountFromLabel,
   amountMonthly,
 }: WorksheetReadyProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your TN child support worksheet PDF is ready</Preview>
+    <Preview>Your TN child support worksheet PDFs are ready</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Your worksheet is ready</Heading>
         <Text style={text}>
-          Thanks for your purchase. Your filing-ready Tennessee child support
-          worksheet PDF{matterName ? ` for ${matterName}` : ""} is attached below
-          as a secure download link.
+          Thanks for your purchase. Your Tennessee child support worksheet
+          {matterName ? ` for ${matterName}` : ""} is ready in two formats — a
+          clean summary for review and the official AOC line-numbered form for
+          filing.
         </Text>
 
         {amountMonthly && amountFromLabel ? (
@@ -39,21 +42,37 @@ const WorksheetReadyEmail = ({
         ) : null}
 
         <Section style={{ textAlign: "center", margin: "28px 0" }}>
+          {officialDownloadUrl ? (
+            <Button href={officialDownloadUrl} style={button}>
+              Download official AOC worksheet
+            </Button>
+          ) : null}
+        </Section>
+
+        <Section style={{ textAlign: "center", margin: "12px 0 28px" }}>
           {downloadUrl ? (
-            <Button href={downloadUrl} style={button}>
-              Download PDF
+            <Button href={downloadUrl} style={buttonSecondary}>
+              Download summary worksheet
             </Button>
           ) : null}
         </Section>
 
         <Text style={small}>
-          The download link is unique to your order. Save the PDF locally —
-          this link will continue to work, but treat it like a receipt.
+          The <strong>official</strong> PDF mirrors the State of Tennessee
+          Child Support Worksheet (Parts I–VI, line numbers 1–16) — file this
+          one with the court. The <strong>summary</strong> PDF is our
+          easier-to-read version of the same calculation for your records or
+          client.
+        </Text>
+
+        <Text style={small}>
+          Links are unique to your order. Save both PDFs locally — the links
+          will continue to work, but treat them like receipts.
         </Text>
 
         <Text style={footer}>
-          This worksheet implements Tenn. Comp. R. &amp; Regs. 1240-02-04 (Income
-          Shares Model). It is a calculation aid and not legal advice.
+          Implements Tenn. Comp. R. &amp; Regs. 1240-02-04 (Income Shares
+          Model). Calculation aid only; not legal advice.
         </Text>
 
         <Text style={footer}>— The {SITE_NAME} Team</Text>
@@ -61,6 +80,7 @@ const WorksheetReadyEmail = ({
     </Body>
   </Html>
 );
+
 
 export const template = {
   component: WorksheetReadyEmail,
@@ -72,6 +92,7 @@ export const template = {
   previewData: {
     matterName: "Smith v. Smith",
     downloadUrl: "https://example.com/unlock/abc123",
+    officialDownloadUrl: "https://example.com/unlock/abc123?variant=official",
     amountFromLabel: "Parent A → Parent B",
     amountMonthly: "1,284",
   },
@@ -100,6 +121,17 @@ const button = {
   fontWeight: 600,
   textDecoration: "none",
   display: "inline-block",
+};
+const buttonSecondary = {
+  backgroundColor: "#ffffff",
+  color: "#1a1a1a",
+  padding: "11px 21px",
+  borderRadius: "4px",
+  fontSize: "14px",
+  fontWeight: 600,
+  textDecoration: "none",
+  display: "inline-block",
+  border: "1px solid #1a1a1a",
 };
 const small = { fontSize: "13px", color: "#666", lineHeight: "1.5", margin: "16px 0 0" };
 const footer = { fontSize: "12px", color: "#888", margin: "20px 0 0", lineHeight: "1.5" };
