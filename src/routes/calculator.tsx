@@ -1,11 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { calculate, defaultInputs } from "@/lib/calc/calc";
 import type { CalcInputs } from "@/lib/calc/types";
 import { CalculatorInputs } from "@/components/calculator/inputs";
 import { ResultSidebar } from "@/components/calculator/result-sidebar";
 import { OfficialWorksheet } from "@/components/calculator/official-worksheet";
 import { ComparisonView } from "@/components/calculator/comparison";
+import { CaseCaptionForm } from "@/components/calculator/case-caption";
+import {
+  defaultCaption,
+  decodeShare,
+  encodeShare,
+  type CaseCaption,
+} from "@/lib/calc/share";
 
 export const Route = createFileRoute("/calculator")({
   head: () => ({
@@ -25,8 +32,34 @@ type Tab = "inputs" | "comparison" | "worksheet";
 
 function CalculatorPage() {
   const [inputs, setInputs] = useState<CalcInputs>(() => defaultInputs());
+  const [caption, setCaption] = useState<CaseCaption>(() => defaultCaption());
   const [tab, setTab] = useState<Tab>("inputs");
+  const hydratedRef = useRef(false);
   const outputs = useMemo(() => calculate(inputs), [inputs]);
+
+  // Hydrate from ?s= on mount.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const s = params.get("s");
+    if (s) {
+      const decoded = decodeShare(s);
+      if (decoded) {
+        setInputs(decoded.inputs);
+        setCaption(decoded.caption);
+      }
+    }
+    hydratedRef.current = true;
+  }, []);
+
+  // Mirror current state into ?s= so the URL is always shareable.
+  useEffect(() => {
+    if (typeof window === "undefined" || !hydratedRef.current) return;
+    const encoded = encodeShare(inputs, caption);
+    const url = new URL(window.location.href);
+    url.searchParams.set("s", encoded);
+    window.history.replaceState({}, "", url.toString());
+  }, [inputs, caption]);
 
   return (
     <div>
@@ -61,11 +94,18 @@ function CalculatorPage() {
           </div>
 
           {tab === "inputs" && (
-            <CalculatorInputs inputs={inputs} setInputs={setInputs} />
+            <>
+              <CaseCaptionForm caption={caption} setCaption={setCaption} />
+              <CalculatorInputs inputs={inputs} setInputs={setInputs} />
+            </>
           )}
           {tab === "comparison" && <ComparisonView inputs={inputs} />}
           {tab === "worksheet" && (
-            <OfficialWorksheet inputs={inputs} outputs={outputs} />
+            <OfficialWorksheet
+              inputs={inputs}
+              outputs={outputs}
+              caption={caption}
+            />
           )}
         </div>
 

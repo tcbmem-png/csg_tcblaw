@@ -1,4 +1,6 @@
 import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
+import type { CaseCaption } from "@/lib/calc/share";
+import { defaultCaption } from "@/lib/calc/share";
 
 function fmt(n: number) {
   const abs = Math.abs(n);
@@ -65,12 +67,20 @@ function SectionHeader({ title }: { title: string }) {
 export function OfficialWorksheet({
   inputs,
   outputs,
+  caption = defaultCaption(),
 }: {
   inputs: CalcInputs;
   outputs: CalcOutputs;
+  caption?: CaseCaption;
 }) {
   const a = inputs.parentALabel;
   const b = inputs.parentBLabel;
+  const hasCaption =
+    caption.matterName ||
+    caption.docketNumber ||
+    caption.court ||
+    caption.preparedBy ||
+    caption.client;
 
   return (
     <div className="print-page">
@@ -94,6 +104,52 @@ export function OfficialWorksheet({
             <div>via TCB Law TN Child Support Calculator</div>
           </div>
         </div>
+
+        {/* Case caption */}
+        {hasCaption && (
+          <div className="grid grid-cols-1 gap-x-6 gap-y-1 border-b border-rule bg-cream px-6 py-4 text-[11px] text-ink sm:grid-cols-2">
+            {caption.matterName && (
+              <div>
+                <span className="font-mono uppercase tracking-widest text-muted-foreground">
+                  Matter ·{" "}
+                </span>
+                {caption.matterName}
+              </div>
+            )}
+            {caption.docketNumber && (
+              <div>
+                <span className="font-mono uppercase tracking-widest text-muted-foreground">
+                  Docket ·{" "}
+                </span>
+                {caption.docketNumber}
+              </div>
+            )}
+            {caption.court && (
+              <div className="sm:col-span-2">
+                <span className="font-mono uppercase tracking-widest text-muted-foreground">
+                  Court ·{" "}
+                </span>
+                {caption.court}
+              </div>
+            )}
+            {caption.client && (
+              <div>
+                <span className="font-mono uppercase tracking-widest text-muted-foreground">
+                  Client ·{" "}
+                </span>
+                {caption.client}
+              </div>
+            )}
+            {caption.preparedBy && (
+              <div>
+                <span className="font-mono uppercase tracking-widest text-muted-foreground">
+                  Prepared by ·{" "}
+                </span>
+                {caption.preparedBy}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Identification */}
         <SectionHeader title="I · Identification" />
