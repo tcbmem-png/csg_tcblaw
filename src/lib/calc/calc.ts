@@ -222,24 +222,21 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
   );
 
   // === SSR check (Rule .02(25) + .09 shaded area) ===
-  // Engages only if the obligor's pro-rata BCSO would reduce them below SSR.
-  // For high-income above-cap cases SSR never applies. For schedule cases,
-  // recompute with obligor-only AGI and pick the lower of the two if the
-  // schedule cell is shaded for that AGI.
+  // The shaded-cell test must key off the OBLIGOR's own AGI, not combined AGI:
+  // a combined-AGI cell can clear the threshold while the obligor-alone lookup
+  // is shaded — exactly the case the rule is meant to catch. For above-cap
+  // combined cases the obligor's own income can still be on the schedule, so
+  // we always perform the alt lookup whenever the obligor has positive AGI
+  // within the schedule range.
   let ssrApplied = false;
   let ssrNote: string | null = null;
   let minimumOrderApplied = false;
   let presumptiveAfterSsr = presumptiveFromA;
-  if (
-    bcsoLookup.source === "schedule" &&
-    bcsoLookup.isShaded &&
-    Math.abs(presumptiveFromA) > 0
-  ) {
-
+  if (Math.abs(presumptiveFromA) > 0) {
     // Identify obligor (the parent with positive outflow).
     const obligorIsA = presumptiveFromA > 0;
     const obligorAgi = obligorIsA ? aAGI : bAGI;
-    if (obligorAgi > 0 && obligorAgi <= 28250) {
+    if (obligorAgi > 0 && obligorAgi <= COMBINED_AGI_CAP) {
       const altLookup = lookupBcso(obligorAgi, inputs.numChildren);
       if (altLookup.isShaded) {
         // Use lower of pro-rata BCSO or alt BCSO for the obligor.
@@ -251,7 +248,7 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
           const final = Math.min(alt, allowed);
           presumptiveAfterSsr = obligorIsA ? final : -final;
           ssrApplied = true;
-          ssrNote = `Self-Support Reserve applied (Rule .02(25)): obligor-only BCSO ($${alt}) used in place of pro-rata BCSO.`;
+          ssrNote = `Self-Support Reserve applied (Rule .02(25)): obligor-only BCSO ($${alt}) used in place of pro-rata BCSO so the obligor retains the $${SSR_AMOUNT}/mo reserve.`;
         }
       }
     }
@@ -385,6 +382,46 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     }
   }
 
+  // === Non-earner ARP explainer (Rule .04(7)(f)) ===
+  // When the ARP has zero/negligible income, pro-rata BCSO yields ~$0 and the
+  // PRP (despite earning more) cannot be ordered to pay the ARP under the
+  // Guidelines. .04(7)(f) permits but does not require PRP→ARP support.
+  let nonEarnerArpNote: string | null = null;
+  if (
+    inputs.parentingType !== "equal" &&
+    Math.abs(presumptiveAfterSsr) < 1 &&
+    combinedAGI > 0
+  ) {
+    const arpAgi = arpIsA ? aAGI : bAGI;
+    const prpAgi = arpIsA ? bAGI : aAGI;
+    if (arpAgi <= 1 && prpAgi > 0) {
+      const arpLabel = arpIsA ? inputs.parentALabel : inputs.parentBLabel;
+      const prpLabel = arpIsA ? inputs.parentBLabel : inputs.parentALabel;
+      nonEarnerArpNote =
+        `Presumptive support is $0 because the alternate residential parent (${arpLabel}) has no income to pay from. ` +
+        `Under the Income Shares model, the ARP's pro-rata share of the BCSO is BCSO × (ARP income / combined income); with zero ARP income that share is zero. ` +
+        `Rule 1240-02-04-.04(7)(f) permits — but does not require — the primary residential parent (${prpLabel}) to be ordered to pay support to the ARP, and the Guidelines provide no formula for doing so. ` +
+        `Any such order is a discretionary deviation under Rule .07, supported by written findings explaining why it is in the children's best interest.`;
+    }
+  }
+
+  // === Zero-presumptive / floor-does-not-apply explainer (Rule .04(12)) ===
+  // The $100 minimum-order floor applies to an obligor who already has a
+  // presumptive obligation. When presumptive support is $0, there is no
+  // obligor and no obligation for the floor to lift.
+  let zeroPresumptiveNote: string | null = null;
+  if (
+    !meansTestedOnly &&
+    combinedAGI > 0 &&
+    Math.abs(presumptiveAfterSsr) < 1 &&
+    nonEarnerArpNote === null
+  ) {
+    zeroPresumptiveNote =
+      `Presumptive support is $0, so the $100/month minimum-order floor under Rule 1240-02-04-.04(12) does not apply. ` +
+      `The floor lifts a small calculated obligation up to $100; it does not create an obligation where the Guidelines produce none. ` +
+      `If the parties believe a non-zero order is warranted (e.g., a parent has unreported income, voluntarily underemployed), the path is to revisit the income inputs or request a written deviation under Rule .07.`;
+  }
+
 
 
 
@@ -489,6 +526,8 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     pcsoBelowCapNote,
     bcsoAboveCapBreakdown,
     equalParentingLowSupportNote,
+    nonEarnerArpNote,
+    zeroPresumptiveNote,
 
 
     scheduleEffectiveDate: SCHEDULE_EFFECTIVE_DATE,
@@ -548,6 +587,8 @@ function emptyOutputs(opts: {
     pcsoBelowCapNote: null,
     bcsoAboveCapBreakdown: null,
     equalParentingLowSupportNote: null,
+    nonEarnerArpNote: null,
+    zeroPresumptiveNote: null,
     scheduleEffectiveDate: SCHEDULE_EFFECTIVE_DATE,
     errors: opts.errors,
   };
