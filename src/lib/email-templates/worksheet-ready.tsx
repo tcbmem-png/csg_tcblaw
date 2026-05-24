@@ -197,3 +197,4 @@ const buttonSecondary = {
 };
 const small = { fontSize: "13px", color: "#666", lineHeight: "1.5", margin: "16px 0 0" };
 const footer = { fontSize: "12px", color: "#888", margin: "20px 0 0", lineHeight: "1.5" };
+const inlineLink = { color: "#1a1a1a", textDecoration: "underline" };
