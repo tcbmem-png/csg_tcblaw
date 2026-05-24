@@ -139,7 +139,7 @@ Direction:    higher-earning parent → lower-earning parent`}
         <strong>Add-ons</strong> (health insurance premium for the children,
         recurring uninsured medical, work-related childcare) are{" "}
         <em>mandatory</em> and allocated <strong>pro-rata</strong> to income
-        share — never 75/25 or 80/20.
+        share.
       </p>
       <p className="mt-3">
         <strong>Private school</strong> is a <em>discretionary deviation</em> —
