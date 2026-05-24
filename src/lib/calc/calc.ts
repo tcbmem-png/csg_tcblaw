@@ -544,6 +544,10 @@ function emptyOutputs(opts: {
     pcsoExceedsStatutoryMax: false,
     pcsoStatutoryMax: 0,
     pcsoCapNote: null,
+    pcsoExcessOverCap: 0,
+    pcsoBelowCapNote: null,
+    bcsoAboveCapBreakdown: null,
+    equalParentingLowSupportNote: null,
     scheduleEffectiveDate: SCHEDULE_EFFECTIVE_DATE,
     errors: opts.errors,
   };
