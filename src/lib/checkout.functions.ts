@@ -86,7 +86,7 @@ export const createUnlockCheckout = createServerFn({ method: "POST" })
       return_url: data.returnUrl,
       customer_email: data.email,
       payment_intent_data: {
-        description: "TN Child Support Worksheet PDF",
+        description: state === "MS" ? "MS Child Support Worksheet PDF" : "TN Child Support Worksheet PDF",
       },
       metadata: {
         order_id: order.id as string,
