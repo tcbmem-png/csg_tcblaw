@@ -9,8 +9,8 @@ import { getOrCreateUnsubscribeToken } from "@/lib/email/unsubscribe-token.serve
 
 
 const SITE_NAME = "TCB Child Support Helper";
-const SENDER_DOMAIN = "notify.tncsg.tcblaw.org";
-const FROM_DOMAIN = "notify.tncsg.tcblaw.org";
+const FROM_EMAIL = "noreply@notify.tncsg.tcblaw.org";
+const RESEND_GATEWAY = "https://connector-gateway.lovable.dev/resend";
 
 export interface FulfillResult {
   ok: boolean;
@@ -26,11 +26,65 @@ function readState(payload: any): OrderState {
   return payload?.state === "MS" ? "MS" : "TN";
 }
 
+function publicOrigin(fallback: string): string {
+  const env = process.env.PUBLIC_SITE_ORIGIN;
+  return env && /^https?:\/\//.test(env) ? env.replace(/\/+$/, "") : fallback;
+}
+
+interface SendArgs {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  attachments: Array<{ filename: string; content: string }>; // base64
+  unsubscribeUrl: string;
+}
+
+async function sendViaResend(args: SendArgs): Promise<{ ok: boolean; error?: string }> {
+  const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
+  const RESEND_API_KEY = process.env.RESEND_API_KEY;
+  if (!LOVABLE_API_KEY) return { ok: false, error: "LOVABLE_API_KEY not configured" };
+  if (!RESEND_API_KEY) return { ok: false, error: "RESEND_API_KEY not configured" };
+
+  const res = await fetch(`${RESEND_GATEWAY}/emails`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "X-Connection-Api-Key": RESEND_API_KEY,
+    },
+    body: JSON.stringify({
+      from: `${SITE_NAME} <${FROM_EMAIL}>`,
+      to: [args.to],
+      subject: args.subject,
+      html: args.html,
+      text: args.text,
+      attachments: args.attachments,
+      headers: {
+        "List-Unsubscribe": `<${args.unsubscribeUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    return { ok: false, error: `resend ${res.status}: ${body.slice(0, 300)}` };
+  }
+  return { ok: true };
+}
+
+function bufToBase64(buf: Uint8Array | ArrayBuffer): string {
+  const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  // Worker runtime: Buffer is available via nodejs_compat
+  return Buffer.from(u8).toString("base64");
+}
+
 /**
- * Idempotently fulfill a paid order: render PDF(s), upload, enqueue email,
- * mark delivered. Safe to call multiple times — early-returns if already
- * delivered. Branches on payload.state for TN (two PDFs: summary + official
- * AOC) vs MS (single PDF).
+ * Idempotently fulfill a paid order: render PDF(s), upload, send email with
+ * PDFs attached, mark delivered. Safe to call multiple times — early-returns
+ * if already delivered. Branches on payload.state for TN (two PDFs: summary
+ * + official AOC) vs MS (single PDF).
  */
 export async function fulfillOrder(
   sb: SupabaseClient,
@@ -59,9 +113,11 @@ export async function fulfillOrder(
 
   const storagePath = `${order.id}/worksheet.pdf`;
   let officialStoragePath: string | null = null;
+  let pdfBuf: Uint8Array;
+  let officialPdfBuf: Uint8Array | null = null;
 
   if (state === "MS") {
-    const pdfBuf = await renderMSWorksheetPdf({
+    pdfBuf = await renderMSWorksheetPdf({
       inputs: payload.inputs,
       outputs: payload.outputs,
       caption: payload.caption,
@@ -71,28 +127,37 @@ export async function fulfillOrder(
       .upload(storagePath, pdfBuf, { contentType: "application/pdf", upsert: true });
     if (upErr) return { ok: false, error: `upload: ${upErr.message}` };
   } else {
-    const [pdfBuf, officialPdfBuf] = await Promise.all([
+    [pdfBuf, officialPdfBuf] = await Promise.all([
       renderWorksheetPdf({ inputs: payload.inputs, outputs: payload.outputs, caption: payload.caption }),
       renderOfficialWorksheetPdf({ inputs: payload.inputs, outputs: payload.outputs, caption: payload.caption }),
     ]);
     officialStoragePath = `${order.id}/worksheet-official.pdf`;
     const [{ error: upErr }, { error: upErrOfficial }] = await Promise.all([
       sb.storage.from("worksheet-pdfs").upload(storagePath, pdfBuf, { contentType: "application/pdf", upsert: true }),
-      sb.storage.from("worksheet-pdfs").upload(officialStoragePath, officialPdfBuf, { contentType: "application/pdf", upsert: true }),
+      sb.storage.from("worksheet-pdfs").upload(officialStoragePath, officialPdfBuf!, { contentType: "application/pdf", upsert: true }),
     ]);
     if (upErr) return { ok: false, error: `upload: ${upErr.message}` };
     if (upErrOfficial) return { ok: false, error: `upload official: ${upErrOfficial.message}` };
   }
 
 
-  const downloadUrl = `${origin}/unlock/${order.unlock_token}`;
+  const linkOrigin = publicOrigin(origin);
+  const downloadUrl = `${linkOrigin}/unlock/${order.unlock_token}`;
   const officialDownloadUrl =
-    state === "TN" ? `${origin}/unlock/${order.unlock_token}?variant=official` : undefined;
+    state === "TN" ? `${linkOrigin}/unlock/${order.unlock_token}?variant=official` : undefined;
   const matterName = payload.caption?.matterName || undefined;
 
   const { amountMonthly, amountFromLabel } = formatAmounts(state, payload);
 
-  const templateData = { state, matterName, downloadUrl, officialDownloadUrl, amountMonthly, amountFromLabel };
+  const templateData = {
+    state,
+    matterName,
+    downloadUrl,
+    officialDownloadUrl,
+    amountMonthly,
+    amountFromLabel,
+    attachmentsIncluded: true,
+  };
 
   const element = React.createElement(worksheetReadyTemplate.component, templateData);
   const html = await render(element);
@@ -102,34 +167,51 @@ export async function fulfillOrder(
       ? worksheetReadyTemplate.subject(templateData)
       : worksheetReadyTemplate.subject;
 
+  const attachments =
+    state === "TN" && officialPdfBuf
+      ? [
+          { filename: "tn-child-support-worksheet-official.pdf", content: bufToBase64(officialPdfBuf) },
+          { filename: "tn-child-support-worksheet.pdf", content: bufToBase64(pdfBuf) },
+        ]
+      : [{ filename: "ms-child-support-worksheet.pdf", content: bufToBase64(pdfBuf) }];
+
   const messageId = crypto.randomUUID();
   const unsubscribeToken = await getOrCreateUnsubscribeToken(sb, order.email);
+  const unsubscribeUrl = `${linkOrigin}/unsubscribe?token=${unsubscribeToken}`;
+
   await sb.from("email_send_log").insert({
     message_id: messageId,
     template_name: "worksheet-ready",
     recipient_email: order.email,
     status: "pending",
   });
-  const { error: enqueueErr } = await sb.rpc("enqueue_email", {
-    queue_name: "transactional_emails",
-    payload: {
-      message_id: messageId,
-      to: order.email,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject,
-      html,
-      text,
-      purpose: "transactional",
-      label: "worksheet-ready",
-      idempotency_key: `worksheet-ready-${order.id}-${Date.now()}`,
-      unsubscribe_token: unsubscribeToken,
-      queued_at: new Date().toISOString(),
-    },
+
+  const sendRes = await sendViaResend({
+    to: order.email,
+    subject,
+    html,
+    text,
+    attachments,
+    unsubscribeUrl,
   });
-  if (enqueueErr) {
-    return { ok: false, error: `enqueue: ${enqueueErr.message}` };
+
+  if (!sendRes.ok) {
+    await sb.from("email_send_log").insert({
+      message_id: messageId,
+      template_name: "worksheet-ready",
+      recipient_email: order.email,
+      status: "failed",
+      error: sendRes.error,
+    });
+    return { ok: false, error: `send: ${sendRes.error}` };
   }
+
+  await sb.from("email_send_log").insert({
+    message_id: messageId,
+    template_name: "worksheet-ready",
+    recipient_email: order.email,
+    status: "sent",
+  });
 
   await sb
     .from("orders")
@@ -170,8 +252,8 @@ function formatAmounts(state: OrderState, payload: any) {
 }
 
 /**
- * Enqueue a worksheet-ready email for an already-delivered order
- * (recovery / "resend my worksheet" flow). Does not re-render PDF.
+ * Re-download PDFs from storage and re-send the worksheet email with
+ * attachments (recovery / "resend my worksheet" flow). Does not re-render PDF.
  */
 export async function resendWorksheetEmail(
   sb: SupabaseClient,
@@ -190,13 +272,40 @@ export async function resendWorksheetEmail(
 
   const payload = order.payload_json as { inputs: any; outputs: any; caption: any; state?: OrderState };
   const state = readState(payload);
-  const downloadUrl = `${origin}/unlock/${order.unlock_token}`;
+  const linkOrigin = publicOrigin(origin);
+  const downloadUrl = `${linkOrigin}/unlock/${order.unlock_token}`;
   const officialDownloadUrl =
-    state === "TN" ? `${origin}/unlock/${order.unlock_token}?variant=official` : undefined;
+    state === "TN" ? `${linkOrigin}/unlock/${order.unlock_token}?variant=official` : undefined;
   const matterName = payload.caption?.matterName || undefined;
   const { amountMonthly, amountFromLabel } = formatAmounts(state, payload);
 
-  const templateData = { state, matterName, downloadUrl, officialDownloadUrl, amountMonthly, amountFromLabel };
+  // Pull PDFs back out of storage.
+  const summaryDl = await sb.storage.from("worksheet-pdfs").download(order.pdf_storage_path as string);
+  if (summaryDl.error || !summaryDl.data) {
+    return { ok: false, error: `download summary: ${summaryDl.error?.message ?? "missing"}` };
+  }
+  const summaryBuf = new Uint8Array(await summaryDl.data.arrayBuffer());
+
+  let officialBuf: Uint8Array | null = null;
+  if (state === "TN" && order.pdf_official_storage_path) {
+    const dl = await sb.storage
+      .from("worksheet-pdfs")
+      .download(order.pdf_official_storage_path as string);
+    if (dl.error || !dl.data) {
+      return { ok: false, error: `download official: ${dl.error?.message ?? "missing"}` };
+    }
+    officialBuf = new Uint8Array(await dl.data.arrayBuffer());
+  }
+
+  const templateData = {
+    state,
+    matterName,
+    downloadUrl,
+    officialDownloadUrl,
+    amountMonthly,
+    amountFromLabel,
+    attachmentsIncluded: true,
+  };
 
   const element = React.createElement(worksheetReadyTemplate.component, templateData);
   const html = await render(element);
@@ -206,32 +315,51 @@ export async function resendWorksheetEmail(
       ? worksheetReadyTemplate.subject(templateData)
       : worksheetReadyTemplate.subject;
 
+  const attachments =
+    state === "TN" && officialBuf
+      ? [
+          { filename: "tn-child-support-worksheet-official.pdf", content: bufToBase64(officialBuf) },
+          { filename: "tn-child-support-worksheet.pdf", content: bufToBase64(summaryBuf) },
+        ]
+      : [{ filename: "ms-child-support-worksheet.pdf", content: bufToBase64(summaryBuf) }];
+
   const messageId = crypto.randomUUID();
   const unsubscribeToken = await getOrCreateUnsubscribeToken(sb, order.email);
+  const unsubscribeUrl = `${linkOrigin}/unsubscribe?token=${unsubscribeToken}`;
+
   await sb.from("email_send_log").insert({
     message_id: messageId,
     template_name: "worksheet-ready",
     recipient_email: order.email,
     status: "pending",
   });
-  const { error: enqueueErr } = await sb.rpc("enqueue_email", {
-    queue_name: "transactional_emails",
-    payload: {
-      message_id: messageId,
-      to: order.email,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject,
-      html,
-      text,
-      purpose: "transactional",
-      label: "worksheet-ready-resend",
-      idempotency_key: `worksheet-resend-${order.id}-${Date.now()}`,
-      unsubscribe_token: unsubscribeToken,
-      queued_at: new Date().toISOString(),
-    },
+
+  const sendRes = await sendViaResend({
+    to: order.email,
+    subject,
+    html,
+    text,
+    attachments,
+    unsubscribeUrl,
   });
-  if (enqueueErr) return { ok: false, error: `enqueue: ${enqueueErr.message}` };
+
+  if (!sendRes.ok) {
+    await sb.from("email_send_log").insert({
+      message_id: messageId,
+      template_name: "worksheet-ready",
+      recipient_email: order.email,
+      status: "failed",
+      error: sendRes.error,
+    });
+    return { ok: false, error: `send: ${sendRes.error}` };
+  }
+
+  await sb.from("email_send_log").insert({
+    message_id: messageId,
+    template_name: "worksheet-ready",
+    recipient_email: order.email,
+    status: "sent",
+  });
 
   return { ok: true, messageId };
 }
