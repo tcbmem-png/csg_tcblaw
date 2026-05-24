@@ -50,6 +50,7 @@ export interface CalcInputs {
   healthPremiumMonthly: number;
   healthPaidBy: "parent_a" | "parent_b";
   uninsuredMedicalMonthly: number;
+  uninsuredMedicalPaidBy: "parent_a" | "parent_b" | "split_pro_rata";
   childcareMonthly: number;
   childcarePaidBy: "parent_a" | "parent_b";
   /** Official Line 8c (payroll-deducted) vs 8d (non-payroll-deducted). Math identical;
