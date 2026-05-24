@@ -66,6 +66,32 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+const SITE_URL = "https://tncsg.tcblaw.org";
+const SITE_NAME = "TN Child Support Calculator";
+const OG_IMAGE =
+  "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6efdae8a-fea3-4e17-a327-e9a70200a8ce/id-preview-6e78522f--82e5e86b-e638-4ac3-85c4-a30e79254546.lovable.app-1779593142024.png";
+
+const ORG_JSONLD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: "TCB Law, PLLC",
+      url: SITE_URL,
+      logo: OG_IMAGE,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      publisher: { "@id": `${SITE_URL}/#organization` },
+      inLanguage: "en-US",
+    },
+  ],
+};
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -78,6 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Open-source Tennessee child support calculator implementing Rule 1240-02-04 (Income Shares Model). Built for attorneys, parties, and mediators.",
       },
       { name: "author", content: "TCB Law, PLLC" },
+      { property: "og:site_name", content: SITE_NAME },
       { property: "og:title", content: "TN Child Support Calculator — TCB Law" },
       {
         property: "og:description",
@@ -85,15 +112,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Accurate, transparent Tennessee child support calculation under Rule 1240-02-04. Generates an official-style worksheet for negotiation and filing.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { property: "og:image", content: OG_IMAGE },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "TN Child Support Calculator — TCB Law" },
-      { name: "description", content: "TN Child Support Assistant calculates Tennessee child support obligations and generates official worksheets." },
-      { property: "og:description", content: "TN Child Support Assistant calculates Tennessee child support obligations and generates official worksheets." },
-      { name: "twitter:description", content: "TN Child Support Assistant calculates Tennessee child support obligations and generates official worksheets." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6efdae8a-fea3-4e17-a327-e9a70200a8ce/id-preview-6e78522f--82e5e86b-e638-4ac3-85c4-a30e79254546.lovable.app-1779593142024.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6efdae8a-fea3-4e17-a327-e9a70200a8ce/id-preview-6e78522f--82e5e86b-e638-4ac3-85c4-a30e79254546.lovable.app-1779593142024.png" },
+      {
+        name: "twitter:description",
+        content:
+          "Accurate, transparent Tennessee child support calculation under Rule 1240-02-04.",
+      },
+      { name: "twitter:image", content: OG_IMAGE },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(ORG_JSONLD),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,

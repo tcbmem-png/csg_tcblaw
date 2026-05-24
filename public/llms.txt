@@ -1,0 +1,12 @@
+# TN Child Support Calculator
+
+> Open-source Tennessee child support calculator implementing Tenn. Comp. R. & Regs. Chapter 1240-02-04 (Income Shares Model). Built and maintained by TCB Law, PLLC for attorneys, parties, and mediators.
+
+The calculator implements the official 2022 TN DHS Income Shares Worksheet — BCSO schedule, above-cap formula, parenting-time adjustment, statutory PCSO maximums, and add-ons — and is verified within $1 of the official worksheet.
+
+## Pages
+
+- [Home](/): Overview and entry point to the calculator.
+- [Calculator](/calculator): Run a full Tennessee child support calculation and generate an official-style worksheet.
+- [How it works](/how-it-works): Plain-English walkthrough of Rule 1240-02-04 — combined income, BCSO, parenting time, add-ons, and the final order.
+- [About](/about): Data sources, scope, verification, and limitations.

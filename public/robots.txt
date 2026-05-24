@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /unlock/
+Disallow: /checkout/
+Disallow: /unsubscribe
+Disallow: /api/
+
+Sitemap: https://tncsg.tcblaw.org/sitemap.xml
