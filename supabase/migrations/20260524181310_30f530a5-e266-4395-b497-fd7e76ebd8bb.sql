@@ -1,0 +1,1 @@
+UPDATE public.orders SET status = 'paid', delivered_at = NULL WHERE id = 'e327a75f-c29e-42af-84c7-813af09181fa';
