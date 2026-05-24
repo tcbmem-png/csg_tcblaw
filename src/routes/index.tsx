@@ -7,9 +7,17 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
+          "Tennessee child support, calculated right. Open-source Income Shares calculator with official-style worksheet output for negotiation and filing.",
+      },
+      { property: "og:title", content: "TN Child Support Calculator — TCB Law" },
+      {
+        property: "og:description",
+        content:
           "Tennessee child support, calculated right. Open-source Income Shares calculator with official-style worksheet output.",
       },
+      { property: "og:url", content: "https://tncsg.tcblaw.org/" },
     ],
+    links: [{ rel: "canonical", href: "https://tncsg.tcblaw.org/" }],
   }),
   component: Index,
 });
