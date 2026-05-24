@@ -226,6 +226,7 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
   // schedule cell is shaded for that AGI.
   let ssrApplied = false;
   let ssrNote: string | null = null;
+  let minimumOrderApplied = false;
   let presumptiveAfterSsr = presumptiveFromA;
   if (
     bcsoLookup.source === "schedule" &&
@@ -357,6 +358,7 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     if (absPresumptive > 0 && absPresumptive < MIN_SUPPORT_MONTHLY) {
       const adjust = MIN_SUPPORT_MONTHLY - absPresumptive;
       allInMonthlyFromA += presumptiveAfterSsr > 0 ? adjust : -adjust;
+      minimumOrderApplied = true;
       warnings.push(
         `Minimum support floor of $${MIN_SUPPORT_MONTHLY}/month applied per Rule .04(12).`,
       );
@@ -390,6 +392,7 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
 
     ssrApplied,
     ssrNote,
+    minimumOrderApplied,
 
     addOnHealthFromA: r$(addOnHealthFromA),
     addOnMedicalFromA: r$(addOnMedicalFromA),
@@ -447,6 +450,7 @@ function emptyOutputs(opts: {
     presumptiveDirection: "none",
     ssrApplied: false,
     ssrNote: null,
+    minimumOrderApplied: false,
     addOnHealthFromA: 0,
     addOnMedicalFromA: 0,
     addOnChildcareFromA: 0,
@@ -501,6 +505,7 @@ export function defaultInputs(): CalcInputs {
     uninsuredMedicalMonthly: 0,
     childcareMonthly: 0,
     childcarePaidBy: "parent_a",
+    childcarePayrollDeducted: false,
     includePrivateSchool: false,
     privateSchoolAnnual: 0,
     privateSchoolPaidBy: "split_pro_rata",
