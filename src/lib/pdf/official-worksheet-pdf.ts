@@ -215,14 +215,20 @@ function identTable(
   drawCenter(ctx, "SPLIT", C_X + colW / 2, ctx.y - 9, { size: 8, bold: true });
   ctx.y -= colHdrH;
 
+  // Inside the label block (NUM_X..A_X) we reserve the LEFT ~150pt for the
+  // printed label and the RIGHT ~50pt for an underlined value field.
+  const labelLeftX = NUM_X;
+  const valueLeftX = NUM_X + 154;
+  const valueRightX = A_X - 4;
+
   const drawNameRow = (label: string, value: string, isPrp: boolean, isArp: boolean) => {
     const h = 14;
     ensure(ctx, h);
     const yBot = ctx.y - h;
-    // Label + name baseline rule
-    ctx.pdf.line(LBL_X, yBot, A_X - 4, yBot, RULE, 0.5);
-    draw(ctx, label, NUM_X, yBot + 4, { size: 9, bold: true });
-    draw(ctx, value, LBL_X + 4, yBot + 4, { size: 9, maxWidth: A_X - LBL_X - 8 });
+    // Underline for the name value
+    ctx.pdf.line(valueLeftX, yBot, valueRightX, yBot, RULE, 0.5);
+    draw(ctx, label, labelLeftX, yBot + 4, { size: 9, bold: true, maxWidth: valueLeftX - labelLeftX - 2 });
+    draw(ctx, value, valueLeftX + 2, yBot + 4, { size: 9, maxWidth: valueRightX - valueLeftX - 4 });
     // Three X-boxes
     [A_X, B_X, C_X].forEach((x) => {
       ctx.pdf.strokeRect(x, yBot, colW, h, RULE, 0.4);
