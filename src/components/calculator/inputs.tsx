@@ -478,10 +478,24 @@ export function CalculatorInputs({
               ]}
             />
           </Field>
-          <Field label="Recurring uninsured medical / mo">
+          <Field
+            label="Recurring uninsured medical / mo"
+            help="Pro-rata reimbursement to the parent who pays out-of-pocket. Choose 'Split pro-rata' if both parents already pay their share directly."
+          >
             <NumInput
               value={inputs.uninsuredMedicalMonthly}
               onChange={(n) => u({ uninsuredMedicalMonthly: n })}
+            />
+          </Field>
+          <Field label="Uninsured medical paid by">
+            <Radio
+              value={inputs.uninsuredMedicalPaidBy}
+              onChange={(v) => u({ uninsuredMedicalPaidBy: v })}
+              options={[
+                { value: "parent_a", label: inputs.parentALabel },
+                { value: "parent_b", label: inputs.parentBLabel },
+                { value: "split_pro_rata", label: "Split pro-rata" },
+              ]}
             />
           </Field>
           <Field label="Work-related childcare / mo">
