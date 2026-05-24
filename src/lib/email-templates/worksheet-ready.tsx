@@ -92,6 +92,7 @@ export const template = {
   previewData: {
     matterName: "Smith v. Smith",
     downloadUrl: "https://example.com/unlock/abc123",
+    officialDownloadUrl: "https://example.com/unlock/abc123?variant=official",
     amountFromLabel: "Parent A → Parent B",
     amountMonthly: "1,284",
   },
