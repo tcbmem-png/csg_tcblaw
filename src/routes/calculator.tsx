@@ -26,7 +26,15 @@ export const Route = createFileRoute("/calculator")({
         content:
           "Calculate Tennessee child support under the Income Shares Model. Generates an official-style worksheet for negotiation or filing.",
       },
+      { property: "og:title", content: "Tennessee Child Support Calculator" },
+      {
+        property: "og:description",
+        content:
+          "Run a full Tennessee Income Shares calculation with parenting-time, add-ons, and credits, and download an official-style worksheet.",
+      },
+      { property: "og:url", content: "https://tncsg.tcblaw.org/calculator" },
     ],
+    links: [{ rel: "canonical", href: "https://tncsg.tcblaw.org/calculator" }],
   }),
   component: CalculatorPage,
 });
