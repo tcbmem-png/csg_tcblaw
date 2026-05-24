@@ -112,6 +112,20 @@ export function ResultSidebar({
         </div>
       )}
 
+      {outputs.nonEarnerArpNote && (
+        <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
+          <div className="mb-1 font-semibold">Why is presumptive support $0?</div>
+          {outputs.nonEarnerArpNote}
+        </div>
+      )}
+
+      {outputs.zeroPresumptiveNote && (
+        <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
+          <div className="mb-1 font-semibold">Why doesn't the $100 minimum apply?</div>
+          {outputs.zeroPresumptiveNote}
+        </div>
+      )}
+
       {outputs.warnings.length > 0 && (
         <ul className="mt-4 space-y-2 rounded-md border border-accent/50 bg-accent/10 p-3 text-xs text-ink">
           {outputs.warnings.map((w, i) => (
