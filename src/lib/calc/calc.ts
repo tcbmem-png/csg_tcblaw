@@ -450,6 +450,7 @@ function emptyOutputs(opts: {
     presumptiveDirection: "none",
     ssrApplied: false,
     ssrNote: null,
+    minimumOrderApplied: false,
     addOnHealthFromA: 0,
     addOnMedicalFromA: 0,
     addOnChildcareFromA: 0,
