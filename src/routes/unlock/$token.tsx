@@ -1,4 +1,6 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { setStoredUnlock } from "@/lib/calc/unlock";
 
 export const Route = createFileRoute("/unlock/$token")({
   head: () => ({ meta: [{ title: "Download worksheet — TN Child Support" }] }),
@@ -8,6 +10,9 @@ export const Route = createFileRoute("/unlock/$token")({
 function UnlockPage() {
   const { token } = useParams({ from: "/unlock/$token" });
   const href = `/api/public/unlock/${token}`;
+  useEffect(() => {
+    if (token) setStoredUnlock(token);
+  }, [token]);
   return (
     <div className="mx-auto max-w-xl px-6 py-16">
       <h1 className="font-serif text-3xl text-ink">Your worksheet</h1>
