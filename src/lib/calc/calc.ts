@@ -486,6 +486,7 @@ function emptyOutputs(opts: {
     warnings: opts.warnings,
     pcsoExceedsStatutoryMax: false,
     pcsoStatutoryMax: 0,
+    pcsoCapNote: null,
     scheduleEffectiveDate: SCHEDULE_EFFECTIVE_DATE,
     errors: opts.errors,
   };
