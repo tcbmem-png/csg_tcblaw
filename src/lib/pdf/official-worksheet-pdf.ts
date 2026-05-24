@@ -673,7 +673,7 @@ export async function renderOfficialWorksheetPdf(args: {
   });
   valueRow(ctx, {
     n: "16",
-    label: "FCSO adjusted for federal benefit, Line 1a, Obligor's column",
+    label: "FCSO adjusted for federal benefit (Line 1a)",
     a: outputs.arpIdentity === "parent_a" ? dollar(outputs.allInMonthly) : "",
     b: outputs.arpIdentity === "parent_b" ? dollar(outputs.allInMonthly) : "",
     c: undefined,
