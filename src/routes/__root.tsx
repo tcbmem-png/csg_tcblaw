@@ -121,6 +121,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Accurate, transparent Tennessee child support calculation under Rule 1240-02-04.",
       },
       { name: "twitter:image", content: OG_IMAGE },
+      { name: "google-site-verification", content: "Fb8iyeBlllQSRU1F9KwH7nvTsD1jInErSa1VujsNxiw" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
     scripts: [
