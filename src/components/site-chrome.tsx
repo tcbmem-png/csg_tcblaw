@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { CONSTANTS_EFFECTIVE_DATE } from "@/lib/calc/data/constants";
 
 export function SiteHeader() {
   return (
@@ -40,7 +41,6 @@ export function SiteHeader() {
   );
 }
 
-import { CONSTANTS_EFFECTIVE_DATE } from "@/lib/calc/data/constants";
 
 const APP_VERSION = "v1.0.0";
 const GITHUB_URL = "https://github.com/tcb-law/tn-child-support-calculator";
