@@ -5,6 +5,8 @@ import type { CalcInputs } from "@/lib/calc/types";
 import { CalculatorInputs } from "@/components/calculator/inputs";
 import { ResultSidebar } from "@/components/calculator/result-sidebar";
 import { OfficialWorksheet } from "@/components/calculator/official-worksheet";
+import { UnlockPdfPanel } from "@/components/calculator/unlock-pdf-panel";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ComparisonView } from "@/components/calculator/comparison";
 import { CaseCaptionForm } from "@/components/calculator/case-caption";
 import { ComparisonAppendix } from "@/components/calculator/comparison-appendix";
@@ -64,6 +66,7 @@ function CalculatorPage() {
 
   return (
     <div>
+      <PaymentTestModeBanner />
       <div className="border-b border-rule bg-cream no-print">
         <div className="mx-auto max-w-6xl px-6 py-6">
           <h1 className="font-serif text-3xl text-ink">Calculator</h1>
@@ -109,6 +112,7 @@ function CalculatorPage() {
                 caption={caption}
               />
               <ComparisonAppendix inputs={inputs} caption={caption} />
+              <UnlockPdfPanel inputs={inputs} outputs={outputs} caption={caption} />
             </>
           )}
         </div>
