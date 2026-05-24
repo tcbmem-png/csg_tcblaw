@@ -330,10 +330,10 @@ export async function resendWorksheetEmail(
   const attachments =
     state === "TN" && officialBuf
       ? [
-          { filename: "tn-child-support-worksheet-official.pdf", content: bufToBase64(officialBuf) },
-          { filename: "tn-child-support-worksheet.pdf", content: bufToBase64(summaryBuf) },
+          { filename: "tn-child-support-worksheet-official.pdf", content: bufToBase64(officialBuf), content_type: "application/pdf" },
+          { filename: "tn-child-support-worksheet.pdf", content: bufToBase64(summaryBuf), content_type: "application/pdf" },
         ]
-      : [{ filename: "ms-child-support-worksheet.pdf", content: bufToBase64(summaryBuf) }];
+      : [{ filename: "ms-child-support-worksheet.pdf", content: bufToBase64(summaryBuf), content_type: "application/pdf" }];
 
   const messageId = crypto.randomUUID();
   const unsubscribeToken = await getOrCreateUnsubscribeToken(sb, order.email);
