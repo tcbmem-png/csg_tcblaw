@@ -485,6 +485,10 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     pcsoExceedsStatutoryMax,
     pcsoStatutoryMax,
     pcsoCapNote,
+    pcsoExcessOverCap,
+    pcsoBelowCapNote,
+    bcsoAboveCapBreakdown,
+    equalParentingLowSupportNote,
 
 
     scheduleEffectiveDate: SCHEDULE_EFFECTIVE_DATE,
