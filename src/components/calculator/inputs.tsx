@@ -1,0 +1,467 @@
+import type { CalcInputs } from "@/lib/calc/types";
+import { IMPUTATION_DEFAULT_ANNUAL } from "@/lib/calc/data/constants";
+
+type Setter = (next: CalcInputs) => void;
+
+function fmt$(n: number): string {
+  if (!isFinite(n)) return "0";
+  return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+
+function NumInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div className="flex items-center rounded-md border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
+      <span className="mr-1 text-muted-foreground">$</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        className="w-full bg-transparent text-right font-mono text-sm text-ink outline-none"
+        value={value === 0 ? "" : fmt$(value)}
+        placeholder={placeholder ?? "0"}
+        onChange={(e) => {
+          const raw = e.target.value.replace(/[^0-9.]/g, "");
+          const n = parseFloat(raw);
+          onChange(isNaN(n) ? 0 : n);
+        }}
+      />
+    </div>
+  );
+}
+
+function Section({
+  title,
+  cite,
+  children,
+}: {
+  title: string;
+  cite?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mb-6 rounded-lg border border-rule bg-card p-6">
+      <header className="mb-4 flex items-baseline justify-between gap-4 border-b border-rule pb-3">
+        <h2 className="font-serif text-lg text-ink">{title}</h2>
+        {cite && (
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            {cite}
+          </span>
+        )}
+      </header>
+      <div className="space-y-4">{children}</div>
+    </section>
+  );
+}
+
+function Field({
+  label,
+  help,
+  children,
+}: {
+  label: string;
+  help?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <div className="mb-1 text-sm font-medium text-ink">{label}</div>
+      {children}
+      {help && <div className="mt-1 text-xs text-muted-foreground">{help}</div>}
+    </label>
+  );
+}
+
+function Grid({ children }: { children: React.ReactNode }) {
+  return <div className="grid gap-4 md:grid-cols-2">{children}</div>;
+}
+
+function Toggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (b: boolean) => void;
+  label: string;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-3">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={
+          "relative h-5 w-9 shrink-0 rounded-full border transition-colors " +
+          (checked
+            ? "border-primary bg-primary"
+            : "border-input bg-background")
+        }
+      >
+        <span
+          className={
+            "absolute top-0.5 h-4 w-4 rounded-full bg-card shadow transition-transform " +
+            (checked ? "translate-x-4" : "translate-x-0.5")
+          }
+        />
+      </button>
+      <span className="text-sm text-ink">{label}</span>
+    </label>
+  );
+}
+
+function Radio<T extends string>({
+  value,
+  onChange,
+  options,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: string }[];
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => onChange(o.value)}
+          className={
+            "rounded-md border px-3 py-1.5 text-sm transition-colors " +
+            (value === o.value
+              ? "border-primary bg-primary text-primary-foreground"
+              : "border-input bg-background text-ink hover:bg-accent/40")
+          }
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function CalculatorInputs({
+  inputs,
+  setInputs,
+}: {
+  inputs: CalcInputs;
+  setInputs: Setter;
+}) {
+  const u = (patch: Partial<CalcInputs>) => setInputs({ ...inputs, ...patch });
+
+  return (
+    <div>
+      <Section title="Parents" cite="Rule .04(3)">
+        <Grid>
+          <Field label="Parent A label">
+            <input
+              type="text"
+              value={inputs.parentALabel}
+              onChange={(e) => u({ parentALabel: e.target.value })}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-ring"
+            />
+          </Field>
+          <Field label="Parent B label">
+            <input
+              type="text"
+              value={inputs.parentBLabel}
+              onChange={(e) => u({ parentBLabel: e.target.value })}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-ring"
+            />
+          </Field>
+        </Grid>
+      </Section>
+
+      <Section title="Children" cite="Rule .09">
+        <Field label="Number of children" help="1 to 5. For 6+, consult counsel.">
+          <Radio
+            value={String(inputs.numChildren) as "1" | "2" | "3" | "4" | "5"}
+            onChange={(v) => u({ numChildren: parseInt(v) })}
+            options={[
+              { value: "1", label: "1" },
+              { value: "2", label: "2" },
+              { value: "3", label: "3" },
+              { value: "4", label: "4" },
+              { value: "5", label: "5" },
+            ]}
+          />
+        </Field>
+      </Section>
+
+      <Section title="Parenting time" cite="Rule .04(7)">
+        <Field label="Arrangement">
+          <Radio
+            value={inputs.parentingType}
+            onChange={(v) => u({ parentingType: v })}
+            options={[
+              { value: "standard", label: "Standard (80 ARP days)" },
+              { value: "equal", label: "Equal 50/50" },
+              { value: "custom", label: "Custom days" },
+            ]}
+          />
+        </Field>
+        {inputs.parentingType === "standard" && (
+          <Field label="Which parent is the ARP?">
+            <Radio
+              value={inputs.arpForStandard ?? "parent_b"}
+              onChange={(v) => u({ arpForStandard: v })}
+              options={[
+                { value: "parent_a", label: inputs.parentALabel },
+                { value: "parent_b", label: inputs.parentBLabel },
+              ]}
+            />
+          </Field>
+        )}
+        {inputs.parentingType === "custom" && (
+          <Grid>
+            <Field
+              label={`${inputs.parentALabel} days/year`}
+              help="Total of both parents must = 365."
+            >
+              <NumInput
+                value={inputs.parentADays ?? 0}
+                onChange={(n) =>
+                  u({ parentADays: n, parentBDays: Math.max(0, 365 - n) })
+                }
+              />
+            </Field>
+            <Field label={`${inputs.parentBLabel} days/year`}>
+              <NumInput
+                value={inputs.parentBDays ?? 0}
+                onChange={(n) =>
+                  u({ parentBDays: n, parentADays: Math.max(0, 365 - n) })
+                }
+              />
+            </Field>
+          </Grid>
+        )}
+      </Section>
+
+      <Section title={`Income — ${inputs.parentALabel}`} cite="Rule .04(3)">
+        <Field
+          label="Gross monthly income"
+          help="Use W-2 Box 5 (Medicare wages), NOT Box 1. Include all income from all sources before taxes and voluntary retirement."
+        >
+          <NumInput
+            value={inputs.parentAGrossMonthly}
+            onChange={(n) => u({ parentAGrossMonthly: n })}
+          />
+        </Field>
+      </Section>
+
+      <Section title={`Income — ${inputs.parentBLabel}`} cite="Rule .04(3)">
+        <Toggle
+          checked={inputs.useImputationForB}
+          onChange={(b) => u({ useImputationForB: b })}
+          label="Impute income (voluntary underemployment)"
+        />
+        <Field label="Gross monthly income">
+          <NumInput
+            value={inputs.parentBGrossMonthly}
+            onChange={(n) => u({ parentBGrossMonthly: n })}
+          />
+        </Field>
+        {inputs.useImputationForB && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded-md border border-input bg-background px-3 py-1.5 text-xs text-ink hover:bg-accent/40"
+              onClick={() =>
+                u({
+                  parentBGrossMonthly:
+                    IMPUTATION_DEFAULT_ANNUAL.female / 12,
+                })
+              }
+            >
+              Use TN default (female): ${fmt$(IMPUTATION_DEFAULT_ANNUAL.female)}/yr
+            </button>
+            <button
+              type="button"
+              className="rounded-md border border-input bg-background px-3 py-1.5 text-xs text-ink hover:bg-accent/40"
+              onClick={() =>
+                u({
+                  parentBGrossMonthly: IMPUTATION_DEFAULT_ANNUAL.male / 12,
+                })
+              }
+            >
+              Use TN default (male): ${fmt$(IMPUTATION_DEFAULT_ANNUAL.male)}/yr
+            </button>
+          </div>
+        )}
+      </Section>
+
+      <Section title="Adjustments (credits)" cite="Rule .04(4)–(6)">
+        <Grid>
+          <Field label={`${inputs.parentALabel} SE tax credit / mo`}>
+            <NumInput
+              value={inputs.parentASECredit}
+              onChange={(n) => u({ parentASECredit: n })}
+            />
+          </Field>
+          <Field label={`${inputs.parentBLabel} SE tax credit / mo`}>
+            <NumInput
+              value={inputs.parentBSECredit}
+              onChange={(n) => u({ parentBSECredit: n })}
+            />
+          </Field>
+          <Field label={`${inputs.parentALabel} prior support paid / mo`}>
+            <NumInput
+              value={inputs.parentAPriorSupport}
+              onChange={(n) => u({ parentAPriorSupport: n })}
+            />
+          </Field>
+          <Field label={`${inputs.parentBLabel} prior support paid / mo`}>
+            <NumInput
+              value={inputs.parentBPriorSupport}
+              onChange={(n) => u({ parentBPriorSupport: n })}
+            />
+          </Field>
+          <Field label={`${inputs.parentALabel} in-home children credit / mo`}>
+            <NumInput
+              value={inputs.parentAInhomeCredit}
+              onChange={(n) => u({ parentAInhomeCredit: n })}
+            />
+          </Field>
+          <Field label={`${inputs.parentBLabel} in-home children credit / mo`}>
+            <NumInput
+              value={inputs.parentBInhomeCredit}
+              onChange={(n) => u({ parentBInhomeCredit: n })}
+            />
+          </Field>
+        </Grid>
+      </Section>
+
+      <Section title="Mandatory add-ons (pro-rata)" cite="Rule .04(8)">
+        <Grid>
+          <Field label="Health insurance premium (children's portion) / mo">
+            <NumInput
+              value={inputs.healthPremiumMonthly}
+              onChange={(n) => u({ healthPremiumMonthly: n })}
+            />
+          </Field>
+          <Field label="Premium paid by">
+            <Radio
+              value={inputs.healthPaidBy}
+              onChange={(v) => u({ healthPaidBy: v })}
+              options={[
+                { value: "parent_a", label: inputs.parentALabel },
+                { value: "parent_b", label: inputs.parentBLabel },
+              ]}
+            />
+          </Field>
+          <Field label="Recurring uninsured medical / mo">
+            <NumInput
+              value={inputs.uninsuredMedicalMonthly}
+              onChange={(n) => u({ uninsuredMedicalMonthly: n })}
+            />
+          </Field>
+          <Field label="Work-related childcare / mo">
+            <NumInput
+              value={inputs.childcareMonthly}
+              onChange={(n) => u({ childcareMonthly: n })}
+            />
+          </Field>
+          <Field label="Childcare paid by">
+            <Radio
+              value={inputs.childcarePaidBy}
+              onChange={(v) => u({ childcarePaidBy: v })}
+              options={[
+                { value: "parent_a", label: inputs.parentALabel },
+                { value: "parent_b", label: inputs.parentBLabel },
+              ]}
+            />
+          </Field>
+        </Grid>
+      </Section>
+
+      <Section
+        title="Private school (discretionary deviation)"
+        cite="Rule .07(2)(d)"
+      >
+        <Toggle
+          checked={inputs.includePrivateSchool}
+          onChange={(b) => u({ includePrivateSchool: b })}
+          label="Include private school as a deviation"
+        />
+        {inputs.includePrivateSchool && (
+          <Grid>
+            <Field
+              label="Annual tuition (combined)"
+              help="Pro-rata to income share if granted. NOT 75/25 or 80/20."
+            >
+              <NumInput
+                value={inputs.privateSchoolAnnual}
+                onChange={(n) => u({ privateSchoolAnnual: n })}
+              />
+            </Field>
+            <Field label="Paid by">
+              <Radio
+                value={inputs.privateSchoolPaidBy}
+                onChange={(v) => u({ privateSchoolPaidBy: v })}
+                options={[
+                  { value: "parent_a", label: inputs.parentALabel },
+                  { value: "parent_b", label: inputs.parentBLabel },
+                  { value: "split_pro_rata", label: "Split pro-rata" },
+                ]}
+              />
+            </Field>
+          </Grid>
+        )}
+        {inputs.includePrivateSchool && (
+          <div className="rounded-md border border-accent/40 bg-accent/10 p-3 text-xs text-ink">
+            Private school is a <strong>discretionary deviation</strong>. The
+            court must make written findings that it is in the child's best
+            interest and consistent with the parents' financial circumstances.
+            It is NOT a mandatory add-on.
+          </div>
+        )}
+      </Section>
+
+      <Section title="Special expenses (7% threshold)" cite="Rule .07(2)(d)">
+        <Toggle
+          checked={inputs.includeSpecialExpenses}
+          onChange={(b) => u({ includeSpecialExpenses: b })}
+          label="Include special expenses"
+        />
+        {inputs.includeSpecialExpenses && (
+          <>
+            <Grid>
+              <Field
+                label="Monthly total"
+                help="Camp, lessons, travel, school clubs/athletics."
+              >
+                <NumInput
+                  value={inputs.specialExpensesMonthly}
+                  onChange={(n) => u({ specialExpensesMonthly: n })}
+                />
+              </Field>
+              <Field label="Paid by">
+                <Radio
+                  value={inputs.specialExpensesPaidBy}
+                  onChange={(v) => u({ specialExpensesPaidBy: v })}
+                  options={[
+                    { value: "parent_a", label: inputs.parentALabel },
+                    { value: "parent_b", label: inputs.parentBLabel },
+                    { value: "split_pro_rata", label: "Split pro-rata" },
+                  ]}
+                />
+              </Field>
+            </Grid>
+            <Toggle
+              checked={inputs.specialExpensesWaiveThreshold}
+              onChange={(b) => u({ specialExpensesWaiveThreshold: b })}
+              label="Parties have agreed to waive the 7% threshold"
+            />
+          </>
+        )}
+      </Section>
+    </div>
+  );
+}
