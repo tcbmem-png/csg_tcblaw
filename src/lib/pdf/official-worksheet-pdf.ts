@@ -628,7 +628,7 @@ export async function renderOfficialWorksheetPdf(args: {
   });
   valueRow(ctx, {
     n: "13c",
-    label: "Actual variance between current order and PCSO / BCSO",
+    label: "Actual variance vs PCSO / BCSO",
     a: "",
     b: "",
     c: undefined,
