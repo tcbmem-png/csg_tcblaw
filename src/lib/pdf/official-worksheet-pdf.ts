@@ -517,38 +517,43 @@ export async function renderOfficialWorksheetPdf(args: {
   const hpB = inputs.healthPaidBy === "parent_b" ? inputs.healthPremiumMonthly : 0;
   const ccA = inputs.childcarePaidBy === "parent_a" ? inputs.childcareMonthly : 0;
   const ccB = inputs.childcarePaidBy === "parent_b" ? inputs.childcareMonthly : 0;
-  const umedA = inputs.uninsuredMedicalPaidBy === "parent_a" ? inputs.uninsuredMedicalMonthly : 0;
-  const umedB = inputs.uninsuredMedicalPaidBy === "parent_b" ? inputs.uninsuredMedicalMonthly : 0;
+  // Uninsured medical only enters the worksheet when one parent is paying
+  // out-of-pocket. When the policy is "split_pro_rata" (the default), each
+  // parent absorbs their PI share directly and nothing flows through the
+  // additional-expenses table. This mirrors src/lib/calc/calc.ts.
+  const umedIsSplit = inputs.uninsuredMedicalPaidBy === "split_pro_rata";
+  const umedA = !umedIsSplit && inputs.uninsuredMedicalPaidBy === "parent_a" ? inputs.uninsuredMedicalMonthly : 0;
+  const umedB = !umedIsSplit && inputs.uninsuredMedicalPaidBy === "parent_b" ? inputs.uninsuredMedicalMonthly : 0;
   valueRow(ctx, {
     n: "8a",
     label: "Children's portion of health insurance premium",
     a: dollar(hpA),
     b: dollar(hpB),
-    c: dollar(hpA + hpB),
+    c: undefined,
   });
   valueRow(ctx, {
     n: "8b",
     label: "Recurring Uninsured Medical Expenses",
     a: dollar(umedA),
     b: dollar(umedB),
-    c: dollar(inputs.uninsuredMedicalMonthly),
+    c: undefined,
   });
   valueRow(ctx, {
     n: "8c",
     label: "Work-related childcare",
     a: dollar(ccA),
     b: dollar(ccB),
-    c: dollar(ccA + ccB),
+    c: undefined,
   });
   const totalExpA = hpA + ccA + umedA;
   const totalExpB = hpB + ccB + umedB;
-  const totalExpAll = hpA + hpB + ccA + ccB + (inputs.uninsuredMedicalMonthly || 0);
+  const totalExpAll = totalExpA + totalExpB;
   valueRow(ctx, {
     n: "9",
     label: "Total expenses",
     a: dollar(totalExpA),
     b: dollar(totalExpB),
-    c: dollar(totalExpAll),
+    c: undefined,
     bold: true,
   });
   const shareA = outputs.piA * totalExpAll;
@@ -576,9 +581,17 @@ export async function renderOfficialWorksheetPdf(args: {
   // -----------------------------------------------------------------
   partHead(ctx, "Part V.  Presumptive Child Support / Modification of Current Support");
   columnHeader(ctx, { mergeAB: true, mergeABLabel: "Obligation Column" });
-  // Row 12 — PCSO in obligor column; non-parent caretaker column hatched
-  const pcsoA = outputs.arpIdentity === "parent_a" ? dollar(outputs.allInMonthly) : "";
-  const pcsoB = outputs.arpIdentity === "parent_b" ? dollar(outputs.allInMonthly) : "";
+  // Row 12 — PCSO in obligor column; non-parent caretaker column hatched.
+  // For equal-parenting cases (arpIdentity === "equal") fall back to
+  // allInDirection to identify the obligor.
+  const obligorIsA =
+    outputs.arpIdentity === "parent_a" ||
+    (outputs.arpIdentity === "equal" && outputs.allInDirection === "parent_a_to_b");
+  const obligorIsB =
+    outputs.arpIdentity === "parent_b" ||
+    (outputs.arpIdentity === "equal" && outputs.allInDirection === "parent_b_to_a");
+  const pcsoA = obligorIsA ? dollar(outputs.allInMonthly) : "";
+  const pcsoB = obligorIsB ? dollar(outputs.allInMonthly) : "";
   valueRow(ctx, {
     n: "12",
     label: "Presumptive Child Support Order (PCSO)",
@@ -666,16 +679,16 @@ export async function renderOfficialWorksheetPdf(args: {
   valueRow(ctx, {
     n: "15",
     label: "Final Child Support Order (FCSO)",
-    a: outputs.arpIdentity === "parent_a" ? dollar(fcsoBeforeFb) : "",
-    b: outputs.arpIdentity === "parent_b" ? dollar(fcsoBeforeFb) : "",
+    a: obligorIsA ? dollar(fcsoBeforeFb) : "",
+    b: obligorIsB ? dollar(fcsoBeforeFb) : "",
     c: undefined,
     bold: true,
   });
   valueRow(ctx, {
     n: "16",
     label: "FCSO adjusted for federal benefit (Line 1a)",
-    a: outputs.arpIdentity === "parent_a" ? dollar(outputs.allInMonthly) : "",
-    b: outputs.arpIdentity === "parent_b" ? dollar(outputs.allInMonthly) : "",
+    a: obligorIsA ? dollar(outputs.allInMonthly) : "",
+    b: obligorIsB ? dollar(outputs.allInMonthly) : "",
     c: undefined,
     bold: true,
   });
