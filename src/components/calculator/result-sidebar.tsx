@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
+import { useIsUnlocked } from "@/lib/calc/unlock";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
