@@ -402,6 +402,8 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     specialExpensesIncludedAsDeviation: r$(specialExpensesIncludedAsDeviation),
     specialExpensesDeviationFromA: r$(specialExpensesDeviationFromA),
 
+    federalBenefitOffsetFromA: r$(federalBenefitOffsetFromA),
+
     allInMonthlyFromA: r$(allInMonthlyFromA),
     allInMonthly,
     allInDirection,
