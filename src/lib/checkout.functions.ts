@@ -101,6 +101,8 @@ export const createUnlockCheckout = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const sb = admin();
 
+    await enforceCheckoutRateLimit(sb, clientIp());
+
     const state = data.state ?? "TN";
 
     // Stable hash of the worksheet payload (canonical-ish JSON).
