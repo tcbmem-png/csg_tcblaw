@@ -10,7 +10,7 @@ import { getOrCreateUnsubscribeToken } from "@/lib/email/unsubscribe-token.serve
 
 const SITE_NAME = "TCB Child Support Helper";
 const FROM_EMAIL = "noreply@notify.tncsg.tcblaw.org";
-const RESEND_GATEWAY = "https://connector-gateway.lovable.dev/resend";
+const RESEND_API_URL = "https://api.resend.com";
 
 export interface FulfillResult {
   ok: boolean;
