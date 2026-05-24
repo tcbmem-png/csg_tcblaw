@@ -3,7 +3,22 @@ import { SCHEDULE_EFFECTIVE_DATE } from "@/lib/calc/bcso";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
-    meta: [{ title: "About — TN Child Support Calculator" }],
+    meta: [
+      { title: "About — TN Child Support Calculator" },
+      {
+        name: "description",
+        content:
+          "About the TN Child Support Calculator by TCB Law: data sources, scope, verification against the official 2022 TN DHS worksheet, and limitations.",
+      },
+      { property: "og:title", content: "About the TN Child Support Calculator" },
+      {
+        property: "og:description",
+        content:
+          "Built and maintained by TCB Law, PLLC. Implements Rule 1240-02-04 with the official 2022 BCSO schedule, verified within $1 of the TN DHS worksheet.",
+      },
+      { property: "og:url", content: "https://tncsg.tcblaw.org/about" },
+    ],
+    links: [{ rel: "canonical", href: "https://tncsg.tcblaw.org/about" }],
   }),
   component: About,
 });
