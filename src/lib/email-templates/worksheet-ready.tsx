@@ -9,12 +9,14 @@ interface WorksheetReadyProps {
   /** "TN" (default) or "MS" — adapts copy and CTAs. */
   state?: "TN" | "MS";
   matterName?: string;
-  /** Summary PDF link (TN) or single MS PDF link. */
+  /** Summary PDF link (TN) or single MS PDF link. Used as fallback if attachments are stripped. */
   downloadUrl?: string;
   /** Only present for TN orders. */
   officialDownloadUrl?: string;
   amountFromLabel?: string;
   amountMonthly?: string;
+  /** When true, copy reflects that PDFs are attached. */
+  attachmentsIncluded?: boolean;
 }
 
 const WorksheetReadyEmail = ({
@@ -24,6 +26,7 @@ const WorksheetReadyEmail = ({
   officialDownloadUrl,
   amountFromLabel,
   amountMonthly,
+  attachmentsIncluded = true,
 }: WorksheetReadyProps) => {
   const isMS = state === "MS";
   const stateName = isMS ? "Mississippi" : "Tennessee";
@@ -31,15 +34,16 @@ const WorksheetReadyEmail = ({
   return (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your {stateName} child support worksheet PDF is ready</Preview>
+    <Preview>Your {stateName} child support worksheet PDF is attached</Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Your worksheet is ready</Heading>
         <Text style={text}>
           Thanks for your purchase. Your {stateName} child support worksheet
-          {matterName ? ` for ${matterName}` : ""} is ready{isMS
+          {matterName ? ` for ${matterName}` : ""} is {attachmentsIncluded ? "attached to this email" : "ready"}
+          {isMS
             ? "."
-            : " in two formats — a clean summary for review and the official AOC line-numbered form for filing."}
+            : ` — ${attachmentsIncluded ? "both PDFs are attached: " : ""}a clean summary for review and the official AOC line-numbered form for filing.`}
         </Text>
 
         {amountMonthly && amountFromLabel ? (
@@ -50,7 +54,19 @@ const WorksheetReadyEmail = ({
           </Section>
         ) : null}
 
-        {isMS ? (
+        {attachmentsIncluded ? (
+          <Text style={text}>
+            {isMS ? (
+              <><strong>Attached:</strong> ms-child-support-worksheet.pdf</>
+            ) : (
+              <>
+                <strong>Attached:</strong> tn-child-support-worksheet-official.pdf
+                {" "}(file this one with the court) and tn-child-support-worksheet.pdf
+                {" "}(easier-to-read summary for your records).
+              </>
+            )}
+          </Text>
+        ) : isMS ? (
           <Section style={{ textAlign: "center", margin: "28px 0" }}>
             {downloadUrl ? (
               <Button href={downloadUrl} style={button}>
@@ -94,10 +110,22 @@ const WorksheetReadyEmail = ({
           </Text>
         )}
 
-        <Text style={small}>
-          Links are unique to your order. Save the PDF locally — the link
-          will continue to work, but treat it like a receipt.
-        </Text>
+        {attachmentsIncluded && downloadUrl ? (
+          <Text style={small}>
+            If your email client stripped the attachments, you can also
+            download {isMS ? "the PDF" : "them"} here:{" "}
+            <a href={downloadUrl} style={inlineLink}>{isMS ? "worksheet" : "summary"}</a>
+            {!isMS && officialDownloadUrl ? (
+              <> · <a href={officialDownloadUrl} style={inlineLink}>official AOC</a></>
+            ) : null}
+            .
+          </Text>
+        ) : (
+          <Text style={small}>
+            Links are unique to your order. Save the PDF locally — the link
+            will continue to work, but treat it like a receipt.
+          </Text>
+        )}
 
         <Text style={footer}>
           {isMS
@@ -169,3 +197,4 @@ const buttonSecondary = {
 };
 const small = { fontSize: "13px", color: "#666", lineHeight: "1.5", margin: "16px 0 0" };
 const footer = { fontSize: "12px", color: "#888", margin: "20px 0 0", lineHeight: "1.5" };
+const inlineLink = { color: "#1a1a1a", textDecoration: "underline" };
