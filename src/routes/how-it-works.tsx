@@ -1,5 +1,36 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
+const FAQ_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "What model does Tennessee use to calculate child support?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Tennessee uses the Income Shares Model under Rule 1240-02-04. Both parents' incomes are combined to find a basic obligation, which is then prorated by income share and adjusted for parenting time and add-ons.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Which rule governs Tennessee child support?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Tenn. Comp. R. & Regs. Chapter 1240-02-04 (the Tennessee Child Support Guidelines), implementing the Income Shares Model with the BCSO schedule and statutory PCSO maximums.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Does the calculator produce an official worksheet?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes. The tool generates an official-style Income Shares worksheet that mirrors the 2022 TN DHS form, suitable for negotiation, mediation, or filing.",
+      },
+    },
+  ],
+};
+
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
     meta: [
@@ -7,8 +38,19 @@ export const Route = createFileRoute("/how-it-works")({
       {
         name: "description",
         content:
-          "Plain-English walkthrough of Tennessee child support calculation under Rule 1240-02-04.",
+          "Plain-English walkthrough of Tennessee child support calculation under Rule 1240-02-04: income shares, BCSO, parenting time, and add-ons.",
       },
+      { property: "og:title", content: "How Tennessee child support is calculated" },
+      {
+        property: "og:description",
+        content:
+          "Step-by-step walkthrough of Rule 1240-02-04: combined income, BCSO schedule, parenting-time adjustment, add-ons, and the final order.",
+      },
+      { property: "og:url", content: "https://tncsg.tcblaw.org/how-it-works" },
+    ],
+    links: [{ rel: "canonical", href: "https://tncsg.tcblaw.org/how-it-works" }],
+    scripts: [
+      { type: "application/ld+json", children: JSON.stringify(FAQ_JSONLD) },
     ],
   }),
   component: HowItWorks,
