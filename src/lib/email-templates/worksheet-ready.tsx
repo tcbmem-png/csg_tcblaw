@@ -90,9 +90,9 @@ export const template = {
       : "Your TN child support worksheet PDF",
   displayName: "Worksheet ready",
   previewData: {
-    matterName: "Smith v. Smith",
-    downloadUrl: "https://example.com/unlock/abc123",
-    officialDownloadUrl: "https://example.com/unlock/abc123?variant=official",
+    matterName: "Smith v. Smith (PREVIEW — links are placeholders)",
+    downloadUrl: "https://tncsg.tcblaw.org/calculator",
+    officialDownloadUrl: "https://tncsg.tcblaw.org/calculator",
     amountFromLabel: "Parent A → Parent B",
     amountMonthly: "1,284",
   },
