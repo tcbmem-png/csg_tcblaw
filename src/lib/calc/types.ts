@@ -147,6 +147,10 @@ export interface CalcOutputs {
   } | null;
   /** Explainer shown when 50/50 parenting + similar incomes produce low/zero presumptive support. */
   equalParentingLowSupportNote: string | null;
+  /** Explainer shown when ARP has no income — Rule .04(7)(f) permits but does not require PRP→ARP support. */
+  nonEarnerArpNote: string | null;
+  /** Explainer shown when the presumptive obligation is $0 and the $100 floor therefore does not apply. */
+  zeroPresumptiveNote: string | null;
 
   // Metadata
   scheduleEffectiveDate: string;
