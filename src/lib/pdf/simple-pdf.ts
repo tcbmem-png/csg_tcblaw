@@ -96,6 +96,21 @@ export class SimplePdf {
     this.content += `q ${lineWidth} w ${color.join(" ")} RG ${x1} ${y1} m ${x2} ${y2} l S Q\n`;
   }
 
+  /** Diagonal-hatch fill for "not applicable" cells, clipped to the rect. */
+  hatchRect(x: number, y: number, w: number, h: number, color: Color = [0.75, 0.75, 0.75], spacing = 3, lineWidth = 0.3) {
+    let s = `q ${x} ${y} ${w} ${h} re W n ${lineWidth} w ${color.join(" ")} RG\n`;
+    // Diagonals going up-right (slope 1). Start x ranges so lines cover the rect.
+    for (let off = -h; off < w; off += spacing) {
+      const x1 = x + off;
+      const y1 = y;
+      const x2 = x + off + h;
+      const y2 = y + h;
+      s += `${x1} ${y1} m ${x2} ${y2} l S\n`;
+    }
+    s += `Q\n`;
+    this.content += s;
+  }
+
   text(text: string, x: number, y: number, size = 10, font: FontKey = "F1", color: Color = INK) {
     this.content += `BT ${color.join(" ")} rg /${font} ${size} Tf 1 0 0 1 ${x} ${y} Tm (${escapePdfText(text)}) Tj ET\n`;
   }

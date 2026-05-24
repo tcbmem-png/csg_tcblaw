@@ -1,46 +1,84 @@
-## Goal
+# Make the official PDF actually look like the AOC form
 
-Lock in (with tests) and lightly document how each calculator behaves when one parent has 365 — or near 365 — days of custody. No formula changes; the two models are doing the right thing under their respective statutes. We just want regression coverage and a small bit of UX copy so users don't misread the TN output.
+## Diagnosis
 
-## Findings (no code change needed for these)
+I rendered both files for comparison:
 
-- **MS** — single-obligor flat percentage; custody days never enter the formula. 365/0 is the statutory default. Already correct.
-- **TN** — Rule .04(7) "increase" band caps the upward bump at `(69 − ARP_days) / 365 ≈ 18.9 %` over the ARP's pro-rata BCSO at ARP = 0. There is no "sole-custody" multiplier in the guidelines; behavior is correct but undramatic, which can surprise users.
+- **Real AOC form** (`Tennessee_Child_Support_Worksheet.pdf`) — two-column layout with a left "gutter" of guidance text next to each Part, a dedicated Child(ren) sub-table in Part I, shaded/hatched cells for non-applicable columns, merged "Obligation Column" header in Part V, modification block 13a–c, and a narrative-style Deviations row 14.
+- **Our `official-worksheet-pdf.ts`** — single full-width data table per Part, no gutter, no child sub-table, wrong labels in several rows, extra Min-Order Y/N row that doesn't exist on AOC, no shading on N/A cells, Part V columns not merged, and identification block uses our internal Matter / Prepared-by rows instead of the AOC's TCSES / Docket / Court rows.
 
-## Changes
+The order I just fulfilled (`e327a75f…`) has both PDFs in storage. The summary PDF you uploaded looks correct; the AOC one is where the gap is.
 
-### 1. Tests — `src/lib/calc/__tests__/calc.test.ts`
+## Scope of the rewrite
 
-Add a `describe("Sole / near-sole custody (TN)")` block with three cases:
-- **365/0, custom band**: parentADays = 0, parentBDays = 365. Assert ARP=A, band = "increase", presumptive ≈ proRataA × (1 + 69/365), direction A→B.
-- **Symmetry**: same inputs flipped (0/365) → direction flips, magnitude identical.
-- **Standard 285/80 vs custom 285/80 produces the same presumptive** — sanity that the "standard" preset is just a custom-days shortcut.
-- **Floor check**: very low-income obligor with 365/0 still subject to SSR / $100 minimum logic exactly as in the standard case.
+Rewrite `src/lib/pdf/official-worksheet-pdf.ts` so its rendered output matches the AOC form section-by-section. Touch `src/lib/pdf/simple-pdf.ts` only if a small hatched-fill helper is needed for N/A cells. No calc logic, no email/storage/route changes.
 
-### 2. Tests — `src/lib/calc/ms/__tests__/calc.test.ts`
+## Layout changes
 
-Add a small `describe("MS — sole custody is the default presumption")` block:
-- **Asserts custody is not an input to the formula**: two runs with `sharedCustodyFlag` true vs false and otherwise identical inputs produce the same `presumptiveMonthly` and `proposedFinalMonthly`. Only `warnings` differ (Factor (g) callout appears once).
-- **Spec Test 1 re-asserted with an explicit "sole-custody by default" comment** so future readers see the assumption documented.
+Adopt a two-column page model:
 
-### 3. UX note — TN custom-days input (`src/components/calculator/inputs.tsx`)
+- Left gutter (~150pt): Part heading + the AOC's italic guidance text
+  ("Indicate the status of each parent…", "Use Credit Worksheet to calculate
+  line items 1d and 1e.", "Modification of Current Child Support Order",
+  "Deviations must be substantiated by written findings…").
+- Right body (~390pt): the AOC's actual line-numbered tables.
 
-In the "Parenting time → Custom days" sub-section, when either parent's day count is `≤ 5` or `≥ 360`, render a small muted hint under the day inputs:
+Part bars become a thin horizontal rule with the Part title at top-left of the gutter, not the wide grey banner we use today.
 
-> Tennessee's guidelines (Rule .04(7)(i)) cap the upward adjustment at about 19% over the ARP's standard pro-rata share, even at 0 ARP days. Many sole-custody cases are still entered at the standard 285/80 split.
+## Section-by-section changes
 
-Plain `<p className="text-xs text-muted-foreground">` under the existing day Grid — no new component.
+**Part I — Identification**
+- Replace our captionRow Matter/Prepared-by stack with the AOC ordering:
+  Name of Mother / Name of Father / Name of non-parent Caretaker, then
+  TCSES case #, Docket #, Court name.
+- Add the AOC Child(ren) sub-table:
+  Name(s) of Child(ren) | Date of Birth | Days with Mother | Days with Father | Days with Caretaker.
+  We don't collect per-child data, so render 5 blank ruled rows for the clerk.
+- Keep the PRP / ARP / SPLIT "X" columns aligned right of each parent name (we already have these).
 
-### 4. UX note — MS inputs (`src/components/calculator/ms/inputs.tsx`)
+**Part II — Adjusted Gross Income**
+- Column headers stay (Mother/Col A, Father/Col B, Non-parent Caretaker/Col C).
+- Reword to AOC exactly: 1, 1a Federal benefit for child, 1b Self-employment tax paid, 1c Subtotal, 1d Credit for In-Home Children, 1e Credit for Not In Home Children, 2 Adjusted Gross Income (AGI), 2a Combined Adjusted Gross Income, 3 Percentage Share of Income (PI).
+- Prefix cells with `$` or `%` per AOC; drop the "(+)" / "(-)" suffixes.
+- Hatch-fill the Caretaker column on rows where it doesn't apply (most of 1–3), and hatch-fill the right side of row 2a.
 
-In the header area (or right under the obligor income section), add a single sentence:
+**Part III — Parents' Share of BCSO**
+- Re-label row 4 → "BCSO allotted to primary parent's household" (value in Combined/Col C only; A and B shaded).
+- Row 4a → "Share of BCSO owed to primary parent".
+- Row 5 → "ARP parent's average parenting time" (single value spanning).
+- Rows 6, 7 unchanged in meaning, AOC wording.
 
-> Mississippi assumes the obligor is the non-custodial parent and applies the statutory percentage to their AGI; the number of custody days is not an input. For 50/50 arrangements use the Factor (g) deviation.
+**Part IV — Additional Expenses**
+- Collapse our split 8c/8d (payroll vs non-payroll) into one AOC row 8c "Work-related childcare".
+- 8a, 8b, 8c, 9, 10, 11 numbering matches AOC; shade Col C on rows 10 and 11.
 
-Same muted-text treatment. Not a banner, not a warning.
+**Part V — Presumptive Child Support / Modification of Current Support**
+- Change header to a single merged "Obligation Column" spanning A+B; Caretaker column hatched throughout this Part.
+- Row 12 PCSO with the small-print note: "* Enter the difference between the greater and smaller numbers from Line 11, except in non-parent caretaker situations."
+- Add the two AOC prompts:
+  `Low Income?  ____  (N = 15%   Y = 7.5%)`
+  `Current Order Flat %  ____  (N / Y)`
+- Modification block (left gutter label "Modification of Current Child Support Order"):
+  13a Current child support order amount for the obligor parent.
+  13b Amount required for significant variance to exist.
+  13c Actual variance between current order and PCSO / BCSO.
+
+**Part VI — Deviations and Final Child Support Order**
+- Gutter label: "Deviations must be substantiated by written findings in the Child Support Order".
+- Row 14 Deviations (Specify): one value row + 3 ruled blank lines for narrative.
+- Drop our extra "Adjusted for Minimum Order (Y/N)" row — not on AOC.
+- 15 Final Child Support Order (FCSO).
+- 16 FCSO adjusted for federal benefit, Line 1a, Obligor's column.
+
+**Footer**: keep our Comments box, Preparer's Use Only (Name / Title / Date) block, and the generated-by disclaimer.
+
+## QA
+
+After build, re-fulfill the existing test order (already paid + delivered) by clearing `pdf_official_storage_path` on row `e327a75f…` and hitting `/api/public/payments/retry-stuck` — or just call the admin endpoint once and re-email. Render the new official PDF to JPEGs at 150dpi and visually compare side-by-side with the uploaded AOC form. Iterate until each Part matches structurally.
 
 ## Out of scope
 
-- No change to TN calc formulas, band thresholds, or the `(69 - arpDays)/365` increase factor.
-- No change to MS calc formulas or AGI handling.
-- No new "100% custody" toggle or preset — the existing standard preset + custom days cover it.
+- Summary PDF (you said it looks good).
+- MS worksheet.
+- Calculator logic, email templates, storage, routes.
+- The parent label rendering glitch in the summary ("tay"/"her" split with odd kerning) — not raised, leave it.
