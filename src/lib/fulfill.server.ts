@@ -201,7 +201,7 @@ export async function fulfillOrder(
       template_name: "worksheet-ready",
       recipient_email: order.email,
       status: "failed",
-      error: sendRes.error,
+      error_message: sendRes.error,
     });
     return { ok: false, error: `send: ${sendRes.error}` };
   }
@@ -349,7 +349,7 @@ export async function resendWorksheetEmail(
       template_name: "worksheet-ready",
       recipient_email: order.email,
       status: "failed",
-      error: sendRes.error,
+      error_message: sendRes.error,
     });
     return { ok: false, error: `send: ${sendRes.error}` };
   }
