@@ -2,6 +2,7 @@ import { useState } from "react";
 import { StripeWorksheetCheckout } from "@/components/StripeWorksheetCheckout";
 import type { CalcInputs, CalcOutputs } from "@/lib/calc/types";
 import type { CaseCaption } from "@/lib/calc/share";
+import { useIsUnlocked } from "@/lib/calc/unlock";
 
 interface Props {
   inputs: CalcInputs;
@@ -13,9 +14,28 @@ export function UnlockPdfPanel({ inputs, outputs, caption }: Props) {
   const [email, setEmail] = useState("");
   const [open, setOpen] = useState(false);
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const unlocked = useIsUnlocked();
+
+  if (unlocked) {
+    return (
+      <div
+        id="unlock-pdf-panel"
+        className="mt-8 rounded-lg border border-rule bg-cream p-5 no-print"
+      >
+        <h2 className="font-serif text-lg text-ink">✓ Worksheet unlocked</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          You can now print or save this worksheet as a PDF using the buttons
+          above. A copy was also emailed to you.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-8 rounded-lg border border-rule bg-cream p-5 no-print">
+    <div
+      id="unlock-pdf-panel"
+      className="mt-8 rounded-lg border border-rule bg-cream p-5 no-print"
+    >
       <h2 className="font-serif text-lg text-ink">Get the filing-ready PDF — $99</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         We'll email a clean, citation-ready PDF of this worksheet and give you

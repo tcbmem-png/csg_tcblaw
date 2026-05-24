@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getOrderStatus } from "@/lib/checkout.functions";
+import { setStoredUnlock } from "@/lib/calc/unlock";
 
 export const Route = createFileRoute("/checkout/return")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -36,8 +37,12 @@ function CheckoutReturn() {
         setEmail(res.email);
         setUnlockToken(res.unlockToken);
         if (res.status === "delivered") {
+          if (res.unlockToken) setStoredUnlock(res.unlockToken, res.email ?? undefined);
           setStatus("delivered");
           return;
+        }
+        if (res.status === "paid" && res.unlockToken) {
+          setStoredUnlock(res.unlockToken, res.email ?? undefined);
         }
         setStatus(res.status === "paid" ? "paid" : "pending");
         if (++attempts < 40) setTimeout(poll, 2000);

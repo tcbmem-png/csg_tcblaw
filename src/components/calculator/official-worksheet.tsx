@@ -1,6 +1,7 @@
 import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import { defaultCaption } from "@/lib/calc/share";
+import { useIsUnlocked } from "@/lib/calc/unlock";
 
 function fmt(n: number) {
   const abs = Math.abs(n);
@@ -75,6 +76,7 @@ export function OfficialWorksheet({
 }) {
   const a = inputs.parentALabel;
   const b = inputs.parentBLabel;
+  const unlocked = useIsUnlocked();
   const hasCaption =
     caption.matterName ||
     caption.docketNumber ||
@@ -388,10 +390,19 @@ export function OfficialWorksheet({
       <div className="mt-4 flex justify-end gap-2 no-print">
         <button
           type="button"
-          onClick={() => window.print()}
+          onClick={() => {
+            if (unlocked) {
+              window.print();
+            } else {
+              document
+                .getElementById("unlock-pdf-panel")
+                ?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }}
+          title={unlocked ? undefined : "Unlock the PDF to print or export"}
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          Print / Save PDF
+          {unlocked ? "Print / Save PDF" : "🔒 Unlock to Print / Export"}
         </button>
       </div>
     </div>
