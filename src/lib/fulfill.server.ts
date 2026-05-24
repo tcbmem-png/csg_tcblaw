@@ -38,15 +38,34 @@ interface SendArgs {
   subject: string;
   html: string;
   text: string;
-  attachments: Array<{ filename: string; content: string }>; // base64
+  attachments: Array<{ filename: string; content: string; content_type: string }>; // base64
   unsubscribeUrl: string;
 }
 
-async function sendViaResend(args: SendArgs): Promise<{ ok: boolean; error?: string }> {
+async function sendViaResend(args: SendArgs): Promise<{ ok: boolean; error?: string; response?: string }> {
   const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   if (!LOVABLE_API_KEY) return { ok: false, error: "LOVABLE_API_KEY not configured" };
   if (!RESEND_API_KEY) return { ok: false, error: "RESEND_API_KEY not configured" };
+
+  const body = {
+    from: `${SITE_NAME} <${FROM_EMAIL}>`,
+    to: [args.to],
+    subject: args.subject,
+    html: args.html,
+    text: args.text,
+    attachments: args.attachments,
+    headers: {
+      "List-Unsubscribe": `<${args.unsubscribeUrl}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
+  };
+
+  console.log("[resend] sending", {
+    to: args.to,
+    attachmentCount: args.attachments.length,
+    attachmentSizes: args.attachments.map((a) => ({ filename: a.filename, base64Bytes: a.content.length })),
+  });
 
   const res = await fetch(`${RESEND_GATEWAY}/emails`, {
     method: "POST",
@@ -55,25 +74,16 @@ async function sendViaResend(args: SendArgs): Promise<{ ok: boolean; error?: str
       Authorization: `Bearer ${LOVABLE_API_KEY}`,
       "X-Connection-Api-Key": RESEND_API_KEY,
     },
-    body: JSON.stringify({
-      from: `${SITE_NAME} <${FROM_EMAIL}>`,
-      to: [args.to],
-      subject: args.subject,
-      html: args.html,
-      text: args.text,
-      attachments: args.attachments,
-      headers: {
-        "List-Unsubscribe": `<${args.unsubscribeUrl}>`,
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-      },
-    }),
+    body: JSON.stringify(body),
   });
 
+  const respText = await res.text().catch(() => "");
+  console.log("[resend] response", res.status, respText.slice(0, 500));
+
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    return { ok: false, error: `resend ${res.status}: ${body.slice(0, 300)}` };
+    return { ok: false, error: `resend ${res.status}: ${respText.slice(0, 300)}`, response: respText };
   }
-  return { ok: true };
+  return { ok: true, response: respText };
 }
 
 function bufToBase64(buf: Uint8Array | ArrayBuffer): string {
