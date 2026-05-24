@@ -1,0 +1,119 @@
+import { createServerFn } from "@tanstack/react-start";
+import { createClient } from "@supabase/supabase-js";
+import { z } from "zod";
+import { createStripeClient, type StripeEnv } from "@/lib/stripe.server";
+
+const envSchema = z.enum(["sandbox", "live"]);
+const captionSchema = z.object({
+  matterName: z.string().max(200),
+  docketNumber: z.string().max(100),
+  court: z.string().max(200),
+  preparedBy: z.string().max(200),
+  client: z.string().max(200),
+});
+
+const inputSchema = z.object({
+  email: z.string().email().max(320),
+  returnUrl: z.string().url().max(1000),
+  environment: envSchema,
+  // Pass through the full calculator state. Validate as object — calculator
+  // schema is large and already produced by trusted client code; we only
+  // re-render it server-side at delivery time.
+  payload: z.object({
+    inputs: z.record(z.string(), z.any()),
+    outputs: z.record(z.string(), z.any()),
+    caption: captionSchema,
+  }),
+});
+
+function admin() {
+  return createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
+
+async function sha256Hex(s: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export const createUnlockCheckout = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => inputSchema.parse(d))
+  .handler(async ({ data }) => {
+    const sb = admin();
+
+    // Stable hash of the worksheet payload (canonical-ish JSON).
+    const worksheetHash = await sha256Hex(JSON.stringify(data.payload));
+
+    // Create pending order.
+    const { data: order, error: orderErr } = await sb
+      .from("orders")
+      .insert({
+        email: data.email.toLowerCase(),
+        worksheet_hash: worksheetHash,
+        payload_json: data.payload,
+        status: "pending",
+        amount_cents: 9900,
+      })
+      .select("id, unlock_token")
+      .single();
+
+    if (orderErr || !order) {
+      console.error("Failed to create order", orderErr);
+      throw new Error("Could not create order");
+    }
+
+    const stripe = createStripeClient(data.environment as StripeEnv);
+    const prices = await stripe.prices.list({
+      lookup_keys: ["worksheet_unlock_onetime"],
+    });
+    if (!prices.data.length) throw new Error("Price not configured");
+
+    const session = await stripe.checkout.sessions.create({
+      line_items: [{ price: prices.data[0].id, quantity: 1 }],
+      mode: "payment",
+      ui_mode: "embedded_page",
+      return_url: data.returnUrl,
+      customer_email: data.email,
+      managed_payments: { enabled: true } as any,
+      payment_intent_data: {
+        description: "TN Child Support Worksheet PDF",
+      },
+      metadata: {
+        order_id: order.id as string,
+        managed_payments: "true",
+      },
+    });
+
+    // Link session back to order.
+    await sb
+      .from("orders")
+      .update({ stripe_session_id: session.id })
+      .eq("id", order.id);
+
+    if (!session.client_secret) throw new Error("Stripe did not return a client secret");
+    return { clientSecret: session.client_secret, orderId: order.id as string };
+  });
+
+export const getOrderStatus = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ sessionId: z.string().min(1).max(200) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const sb = admin();
+    const { data: order } = await sb
+      .from("orders")
+      .select("id, status, unlock_token, email")
+      .eq("stripe_session_id", data.sessionId)
+      .maybeSingle();
+    if (!order) return { found: false as const };
+    return {
+      found: true as const,
+      status: order.status as string,
+      unlockToken: order.unlock_token as string,
+      email: order.email as string,
+    };
+  });
