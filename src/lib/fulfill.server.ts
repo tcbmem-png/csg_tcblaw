@@ -3,11 +3,12 @@ import * as React from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { renderWorksheetPdf } from "@/lib/pdf/worksheet-pdf";
 import { renderOfficialWorksheetPdf } from "@/lib/pdf/official-worksheet-pdf";
+import { renderMSWorksheetPdf } from "@/lib/pdf/ms-worksheet-pdf";
 import { template as worksheetReadyTemplate } from "@/lib/email-templates/worksheet-ready";
 import { getOrCreateUnsubscribeToken } from "@/lib/email/unsubscribe-token.server";
 
 
-const SITE_NAME = "TN Child Support Helper";
+const SITE_NAME = "TCB Child Support Helper";
 const SENDER_DOMAIN = "notify.tncsg.tcblaw.org";
 const FROM_DOMAIN = "notify.tncsg.tcblaw.org";
 
@@ -19,10 +20,17 @@ export interface FulfillResult {
   error?: string;
 }
 
+type OrderState = "TN" | "MS";
+
+function readState(payload: any): OrderState {
+  return payload?.state === "MS" ? "MS" : "TN";
+}
+
 /**
- * Idempotently fulfill a paid order: render PDF, upload, enqueue email,
+ * Idempotently fulfill a paid order: render PDF(s), upload, enqueue email,
  * mark delivered. Safe to call multiple times — early-returns if already
- * delivered.
+ * delivered. Branches on payload.state for TN (two PDFs: summary + official
+ * AOC) vs MS (single PDF).
  */
 export async function fulfillOrder(
   sb: SupabaseClient,
@@ -46,37 +54,45 @@ export async function fulfillOrder(
     .eq("id", orderId)
     .neq("status", "delivered");
 
-  const payload = order.payload_json as { inputs: any; outputs: any; caption: any };
-  const [pdfBuf, officialPdfBuf] = await Promise.all([
-    renderWorksheetPdf({ inputs: payload.inputs, outputs: payload.outputs, caption: payload.caption }),
-    renderOfficialWorksheetPdf({ inputs: payload.inputs, outputs: payload.outputs, caption: payload.caption }),
-  ]);
+  const payload = order.payload_json as { inputs: any; outputs: any; caption: any; state?: OrderState };
+  const state = readState(payload);
 
   const storagePath = `${order.id}/worksheet.pdf`;
-  const officialStoragePath = `${order.id}/worksheet-official.pdf`;
-  const [{ error: upErr }, { error: upErrOfficial }] = await Promise.all([
-    sb.storage.from("worksheet-pdfs").upload(storagePath, pdfBuf, { contentType: "application/pdf", upsert: true }),
-    sb.storage.from("worksheet-pdfs").upload(officialStoragePath, officialPdfBuf, { contentType: "application/pdf", upsert: true }),
-  ]);
-  if (upErr) return { ok: false, error: `upload: ${upErr.message}` };
-  if (upErrOfficial) return { ok: false, error: `upload official: ${upErrOfficial.message}` };
+  let officialStoragePath: string | null = null;
+
+  if (state === "MS") {
+    const pdfBuf = await renderMSWorksheetPdf({
+      inputs: payload.inputs,
+      outputs: payload.outputs,
+      caption: payload.caption,
+    });
+    const { error: upErr } = await sb.storage
+      .from("worksheet-pdfs")
+      .upload(storagePath, pdfBuf, { contentType: "application/pdf", upsert: true });
+    if (upErr) return { ok: false, error: `upload: ${upErr.message}` };
+  } else {
+    const [pdfBuf, officialPdfBuf] = await Promise.all([
+      renderWorksheetPdf({ inputs: payload.inputs, outputs: payload.outputs, caption: payload.caption }),
+      renderOfficialWorksheetPdf({ inputs: payload.inputs, outputs: payload.outputs, caption: payload.caption }),
+    ]);
+    officialStoragePath = `${order.id}/worksheet-official.pdf`;
+    const [{ error: upErr }, { error: upErrOfficial }] = await Promise.all([
+      sb.storage.from("worksheet-pdfs").upload(storagePath, pdfBuf, { contentType: "application/pdf", upsert: true }),
+      sb.storage.from("worksheet-pdfs").upload(officialStoragePath, officialPdfBuf, { contentType: "application/pdf", upsert: true }),
+    ]);
+    if (upErr) return { ok: false, error: `upload: ${upErr.message}` };
+    if (upErrOfficial) return { ok: false, error: `upload official: ${upErrOfficial.message}` };
+  }
 
 
   const downloadUrl = `${origin}/unlock/${order.unlock_token}`;
-  const officialDownloadUrl = `${origin}/unlock/${order.unlock_token}?variant=official`;
+  const officialDownloadUrl =
+    state === "TN" ? `${origin}/unlock/${order.unlock_token}?variant=official` : undefined;
   const matterName = payload.caption?.matterName || undefined;
-  const amountMonthly = payload.outputs?.allInMonthly
-    ? Number(payload.outputs.allInMonthly).toLocaleString("en-US", { maximumFractionDigits: 0 })
-    : undefined;
-  const a = payload.inputs?.parentALabel || "Parent A";
-  const b = payload.inputs?.parentBLabel || "Parent B";
-  const dir = payload.outputs?.allInDirection;
-  const amountFromLabel =
-    dir === "parent_a_to_b" ? `${a} → ${b}`
-    : dir === "parent_b_to_a" ? `${b} → ${a}`
-    : "No transfer";
 
-  const templateData = { matterName, downloadUrl, officialDownloadUrl, amountMonthly, amountFromLabel };
+  const { amountMonthly, amountFromLabel } = formatAmounts(state, payload);
+
+  const templateData = { state, matterName, downloadUrl, officialDownloadUrl, amountMonthly, amountFromLabel };
 
   const element = React.createElement(worksheetReadyTemplate.component, templateData);
   const html = await render(element);
@@ -129,6 +145,30 @@ export async function fulfillOrder(
   return { ok: true, storagePath, messageId };
 }
 
+function formatAmounts(state: OrderState, payload: any) {
+  if (state === "MS") {
+    const monthly = payload?.outputs?.proposedFinalMonthly;
+    return {
+      amountMonthly: monthly
+        ? Number(monthly).toLocaleString("en-US", { maximumFractionDigits: 0 })
+        : undefined,
+      amountFromLabel:
+        `${payload?.inputs?.obligorLabel || "Obligor"} → ${payload?.inputs?.obligeeLabel || "Obligee"}`,
+    };
+  }
+  const amountMonthly = payload?.outputs?.allInMonthly
+    ? Number(payload.outputs.allInMonthly).toLocaleString("en-US", { maximumFractionDigits: 0 })
+    : undefined;
+  const a = payload?.inputs?.parentALabel || "Parent A";
+  const b = payload?.inputs?.parentBLabel || "Parent B";
+  const dir = payload?.outputs?.allInDirection;
+  const amountFromLabel =
+    dir === "parent_a_to_b" ? `${a} → ${b}`
+    : dir === "parent_b_to_a" ? `${b} → ${a}`
+    : "No transfer";
+  return { amountMonthly, amountFromLabel };
+}
+
 /**
  * Enqueue a worksheet-ready email for an already-delivered order
  * (recovery / "resend my worksheet" flow). Does not re-render PDF.
@@ -148,22 +188,15 @@ export async function resendWorksheetEmail(
     return { ok: false, error: "order not yet delivered" };
   }
 
-  const payload = order.payload_json as { inputs: any; outputs: any; caption: any };
+  const payload = order.payload_json as { inputs: any; outputs: any; caption: any; state?: OrderState };
+  const state = readState(payload);
   const downloadUrl = `${origin}/unlock/${order.unlock_token}`;
-  const officialDownloadUrl = `${origin}/unlock/${order.unlock_token}?variant=official`;
+  const officialDownloadUrl =
+    state === "TN" ? `${origin}/unlock/${order.unlock_token}?variant=official` : undefined;
   const matterName = payload.caption?.matterName || undefined;
-  const amountMonthly = payload.outputs?.allInMonthly
-    ? Number(payload.outputs.allInMonthly).toLocaleString("en-US", { maximumFractionDigits: 0 })
-    : undefined;
-  const a = payload.inputs?.parentALabel || "Parent A";
-  const b = payload.inputs?.parentBLabel || "Parent B";
-  const dir = payload.outputs?.allInDirection;
-  const amountFromLabel =
-    dir === "parent_a_to_b" ? `${a} → ${b}`
-    : dir === "parent_b_to_a" ? `${b} → ${a}`
-    : "No transfer";
+  const { amountMonthly, amountFromLabel } = formatAmounts(state, payload);
 
-  const templateData = { matterName, downloadUrl, officialDownloadUrl, amountMonthly, amountFromLabel };
+  const templateData = { state, matterName, downloadUrl, officialDownloadUrl, amountMonthly, amountFromLabel };
 
   const element = React.createElement(worksheetReadyTemplate.component, templateData);
   const html = await render(element);
