@@ -52,6 +52,9 @@ export interface CalcInputs {
   uninsuredMedicalMonthly: number;
   childcareMonthly: number;
   childcarePaidBy: "parent_a" | "parent_b";
+  /** Official Line 8c (payroll-deducted) vs 8d (non-payroll-deducted). Math identical;
+   *  affects only which line on the AOC worksheet shows the amount. */
+  childcarePayrollDeducted: boolean;
 
   /** Private school deviation per Rule .07(2)(d). */
   includePrivateSchool: boolean;
