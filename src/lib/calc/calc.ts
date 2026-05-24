@@ -1,6 +1,8 @@
 import type { CalcInputs, CalcOutputs, Direction } from "./types";
 import { lookupBcso, SCHEDULE_EFFECTIVE_DATE } from "./bcso";
 import {
+  ABOVE_CAP,
+  COMBINED_AGI_CAP,
   MIN_SUPPORT_MONTHLY,
   PARENTING_TIME,
   SPECIAL_EXPENSES_THRESHOLD_RATIO,
