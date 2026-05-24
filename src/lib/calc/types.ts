@@ -134,6 +134,19 @@ export interface CalcOutputs {
   pcsoStatutoryMax: number;
   /** Neutral guideline note shown when PCSO is above the §36-5-101(e)(1)(B) cap. Not a warning. */
   pcsoCapNote: string | null;
+  /** Dollar amount by which PCSO exceeds the statutory cap (0 if at or below). */
+  pcsoExcessOverCap: number;
+  /** Reassurance note shown when the PCSO is at or below the statutory cap. */
+  pcsoBelowCapNote: string | null;
+  /** Breakdown of the above-schedule-cap BCSO formula (Rule .09(2)(d)); null when not used. */
+  bcsoAboveCapBreakdown: {
+    topOfSchedule: number;
+    excessAGI: number;
+    rate: number;
+    addition: number;
+  } | null;
+  /** Explainer shown when 50/50 parenting + similar incomes produce low/zero presumptive support. */
+  equalParentingLowSupportNote: string | null;
 
   // Metadata
   scheduleEffectiveDate: string;

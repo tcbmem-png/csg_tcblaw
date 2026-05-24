@@ -243,6 +243,23 @@ export function OfficialWorksheet({
             label={`Schedule row used: $${fmt(outputs.scheduleAgiUsed)} combined AGI / ${inputs.numChildren} children`}
           />
         )}
+        {outputs.bcsoAboveCapBreakdown && (
+          <>
+            <Line
+              label={`Top of schedule (${inputs.numChildren} ${inputs.numChildren === 1 ? "child" : "children"} at $28,250 combined AGI)`}
+              total={`$${fmt(outputs.bcsoAboveCapBreakdown.topOfSchedule)}`}
+            />
+            <Line
+              label="Combined AGI in excess of schedule cap"
+              total={`$${fmt(outputs.bcsoAboveCapBreakdown.excessAGI)}`}
+            />
+            <Line
+              label={`Above-cap rate × excess (${(outputs.bcsoAboveCapBreakdown.rate * 100).toFixed(2)}%)`}
+              cite="Rule .09(2)(d)"
+              total={`+ $${fmt(outputs.bcsoAboveCapBreakdown.addition)}`}
+            />
+          </>
+        )}
         <Line
           n="7"
           label="Pro-rata share of BCSO"
@@ -366,10 +383,36 @@ export function OfficialWorksheet({
           total={`$${fmt(outputs.allInAnnual)}`}
         />
 
-        {/* PCSO statutory-cap note (informational, not a warning) */}
-        {outputs.pcsoCapNote && (
+        {/* Statutory cap panel — side-by-side display per §36-5-101(e)(1)(B) */}
+        {outputs.pcsoExceedsStatutoryMax && (
           <div className="border-t border-rule bg-cream px-6 py-4 text-[11px] leading-relaxed text-ink">
-            {outputs.pcsoCapNote}
+            <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Statutory Presumptive Cap · Tenn. Code Ann. §36-5-101(e)(1)(B)
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 font-mono text-[11px] sm:max-w-md">
+              <div>Calculated PCSO</div>
+              <div className="text-right">${fmt(Math.abs(outputs.allInMonthlyFromA) + Math.abs(outputs.federalBenefitOffsetFromA))}/mo</div>
+              <div>Statutory cap ({inputs.numChildren} {inputs.numChildren === 1 ? "child" : "children"})</div>
+              <div className="text-right">${fmt(outputs.pcsoStatutoryMax)}/mo</div>
+              <div className="border-t border-rule pt-1 font-semibold">Excess subject to recipient's burden</div>
+              <div className="border-t border-rule pt-1 text-right font-semibold">${fmt(outputs.pcsoExcessOverCap)}/mo · ${fmt(outputs.pcsoExcessOverCap * 12)}/yr</div>
+            </div>
+            {outputs.pcsoCapNote && (
+              <p className="mt-3 text-[11px] leading-relaxed">{outputs.pcsoCapNote}</p>
+            )}
+          </div>
+        )}
+
+        {!outputs.pcsoExceedsStatutoryMax && outputs.pcsoBelowCapNote && (
+          <div className="border-t border-rule bg-cream px-6 py-3 text-[11px] leading-relaxed text-muted-foreground">
+            {outputs.pcsoBelowCapNote}
+          </div>
+        )}
+
+        {outputs.equalParentingLowSupportNote && (
+          <div className="border-t border-rule bg-primary/5 px-6 py-4 text-[11px] leading-relaxed text-ink">
+            <div className="mb-1 font-semibold">Why is this support amount so low?</div>
+            {outputs.equalParentingLowSupportNote}
           </div>
         )}
 

@@ -154,6 +154,69 @@ Direction:    higher-earning parent → lower-earning parent`}
         parties agree to waive the threshold.
       </p>
 
+      <h2 className="mt-10 font-serif text-2xl">High-income cases — the four protections</h2>
+      <p className="mt-3">
+        Tennessee's guidelines contain four distinct mechanisms that shape outcomes
+        when one or both parents are high earners. These often get conflated; they
+        serve different functions and operate at different points in the calculation.
+      </p>
+
+      <h3 className="mt-6 font-serif text-xl">Layer 1 — The schedule cap ($28,250/mo combined AGI)</h3>
+      <p className="mt-2">
+        The official BCSO schedule ends at $28,250 combined monthly AGI. This is
+        <strong> not</strong> a cap on support — it's the cap on the lookup table.
+        Above it, Rule .09(2)(d) applies an above-cap formula: top-of-schedule BCSO
+        plus a per-child percentage of the excess AGI
+        (6.81% / 7.22% / 7.77% / 8.05% / 8.66% for 1–5 children). There is no upper
+        bound on BCSO under this formula.
+      </p>
+
+      <h3 className="mt-6 font-serif text-xl">Layer 2 — The statutory presumptive cap (burden shift)</h3>
+      <p className="mt-2">
+        Tenn. Code Ann. § 36-5-101(e)(1)(B) sets a per-child threshold:
+        $2,100 (1) · $3,200 (2) · $4,100 (3) · $4,600 (4) · $5,000 (5+).
+        When the calculated PCSO exceeds the threshold, the parent
+        <em> receiving</em> support has the burden to prove by preponderance of
+        the evidence that the excess is reasonably necessary for the children's
+        needs. This is a <strong>rebuttable presumption, not a hard cap</strong>.
+        Modest excesses are routinely approved with brief findings; substantial
+        excesses face real scrutiny.
+      </p>
+
+      <h3 className="mt-6 font-serif text-xl">Layer 3 — The "actual needs" standard (case law)</h3>
+      <p className="mt-2">
+        How "reasonably necessary" gets evaluated under Layer 2 comes from case law:
+        <em> Hugger v. Hugger</em> (Tenn. Ct. App. 1999), <em>Smith v. Smith</em>
+        (Tenn. Ct. App. 2007), and <em>Nash v. Mulle</em>, 846 S.W.2d 803
+        (Tenn. 1993). Courts look to the children's documented needs, their
+        pre-divorce standard of living, and other contributions the obligor is
+        already making — not just the obligor's ability to pay.
+      </p>
+
+      <h3 className="mt-6 font-serif text-xl">Layer 4 — The 50/50 cross-credit mechanic (structural)</h3>
+      <p className="mt-2">
+        In 50/50 cases, presumptive support depends on the
+        <strong> difference</strong> in parental income shares, not the absolute
+        level. Two high earners with similar incomes pay near-zero presumptive
+        support, regardless of how high combined AGI is — the model assumes each
+        can independently provide a comparable lifestyle. See
+        Rule .04(7)(b)(2)(i).
+      </p>
+
+      <h3 className="mt-6 font-serif text-xl">Worked example</h3>
+      <div className="mt-2 rounded-md border border-rule bg-cream p-4 text-sm">
+        <p className="mb-2"><strong>Parent A $65,000/mo, Parent B $20,000/mo, 3 children, 50/50 custody, A pays $300/mo health.</strong></p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>Combined AGI $85,000 → above the schedule cap, so Layer 1 engages.</li>
+          <li>BCSO = $2,954 + ($56,750 × 7.77%) = <strong>$7,363</strong></li>
+          <li>PI: A 76.5%, B 23.5%. 50/50 net = $7,363 × 53% = <strong>$3,902 (A→B)</strong></li>
+          <li>Add A's share of premium → PCSO ≈ <strong>$4,128</strong></li>
+          <li>Statutory cap (3 kids) = $4,100 → excess $28 — trivial, easily justified.</li>
+          <li>Change to standard parenting and the same incomes produce PCSO ≈ $5,862 — excess $1,762, a real settlement lever.</li>
+          <li>Change to two equal $42,500/mo earners on 50/50 and presumptive support drops to ~$0 — Layer 4 doing the work.</li>
+        </ul>
+      </div>
+
       <h2 className="mt-10 font-serif text-2xl">Lifecycle</h2>
       <p className="mt-3">
         This calculator produces a single-point-in-time snapshot. The

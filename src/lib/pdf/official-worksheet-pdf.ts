@@ -706,10 +706,71 @@ export async function renderOfficialWorksheetPdf(args: {
 
 
   // -----------------------------------------------------------------
+  // High-income / statutory-cap explainers (Part VI footer notes)
+  // -----------------------------------------------------------------
+  if (outputs.pcsoExceedsStatutoryMax) {
+    ctx.y -= 8;
+    ensure(ctx, 14);
+    draw(ctx, "Statutory Presumptive Cap \u2014 Tenn. Code Ann. \u00a736-5-101(e)(1)(B)", MARGIN, ctx.y - 9, {
+      size: 9,
+      bold: true,
+    });
+    ctx.y -= 12;
+    const rows: Array<[string, string]> = [
+      ["Calculated PCSO", `$ ${fmt(outputs.allInMonthly + Math.abs(outputs.federalBenefitOffsetFromA))} /mo`],
+      [
+        `Statutory cap (${inputs.numChildren} ${inputs.numChildren === 1 ? "child" : "children"})`,
+        `$ ${fmt(outputs.pcsoStatutoryMax)} /mo`,
+      ],
+      [
+        "Excess subject to recipient's burden",
+        `$ ${fmt(outputs.pcsoExcessOverCap)} /mo  \u00b7  $ ${fmt(outputs.pcsoExcessOverCap * 12)} /yr`,
+      ],
+    ];
+    for (const [label, value] of rows) {
+      ensure(ctx, 12);
+      draw(ctx, label, MARGIN + 8, ctx.y - 9, { size: 9 });
+      drawRight(ctx, value, END_X - 4, ctx.y - 9, { size: 9, bold: label.startsWith("Excess") });
+      ctx.y -= 12;
+    }
+    if (outputs.pcsoCapNote) {
+      ctx.y -= 2;
+      const lines = wrapText(outputs.pcsoCapNote, 8, ROW_W - 12);
+      for (const line of lines) {
+        ensure(ctx, 10);
+        draw(ctx, line, MARGIN + 6, ctx.y - 8, { size: 8, color: MUTED });
+        ctx.y -= 10;
+      }
+    }
+  } else if (outputs.pcsoBelowCapNote) {
+    ctx.y -= 6;
+    const lines = wrapText(outputs.pcsoBelowCapNote, 8, ROW_W - 12);
+    for (const line of lines) {
+      ensure(ctx, 10);
+      draw(ctx, line, MARGIN + 6, ctx.y - 8, { size: 8, color: MUTED });
+      ctx.y -= 10;
+    }
+  }
+
+  if (outputs.equalParentingLowSupportNote) {
+    ctx.y -= 8;
+    ensure(ctx, 12);
+    draw(ctx, "Why this 50/50 obligation is low", MARGIN, ctx.y - 9, { size: 9, bold: true });
+    ctx.y -= 12;
+    const lines = wrapText(outputs.equalParentingLowSupportNote, 8, ROW_W - 12);
+    for (const line of lines) {
+      ensure(ctx, 10);
+      draw(ctx, line, MARGIN + 6, ctx.y - 8, { size: 8, color: MUTED });
+      ctx.y -= 10;
+    }
+  }
+
+  // -----------------------------------------------------------------
   // Comments + Preparer's Use Only
   // -----------------------------------------------------------------
   ctx.y -= 8;
   blankBox(ctx, "Comments, Calculations, or Rebuttals to Schedule:", 56, caption.comments);
+
 
   ensure(ctx, 50);
   ctx.y -= 4;

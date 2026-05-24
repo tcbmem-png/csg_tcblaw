@@ -69,9 +69,46 @@ export function ResultSidebar({
         </div>
       </div>
 
-      {outputs.pcsoCapNote && (
-        <div className="mt-4 rounded-md border border-rule bg-cream p-3 text-xs leading-relaxed text-ink">
-          {outputs.pcsoCapNote}
+      {outputs.pcsoExceedsStatutoryMax && (
+        <div className="mt-4 rounded-md border border-accent/60 bg-accent/10 p-3 text-xs leading-relaxed text-ink">
+          <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Statutory cap check · §36-5-101(e)(1)(B)
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-baseline justify-between">
+              <span>Calculated PCSO</span>
+              <span className="font-mono">${fmt(Math.abs(outputs.allInMonthlyFromA) + Math.abs(outputs.federalBenefitOffsetFromA))}/mo</span>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span>Statutory cap ({inputs.numChildren} {inputs.numChildren === 1 ? "child" : "children"})</span>
+              <span className="font-mono">${fmt(outputs.pcsoStatutoryMax)}/mo</span>
+            </div>
+            <div className="flex items-baseline justify-between border-t border-rule pt-1 font-semibold">
+              <span>Excess (recipient's burden)</span>
+              <span className="font-mono">${fmt(outputs.pcsoExcessOverCap)}/mo</span>
+            </div>
+          </div>
+          {outputs.pcsoCapNote && (
+            <details className="mt-2">
+              <summary className="cursor-pointer text-[11px] underline-offset-2 hover:underline">
+                How the statutory cap works
+              </summary>
+              <p className="mt-2 text-[11px] leading-relaxed">{outputs.pcsoCapNote}</p>
+            </details>
+          )}
+        </div>
+      )}
+
+      {!outputs.pcsoExceedsStatutoryMax && outputs.pcsoBelowCapNote && (
+        <div className="mt-4 rounded-md border border-rule bg-cream p-3 text-[11px] leading-relaxed text-muted-foreground">
+          {outputs.pcsoBelowCapNote}
+        </div>
+      )}
+
+      {outputs.equalParentingLowSupportNote && (
+        <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
+          <div className="mb-1 font-semibold">Why is this support amount so low?</div>
+          {outputs.equalParentingLowSupportNote}
         </div>
       )}
 
