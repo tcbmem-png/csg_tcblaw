@@ -19,10 +19,10 @@ import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UnlockTokenRouteImport } from './routes/unlock/$token'
-import { Route as TnHowItWorksRouteImport } from './routes/tn.how-it-works'
-import { Route as TnAboutRouteImport } from './routes/tn.about'
-import { Route as MsHowItWorksRouteImport } from './routes/ms.how-it-works'
-import { Route as MsAboutRouteImport } from './routes/ms.about'
+import { Route as TnHowItWorksRouteImport } from './routes/tn_.how-it-works'
+import { Route as TnAboutRouteImport } from './routes/tn_.about'
+import { Route as MsHowItWorksRouteImport } from './routes/ms_.how-it-works'
+import { Route as MsAboutRouteImport } from './routes/ms_.about'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout/return'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
@@ -85,24 +85,24 @@ const UnlockTokenRoute = UnlockTokenRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const TnHowItWorksRoute = TnHowItWorksRouteImport.update({
-  id: '/how-it-works',
-  path: '/how-it-works',
-  getParentRoute: () => TnRoute,
+  id: '/tn_/how-it-works',
+  path: '/tn/how-it-works',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const TnAboutRoute = TnAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => TnRoute,
+  id: '/tn_/about',
+  path: '/tn/about',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MsHowItWorksRoute = MsHowItWorksRouteImport.update({
-  id: '/how-it-works',
-  path: '/how-it-works',
-  getParentRoute: () => MsRoute,
+  id: '/ms_/how-it-works',
+  path: '/ms/how-it-works',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MsAboutRoute = MsAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => MsRoute,
+  id: '/ms_/about',
+  path: '/ms/about',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
@@ -165,10 +165,10 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
-  '/ms': typeof MsRouteWithChildren
+  '/ms': typeof MsRoute
   '/resend': typeof ResendRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tn': typeof TnRouteWithChildren
+  '/tn': typeof TnRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -191,10 +191,10 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
-  '/ms': typeof MsRouteWithChildren
+  '/ms': typeof MsRoute
   '/resend': typeof ResendRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tn': typeof TnRouteWithChildren
+  '/tn': typeof TnRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -218,17 +218,17 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
-  '/ms': typeof MsRouteWithChildren
+  '/ms': typeof MsRoute
   '/resend': typeof ResendRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/tn': typeof TnRouteWithChildren
+  '/tn': typeof TnRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
-  '/ms/about': typeof MsAboutRoute
-  '/ms/how-it-works': typeof MsHowItWorksRoute
-  '/tn/about': typeof TnAboutRoute
-  '/tn/how-it-works': typeof TnHowItWorksRoute
+  '/ms_/about': typeof MsAboutRoute
+  '/ms_/how-it-works': typeof MsHowItWorksRoute
+  '/tn_/about': typeof TnAboutRoute
+  '/tn_/how-it-works': typeof TnHowItWorksRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
@@ -305,10 +305,10 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/checkout/return'
     | '/email/unsubscribe'
-    | '/ms/about'
-    | '/ms/how-it-works'
-    | '/tn/about'
-    | '/tn/how-it-works'
+    | '/ms_/about'
+    | '/ms_/how-it-works'
+    | '/tn_/about'
+    | '/tn_/how-it-works'
     | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/api/public/admin/fulfill'
@@ -325,13 +325,17 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   CalculatorRoute: typeof CalculatorRoute
   HowItWorksRoute: typeof HowItWorksRoute
-  MsRoute: typeof MsRouteWithChildren
+  MsRoute: typeof MsRoute
   ResendRoute: typeof ResendRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  TnRoute: typeof TnRouteWithChildren
+  TnRoute: typeof TnRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  MsAboutRoute: typeof MsAboutRoute
+  MsHowItWorksRoute: typeof MsHowItWorksRoute
+  TnAboutRoute: typeof TnAboutRoute
+  TnHowItWorksRoute: typeof TnHowItWorksRoute
   UnlockTokenRoute: typeof UnlockTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicAdminFulfillRoute: typeof ApiPublicAdminFulfillRoute
@@ -415,33 +419,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UnlockTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tn/how-it-works': {
-      id: '/tn/how-it-works'
-      path: '/how-it-works'
+    '/tn_/how-it-works': {
+      id: '/tn_/how-it-works'
+      path: '/tn/how-it-works'
       fullPath: '/tn/how-it-works'
       preLoaderRoute: typeof TnHowItWorksRouteImport
-      parentRoute: typeof TnRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/tn/about': {
-      id: '/tn/about'
-      path: '/about'
+    '/tn_/about': {
+      id: '/tn_/about'
+      path: '/tn/about'
       fullPath: '/tn/about'
       preLoaderRoute: typeof TnAboutRouteImport
-      parentRoute: typeof TnRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/ms/how-it-works': {
-      id: '/ms/how-it-works'
-      path: '/how-it-works'
+    '/ms_/how-it-works': {
+      id: '/ms_/how-it-works'
+      path: '/ms/how-it-works'
       fullPath: '/ms/how-it-works'
       preLoaderRoute: typeof MsHowItWorksRouteImport
-      parentRoute: typeof MsRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/ms/about': {
-      id: '/ms/about'
-      path: '/about'
+    '/ms_/about': {
+      id: '/ms_/about'
+      path: '/ms/about'
       fullPath: '/ms/about'
       preLoaderRoute: typeof MsAboutRouteImport
-      parentRoute: typeof MsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
       id: '/email/unsubscribe'
@@ -516,42 +520,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface MsRouteChildren {
-  MsAboutRoute: typeof MsAboutRoute
-  MsHowItWorksRoute: typeof MsHowItWorksRoute
-}
-
-const MsRouteChildren: MsRouteChildren = {
-  MsAboutRoute: MsAboutRoute,
-  MsHowItWorksRoute: MsHowItWorksRoute,
-}
-
-const MsRouteWithChildren = MsRoute._addFileChildren(MsRouteChildren)
-
-interface TnRouteChildren {
-  TnAboutRoute: typeof TnAboutRoute
-  TnHowItWorksRoute: typeof TnHowItWorksRoute
-}
-
-const TnRouteChildren: TnRouteChildren = {
-  TnAboutRoute: TnAboutRoute,
-  TnHowItWorksRoute: TnHowItWorksRoute,
-}
-
-const TnRouteWithChildren = TnRoute._addFileChildren(TnRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   CalculatorRoute: CalculatorRoute,
   HowItWorksRoute: HowItWorksRoute,
-  MsRoute: MsRouteWithChildren,
+  MsRoute: MsRoute,
   ResendRoute: ResendRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  TnRoute: TnRouteWithChildren,
+  TnRoute: TnRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  MsAboutRoute: MsAboutRoute,
+  MsHowItWorksRoute: MsHowItWorksRoute,
+  TnAboutRoute: TnAboutRoute,
+  TnHowItWorksRoute: TnHowItWorksRoute,
   UnlockTokenRoute: UnlockTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicAdminFulfillRoute: ApiPublicAdminFulfillRoute,
@@ -565,3 +549,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/ms/about")({
+export const Route = createFileRoute("/ms_/about")({
   head: () => ({
     meta: [
       { title: "About — MS Child Support Calculator" },

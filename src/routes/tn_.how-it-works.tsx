@@ -31,7 +31,7 @@ const FAQ_JSONLD = {
   ],
 };
 
-export const Route = createFileRoute("/tn/how-it-works")({
+export const Route = createFileRoute("/tn_/how-it-works")({
   head: () => ({
     meta: [
       { title: "How it works — TN Child Support Calculator" },

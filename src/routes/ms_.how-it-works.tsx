@@ -31,7 +31,7 @@ const FAQ_JSONLD = {
   ],
 };
 
-export const Route = createFileRoute("/ms/how-it-works")({
+export const Route = createFileRoute("/ms_/how-it-works")({
   head: () => ({
     meta: [
       { title: "How it works — MS Child Support Calculator" },
