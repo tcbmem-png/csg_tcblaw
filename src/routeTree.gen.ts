@@ -19,6 +19,7 @@ import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UnlockTokenRouteImport } from './routes/unlock/$token'
+import { Route as TnWhyWeBuiltThisRouteImport } from './routes/tn_.why-we-built-this'
 import { Route as TnHowItWorksRouteImport } from './routes/tn_.how-it-works'
 import { Route as TnAboutRouteImport } from './routes/tn_.about'
 import { Route as MsHowItWorksRouteImport } from './routes/ms_.how-it-works'
@@ -82,6 +83,11 @@ const IndexRoute = IndexRouteImport.update({
 const UnlockTokenRoute = UnlockTokenRouteImport.update({
   id: '/unlock/$token',
   path: '/unlock/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TnWhyWeBuiltThisRoute = TnWhyWeBuiltThisRouteImport.update({
+  id: '/tn_/why-we-built-this',
+  path: '/tn/why-we-built-this',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TnHowItWorksRoute = TnHowItWorksRouteImport.update({
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/ms/how-it-works': typeof MsHowItWorksRoute
   '/tn/about': typeof TnAboutRoute
   '/tn/how-it-works': typeof TnHowItWorksRoute
+  '/tn/why-we-built-this': typeof TnWhyWeBuiltThisRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
@@ -202,6 +209,7 @@ export interface FileRoutesByTo {
   '/ms/how-it-works': typeof MsHowItWorksRoute
   '/tn/about': typeof TnAboutRoute
   '/tn/how-it-works': typeof TnHowItWorksRoute
+  '/tn/why-we-built-this': typeof TnWhyWeBuiltThisRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
@@ -229,6 +237,7 @@ export interface FileRoutesById {
   '/ms_/how-it-works': typeof MsHowItWorksRoute
   '/tn_/about': typeof TnAboutRoute
   '/tn_/how-it-works': typeof TnHowItWorksRoute
+  '/tn_/why-we-built-this': typeof TnWhyWeBuiltThisRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
@@ -257,6 +266,7 @@ export interface FileRouteTypes {
     | '/ms/how-it-works'
     | '/tn/about'
     | '/tn/how-it-works'
+    | '/tn/why-we-built-this'
     | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/api/public/admin/fulfill'
@@ -283,6 +293,7 @@ export interface FileRouteTypes {
     | '/ms/how-it-works'
     | '/tn/about'
     | '/tn/how-it-works'
+    | '/tn/why-we-built-this'
     | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/api/public/admin/fulfill'
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/ms_/how-it-works'
     | '/tn_/about'
     | '/tn_/how-it-works'
+    | '/tn_/why-we-built-this'
     | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/api/public/admin/fulfill'
@@ -336,6 +348,7 @@ export interface RootRouteChildren {
   MsHowItWorksRoute: typeof MsHowItWorksRoute
   TnAboutRoute: typeof TnAboutRoute
   TnHowItWorksRoute: typeof TnHowItWorksRoute
+  TnWhyWeBuiltThisRoute: typeof TnWhyWeBuiltThisRoute
   UnlockTokenRoute: typeof UnlockTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicAdminFulfillRoute: typeof ApiPublicAdminFulfillRoute
@@ -417,6 +430,13 @@ declare module '@tanstack/react-router' {
       path: '/unlock/$token'
       fullPath: '/unlock/$token'
       preLoaderRoute: typeof UnlockTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tn_/why-we-built-this': {
+      id: '/tn_/why-we-built-this'
+      path: '/tn/why-we-built-this'
+      fullPath: '/tn/why-we-built-this'
+      preLoaderRoute: typeof TnWhyWeBuiltThisRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tn_/how-it-works': {
@@ -536,6 +556,7 @@ const rootRouteChildren: RootRouteChildren = {
   MsHowItWorksRoute: MsHowItWorksRoute,
   TnAboutRoute: TnAboutRoute,
   TnHowItWorksRoute: TnHowItWorksRoute,
+  TnWhyWeBuiltThisRoute: TnWhyWeBuiltThisRoute,
   UnlockTokenRoute: UnlockTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicAdminFulfillRoute: ApiPublicAdminFulfillRoute,
