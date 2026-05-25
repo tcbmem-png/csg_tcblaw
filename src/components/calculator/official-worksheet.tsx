@@ -1,6 +1,10 @@
 import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import { defaultCaption } from "@/lib/calc/share";
+import {
+  DEVIATION_METHODOLOGY_NOTE,
+  specialExpensesThresholdLine,
+} from "@/lib/calc/citations";
 import { useIsUnlocked } from "@/lib/calc/unlock";
 
 function fmt(n: number) {
