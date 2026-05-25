@@ -196,33 +196,36 @@ const POSITION_LABEL: Record<string, string> = {
 /**
  * Per-row attribution string for one side of the deviation worksheet.
  *
- * "Slate" identifies which slate in `MSInputs` this column reads from:
- * obligor column reads `deviationsA` (slate "A"), obligee column reads
- * `deviationsB` (slate "B"). The handoff's `originatingSide` tells us
- * which slate the originating attorney filled in — the OTHER slate's
- * entries are attributed to the receiving attorney.
+ * Role-led format: chancellor reads "Per counsel for {role} — {name}
+ * ({firm})" rather than a slate letter. The role label ("Obligor" /
+ * "Obligee") comes from the inputs, which derive from the case caption
+ * and are the terms a court cares about. Slate ("A"/"B") is only used
+ * internally to look up which attorney filled in this column.
  *
- * Returns `null` when there is no handoff (single-attorney workflow),
- * in which case the column header is just the party label, unchanged
- * from the pre-handoff PDF.
+ * Returns `null` when there is no handoff (single-attorney workflow);
+ * the column header is then just the party label, unchanged from the
+ * pre-handoff PDF.
  */
 function attributionFor(
   handoff: HandoffState | undefined,
   slate: "A" | "B",
+  roleLabel: string,
 ): string | null {
   if (!handoff || handoff.status === "none") return null;
   const isOriginating = slate === handoff.originatingSide;
-  if (isOriginating) {
-    const a = handoff.originatingAttorney;
-    const name = a?.name?.trim() || "originating counsel";
-    const firm = a?.firm?.trim();
-    return firm ? `Per ${name} (${firm})` : `Per ${name}`;
+  const prefix = isOriginating
+    ? `Per counsel for ${roleLabel}`
+    : `Per opposing counsel for ${roleLabel}`;
+  const att = isOriginating
+    ? handoff.originatingAttorney
+    : handoff.receivingAttorney;
+  const name = att?.name?.trim();
+  const firm = att?.firm?.trim();
+  if (!name && !firm) {
+    return isOriginating ? prefix : `${prefix} (name not provided)`;
   }
-  const r = handoff.receivingAttorney;
-  const name = r?.name?.trim();
-  if (!name) return "Per opposing counsel (name not provided)";
-  const firm = r?.firm?.trim();
-  return firm ? `Per ${name} (${firm})` : `Per ${name}`;
+  if (name && firm) return `${prefix} — ${name} (${firm})`;
+  return `${prefix} — ${name || firm}`;
 }
 
 function partyColumn(
@@ -362,8 +365,8 @@ function factorBlock(
     return;
   }
 
-  const obligorAttribution = attributionFor(handoff, "A");
-  const obligeeAttribution = attributionFor(handoff, "B");
+  const obligorAttribution = attributionFor(handoff, "A", inputs.obligorLabel || "Obligor");
+  const obligeeAttribution = attributionFor(handoff, "B", inputs.obligeeLabel || "Obligee");
 
   // Per-party columns
   if (sideBySide) {

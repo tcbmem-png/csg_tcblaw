@@ -104,16 +104,16 @@ export function MSHandoffShareDialog({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-ink">
-              Which side does your client represent?
+              Which party does your client represent?
             </label>
-            <div className="mt-1 flex gap-3 text-sm">
+            <div className="mt-1 flex flex-col gap-2 text-sm">
               <label className="flex items-center gap-2">
                 <input
                   type="radio"
                   checked={side === "A"}
                   onChange={() => setSide("A")}
                 />
-                <span>{obligor} (Slate A)</span>
+                <span>Obligor — {obligor}</span>
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -121,12 +121,11 @@ export function MSHandoffShareDialog({
                   checked={side === "B"}
                   onChange={() => setSide("B")}
                 />
-                <span>{obligee} (Slate B)</span>
+                <span>Obligee — {obligee}</span>
               </label>
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Obligor / obligee identification on the worksheet comes from the
-              case caption above, not from the slate letter.
+              Obligor / obligee roles come from the case caption above.
             </p>
           </div>
 
