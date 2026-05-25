@@ -278,6 +278,14 @@ export interface MSInputs {
   deviationsA: MSDeviation[];
   /** Position B's slate — only populated when comparisonMode === 'side_by_side'. */
   deviationsB?: MSDeviation[];
+
+  /**
+   * Ages (in years) of the children before the court. Optional; powers the
+   * reconciliation view's cumulative-impact estimate using
+   *   avgMonthsRemaining = mean(max(0, 21 − age)) × 12  (capped at 21 yrs).
+   * Empty array → cumulative display is suppressed.
+   */
+  childAges: number[];
 }
 
 export interface MSDeviationComputation {
