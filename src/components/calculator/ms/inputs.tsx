@@ -21,6 +21,12 @@ import { MSDeviationComparison } from "./deviation-comparison";
 
 type Setter = (next: MSInputs) => void;
 
+function monthlyHint(annual: number): string {
+  if (!annual || annual <= 0) return "";
+  const m = Math.round(annual / 12);
+  return `(≈ $${m.toLocaleString("en-US")}/mo)`;
+}
+
 const ALL_LETTERS: MSInputs["deviationsA"][number]["letter"][] = [
   "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
 ];
@@ -94,13 +100,15 @@ export function MSCalculatorInputs({
         <p className="text-xs text-muted-foreground">
           MS uses obligor-only AGI. All figures are <strong>annual</strong>{" "}
           except the in-home deduction. Use the obligor's actual tax liability,
-          not over-withholding.
+          not over-withholding. <strong>Tip:</strong> If you have a monthly
+          figure, multiply by 12 before entering. Each annual field below shows
+          its monthly equivalent for sanity-checking.
         </p>
         <MSImputationBasis inputs={inputs} setInputs={setInputs} />
         <Grid>
           <Field
             label="Gross annual income (all sources)"
-            help="Wages, salary, bonuses, self-employment, rental income, etc."
+            help={`Wages, salary, bonuses, self-employment, rental income, etc. ${monthlyHint(inputs.obligorAnnualGross)}`}
           >
             <NumInput
               value={inputs.obligorAnnualGross}

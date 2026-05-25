@@ -228,7 +228,7 @@ describe("Sole / near-sole custody (TN)", () => {
     numChildren: 2,
   };
 
-  it("365/0 puts ARP in the 'increase' band with a ~18.9% bump", () => {
+  it("365/0 puts ARP in the 'increase' band with a ~18.6% bump", () => {
     const out = calculate({
       ...base,
       parentingType: "custom",
@@ -237,8 +237,9 @@ describe("Sole / near-sole custody (TN)", () => {
     });
     // A has 0 days → A is ARP → A pays B.
     expect(out.presumptiveDirection).toBe("parent_a_to_b");
-    // Expected: proRataA × (1 + 69/365)
-    const expected = out.bcso * out.piA * (1 + 69 / 365);
+    // Expected: proRataA × (1 + 68/365) using INCREASE_THRESHOLD=68 so the
+    // adjustment is continuous at the 68-day boundary.
+    const expected = out.bcso * out.piA * (1 + 68 / 365);
     expect(out.netPresumptiveSupport).toBe(Math.round(expected));
   });
 
