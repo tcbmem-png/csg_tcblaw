@@ -209,12 +209,12 @@ export function MSWorksheetPreview({
         {sideBySide && outputs.positionB ? (
           <>
             <Row
-              label={`${inputs.positionALabel} — proposed final / mo`}
+              label={`${inputs.obligorLabel} — proposed final / mo`}
               total={fmt(outputs.proposedFinalMonthly, 2)}
               emphasis
             />
             <Row
-              label={`${inputs.positionBLabel} — proposed final / mo`}
+              label={`${inputs.obligeeLabel} — proposed final / mo`}
               total={fmt(outputs.positionB.proposedFinalMonthly, 2)}
               emphasis
             />

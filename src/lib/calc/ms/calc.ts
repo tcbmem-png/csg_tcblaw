@@ -62,8 +62,6 @@ export function defaultMSInputs(): MSInputs {
     sharedCustodyFlag: false,
     comparisonMode: "single",
     deviationEntryMode: "pick",
-    positionALabel: "Position A",
-    positionBLabel: "Position B",
     deviationsA: ALL_FACTOR_LETTERS.map(defaultDeviation),
     deviationsB: undefined,
     childAges: [],

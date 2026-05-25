@@ -251,20 +251,10 @@ function MSDeviationsSection({
           />
         </Field>
         {inputs.comparisonMode === "side_by_side" && (
-          <Grid>
-            <Field label="Position A label">
-              <TextInput
-                value={inputs.positionALabel}
-                onChange={(v) => setInputs({ ...inputs, positionALabel: v })}
-              />
-            </Field>
-            <Field label="Position B label">
-              <TextInput
-                value={inputs.positionBLabel}
-                onChange={(v) => setInputs({ ...inputs, positionBLabel: v })}
-              />
-            </Field>
-          </Grid>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Each factor will show {inputs.obligorLabel || "the obligor"}'s
+            proposed amount alongside {inputs.obligeeLabel || "the obligee"}'s.
+          </p>
         )}
       </div>
 
