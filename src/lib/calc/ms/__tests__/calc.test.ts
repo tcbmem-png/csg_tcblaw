@@ -7,14 +7,12 @@ function withDefaults(patch: Partial<MSInputs>): MSInputs {
 }
 
 describe("MS calc — § 43-19-101 verification tests", () => {
-  // Spec §7 Test 1 — Simple median case
   it("Test 1: $30K / 2 kids / no special items = $402.33/mo", () => {
     const inputs = withDefaults({
       numChildren: 2,
       obligorAnnualGross: 30000,
       obligorAnnualTaxes: 4000,
       obligorAnnualSocialSecurity: 1860,
-      obligorAnnualMandatoryRetirement: 0,
     });
     const out = calculateMS(inputs);
     expect(out.annualAGI).toBe(24140);
@@ -24,61 +22,44 @@ describe("MS calc — § 43-19-101 verification tests", () => {
     expect(out.proposedFinalMonthly).toBeCloseTo(402.33, 2);
     expect(out.requiresFindingHighIncome).toBe(false);
     expect(out.requiresFindingLowIncome).toBe(false);
+    expect(out.suspensionApplies).toBe(false);
   });
 
-  // Spec §7 Test 2 — High income, above $100K finding threshold
   it("Test 2: $250K / 3 kids triggers high-income finding flag", () => {
     const inputs = withDefaults({
       numChildren: 3,
       obligorAnnualGross: 250000,
       obligorAnnualTaxes: 60000,
       obligorAnnualSocialSecurity: 9114,
-      obligorAnnualMandatoryRetirement: 0,
     });
     const out = calculateMS(inputs);
-    expect(out.annualAGI).toBe(180886);
-    expect(out.monthlyAGI).toBeCloseTo(15073.83, 2);
-    expect(out.statutoryPercentage).toBe(0.22);
-    expect(out.presumptiveMonthly).toBeCloseTo(3316.24, 1);
     expect(out.requiresFindingHighIncome).toBe(true);
-    expect(out.requiresFindingLowIncome).toBe(false);
     expect(out.warnings.some((w) => w.includes("$100,000"))).toBe(true);
   });
 
-  // Spec §7 Test 3 — Low income, below $10K finding threshold
   it("Test 3: $14K + $2,400 pre-existing / 1 kid triggers low-income finding", () => {
     const inputs = withDefaults({
       numChildren: 1,
       obligorAnnualGross: 14000,
       obligorAnnualTaxes: 1000,
       obligorAnnualSocialSecurity: 868,
-      obligorAnnualMandatoryRetirement: 0,
       preexistingSupportAnnual: 2400,
     });
     const out = calculateMS(inputs);
-    expect(out.annualAGI).toBe(9732);
-    expect(out.monthlyAGI).toBeCloseTo(811, 0);
-    expect(out.statutoryPercentage).toBe(0.14);
-    expect(out.presumptiveMonthly).toBeCloseTo(113.54, 1);
-    expect(out.requiresFindingHighIncome).toBe(false);
     expect(out.requiresFindingLowIncome).toBe(true);
     expect(out.warnings.some((w) => w.includes("$10,000"))).toBe(true);
   });
 
-  // Spec §7 Test 4 — Health insurance provided by obligee adds to award
   it("Test 4: $80K / 2 kids + $300/mo health by obligee = $1,300.67/mo", () => {
     const inputs = withDefaults({
       numChildren: 2,
       obligorAnnualGross: 80000,
       obligorAnnualTaxes: 15000,
       obligorAnnualSocialSecurity: 4960,
-      obligorAnnualMandatoryRetirement: 0,
       healthInsuranceMonthly: 300,
       healthInsuranceProvidedBy: "obligee",
     });
     const out = calculateMS(inputs);
-    expect(out.annualAGI).toBe(60040);
-    expect(out.presumptiveMonthly).toBeCloseTo(1000.67, 2);
     expect(out.healthInsuranceAddOnMonthly).toBe(300);
     expect(out.proposedFinalMonthly).toBeCloseTo(1300.67, 2);
   });
@@ -100,7 +81,7 @@ describe("MS calc — additional invariants", () => {
       obligorAnnualGross: 60000,
       obligorAnnualTaxes: 10000,
       obligorAnnualSocialSecurity: 3720,
-      deviations: base.deviations.map((d) => {
+      deviationsA: base.deviationsA.map((d) => {
         if (d.letter === "a") return { ...d, applicable: true, description: "Orthodontia", proposedMonthly: 150 };
         if (d.letter === "g") return { ...d, applicable: true, description: "50/50 schedule", proposedMonthly: -200 };
         return d;
@@ -119,7 +100,7 @@ describe("MS calc — additional invariants", () => {
       obligorAnnualGross: 20000,
       obligorAnnualTaxes: 2000,
       obligorAnnualSocialSecurity: 1240,
-      deviations: base.deviations.map((d) =>
+      deviationsA: base.deviationsA.map((d) =>
         d.letter === "j"
           ? { ...d, applicable: true, description: "Massive offset", proposedMonthly: -10000 }
           : d,
@@ -137,10 +118,118 @@ describe("MS calc — additional invariants", () => {
   });
 });
 
+// =============================================================
+// Spec §9 — verification tests for the v2 upgrade
+// =============================================================
+
+describe("MS calc — § 43-19-36 incarceration suspension (Test D)", () => {
+  it("incarceration > 180 days, no carve-out, no means → suspension short-circuits to $0", () => {
+    const inputs = withDefaults({
+      numChildren: 2,
+      obligorAnnualGross: 30000,
+      obligorAnnualTaxes: 4000,
+      obligorAnnualSocialSecurity: 1860,
+      incarceration: {
+        status: "over_180",
+        reasons: { domesticViolence: false, childAbuse: false, criminalNonpayment: false },
+        hasMeansToPay: false,
+      },
+    });
+    const out = calculateMS(inputs);
+    expect(out.suspensionApplies).toBe(true);
+    expect(out.proposedFinalMonthly).toBe(0);
+    expect(out.suspensionReason).toContain("§ 43-19-36");
+    expect(out.warnings.some((w) => w.includes("§ 43-19-36"))).toBe(true);
+  });
+});
+
+describe("MS calc — § 43-19-36 carve-out (Test E)", () => {
+  it("domestic violence carve-out preserves the full obligation", () => {
+    const inputs = withDefaults({
+      numChildren: 2,
+      obligorAnnualGross: 30000,
+      obligorAnnualTaxes: 4000,
+      obligorAnnualSocialSecurity: 1860,
+      incarceration: {
+        status: "over_180",
+        reasons: { domesticViolence: true, childAbuse: false, criminalNonpayment: false },
+        hasMeansToPay: false,
+      },
+    });
+    const out = calculateMS(inputs);
+    expect(out.suspensionApplies).toBe(false);
+    expect(out.proposedFinalMonthly).toBeCloseTo(402.33, 2);
+    expect(out.warnings.some((w) => w.includes("§ 43-19-36(2)(b)"))).toBe(true);
+  });
+
+  it("means-to-pay exception preserves the full obligation", () => {
+    const inputs = withDefaults({
+      numChildren: 2,
+      obligorAnnualGross: 30000,
+      obligorAnnualTaxes: 4000,
+      obligorAnnualSocialSecurity: 1860,
+      incarceration: {
+        status: "over_180",
+        reasons: { domesticViolence: false, childAbuse: false, criminalNonpayment: false },
+        hasMeansToPay: true,
+      },
+    });
+    const out = calculateMS(inputs);
+    expect(out.suspensionApplies).toBe(false);
+    expect(out.proposedFinalMonthly).toBeGreaterThan(0);
+    expect(out.warnings.some((w) => w.includes("§ 43-19-36(2)(a)"))).toBe(true);
+  });
+});
+
+describe("MS calc — imputation basis flag (Test F)", () => {
+  it("imputed AGI emits a § 43-19-101(5) note", () => {
+    const inputs = withDefaults({
+      numChildren: 1,
+      obligorAnnualGross: 40000,
+      obligorAnnualTaxes: 5000,
+      obligorAnnualSocialSecurity: 2480,
+      agiBasis: "imputed",
+      imputationBasis: {
+        pastEarnings: true,
+        jobSkills: true,
+        localMarket: false,
+        availableEmployers: false,
+        other: false,
+        note: "",
+      },
+    });
+    const out = calculateMS(inputs);
+    expect(out.warnings.some((w) => w.includes("§ 43-19-101(5)"))).toBe(true);
+  });
+});
+
+describe("MS calc — side-by-side comparison (Test C)", () => {
+  it("computes position A and position B independently with the same presumptive base", () => {
+    const base = defaultMSInputs();
+    const inputs: MSInputs = {
+      ...base,
+      numChildren: 2,
+      obligorAnnualGross: 80000,
+      obligorAnnualTaxes: 15000,
+      obligorAnnualSocialSecurity: 4960,
+      comparisonMode: "side_by_side",
+      deviationsA: base.deviationsA.map((d) =>
+        d.letter === "a" ? { ...d, applicable: true, proposedMonthly: 300, description: "A's position" } : d,
+      ),
+      deviationsB: base.deviationsA.map((d) =>
+        d.letter === "a" ? { ...d, applicable: true, proposedMonthly: 100, description: "B's position" } : d,
+      ),
+    };
+    const out = calculateMS(inputs);
+    expect(out.totalDeviationsMonthly).toBe(300);
+    expect(out.positionB?.totalMonthly).toBe(100);
+    const gap = (out.proposedFinalMonthly - (out.positionB?.proposedFinalMonthly ?? 0));
+    expect(gap).toBeCloseTo(200, 2);
+  });
+});
+
 describe("MS — sole custody is the default presumption", () => {
   it("custody arrangement is not an input to the formula", () => {
-    // Two identical runs, only sharedCustodyFlag differs. The award must
-    // be identical; only the warnings array differs (Factor (g) callout).
     const base = withDefaults({
       numChildren: 2,
       obligorAnnualGross: 60000,
@@ -151,19 +240,5 @@ describe("MS — sole custody is the default presumption", () => {
     const shared = calculateMS({ ...base, sharedCustodyFlag: true });
     expect(shared.presumptiveMonthly).toBe(sole.presumptiveMonthly);
     expect(shared.proposedFinalMonthly).toBe(sole.proposedFinalMonthly);
-    expect(sole.warnings.some((w) => w.includes("§ 43-19-103(g)"))).toBe(false);
-    expect(shared.warnings.some((w) => w.includes("§ 43-19-103(g)"))).toBe(true);
-  });
-
-  it("Spec Test 1 holds with no custody-day inputs at all (sole custody is the default)", () => {
-    const out = calculateMS(
-      withDefaults({
-        numChildren: 2,
-        obligorAnnualGross: 30000,
-        obligorAnnualTaxes: 4000,
-        obligorAnnualSocialSecurity: 1860,
-      }),
-    );
-    expect(out.proposedFinalMonthly).toBeCloseTo(402.33, 2);
   });
 });

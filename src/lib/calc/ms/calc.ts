@@ -1,4 +1,10 @@
-import type { MSInputs, MSOutputs, MSDeviation, MSFactorLetter } from "./types";
+import type {
+  MSInputs,
+  MSOutputs,
+  MSDeviation,
+  MSFactorLetter,
+  MSDeviationComputation,
+} from "./types";
 import {
   MS_AGI_HIGH_THRESHOLD,
   MS_AGI_LOW_THRESHOLD,
@@ -19,31 +25,72 @@ export function defaultMSInputs(): MSInputs {
     obligorLabel: "Obligor",
     obligeeLabel: "Obligee",
     numChildren: 1,
+    incarceration: {
+      status: "none",
+      reasons: { domesticViolence: false, childAbuse: false, criminalNonpayment: false },
+      hasMeansToPay: false,
+    },
     obligorAnnualGross: 0,
     obligorAnnualTaxes: 0,
     obligorAnnualSocialSecurity: 0,
     obligorAnnualMandatoryRetirement: 0,
     preexistingSupportAnnual: 0,
     inHomeChildrenDeductionMonthly: 0,
+    agiBasis: "actual",
+    imputationBasis: {
+      pastEarnings: false,
+      jobSkills: false,
+      localMarket: false,
+      availableEmployers: false,
+      other: false,
+      note: "",
+    },
     healthInsuranceMonthly: 0,
     healthInsuranceProvidedBy: "neither",
     sharedCustodyFlag: false,
-    deviations: ALL_FACTOR_LETTERS.map(defaultDeviation),
+    comparisonMode: "single",
+    deviationEntryMode: "pick",
+    positionALabel: "Position A",
+    positionBLabel: "Position B",
+    deviationsA: ALL_FACTOR_LETTERS.map(defaultDeviation),
+    deviationsB: undefined,
   };
+}
+
+function sumDeviations(dev: MSDeviation[] | undefined): number {
+  if (!dev) return 0;
+  return dev
+    .filter((d) => d.applicable)
+    .reduce((sum, d) => sum + (Number(d.proposedMonthly) || 0), 0);
 }
 
 /**
  * Pure Mississippi child support calculation.
  *
- *   annualAGI       = gross - taxes - ss - mandatoryRetirement - preexistingSupport
- *   monthlyAGI      = (annualAGI / 12) - inHomeChildrenDeductionMonthly
- *   presumptive     = monthlyAGI × pct(numChildren)
- *   healthAddOn     = obligee provides ? premium : 0   (if obligor provides, already credited in AGI flow — note in PDF)
- *   final           = max(0, presumptive + healthAddOn + Σ applicable deviations)
+ *   PRE-CHECK § 43-19-36: if obligor is incarcerated > 180 days, no carve-out
+ *   applies, and no means to pay → suspension by operation of law.
+ *
+ *   Otherwise:
+ *     annualAGI       = gross - taxes - ss - mandatoryRetirement - preexistingSupport
+ *     monthlyAGI      = (annualAGI / 12) - inHomeChildrenDeductionMonthly
+ *     presumptive     = monthlyAGI × pct(numChildren)
+ *     healthAddOn     = obligee provides ? premium : 0
+ *     final           = max(0, presumptive + healthAddOn + Σ applicable deviations)
  */
 export function calculateMS(inputs: MSInputs): MSOutputs {
   const warnings: string[] = [];
 
+  // ----- § 43-19-36 incarceration suspension check -----
+  const inc = inputs.incarceration;
+  const hasCarveOut =
+    inc.reasons.domesticViolence ||
+    inc.reasons.childAbuse ||
+    inc.reasons.criminalNonpayment;
+  const suspensionApplies =
+    inc.status === "over_180" && !hasCarveOut && !inc.hasMeansToPay;
+
+  // We still compute everything for display, but if suspension applies
+  // we floor the final at zero and surface the suspension finding.
   const gross = Math.max(0, inputs.obligorAnnualGross);
   const taxes = Math.max(0, inputs.obligorAnnualTaxes);
   const ss = Math.max(0, inputs.obligorAnnualSocialSecurity);
@@ -57,10 +104,6 @@ export function calculateMS(inputs: MSInputs): MSOutputs {
   const statutoryPercentage = msStatutoryPercentage(inputs.numChildren);
   const presumptiveMonthly = monthlyAGI * statutoryPercentage;
 
-  // Health insurance per § 43-19-101(6).
-  // If obligor provides: cost is taken into account implicitly because the obligor
-  // is already paying it out of post-tax dollars; we display it as informational
-  // and do not add it. If obligee provides, add the children's portion to the award.
   let healthInsuranceAddOnMonthly = 0;
   if (
     inputs.healthInsuranceProvidedBy === "obligee" &&
@@ -77,14 +120,45 @@ export function calculateMS(inputs: MSInputs): MSOutputs {
     );
   }
 
-  const totalDeviationsMonthly = inputs.deviations
-    .filter((d) => d.applicable)
-    .reduce((sum, d) => sum + (Number(d.proposedMonthly) || 0), 0);
+  const totalDeviationsMonthly = sumDeviations(inputs.deviationsA);
 
-  const proposedFinalMonthly = Math.max(
-    0,
-    presumptiveMonthly + healthInsuranceAddOnMonthly + totalDeviationsMonthly,
-  );
+  const computeFinal = (devTotal: number): number =>
+    Math.max(0, presumptiveMonthly + healthInsuranceAddOnMonthly + devTotal);
+
+  let proposedFinalMonthly = computeFinal(totalDeviationsMonthly);
+
+  let positionB: MSDeviationComputation | undefined;
+  if (inputs.comparisonMode === "side_by_side") {
+    const bTotal = sumDeviations(inputs.deviationsB);
+    positionB = {
+      totalMonthly: bTotal,
+      proposedFinalMonthly: computeFinal(bTotal),
+    };
+  }
+
+  let suspensionReason: string | null = null;
+  if (suspensionApplies) {
+    proposedFinalMonthly = 0;
+    if (positionB) positionB = { ...positionB, proposedFinalMonthly: 0 };
+    suspensionReason =
+      "Obligation suspended by operation of law during incarceration exceeding 180 days. Resumes the first day of the month following 60 days after release. § 43-19-36(2)–(3).";
+    warnings.unshift(
+      "§ 43-19-36 suspension applies: obligation is suspended during incarceration and resumes 60 days after release.",
+    );
+  } else if (inc.status === "over_180" && hasCarveOut) {
+    const which: string[] = [];
+    if (inc.reasons.domesticViolence) which.push("domestic violence (§ 97-3-7)");
+    if (inc.reasons.childAbuse) which.push("child abuse (§ 97-5-39)");
+    if (inc.reasons.criminalNonpayment)
+      which.push("criminal nonpayment of child support (§ 97-5-3)");
+    warnings.push(
+      `§ 43-19-36(2)(b) carve-out applies (${which.join("; ")}). Suspension is unavailable; the full obligation continues.`,
+    );
+  } else if (inc.status === "over_180" && inc.hasMeansToPay) {
+    warnings.push(
+      "§ 43-19-36(2)(a) exception: obligor has means to pay during incarceration; suspension is unavailable.",
+    );
+  }
 
   const requiresFindingHighIncome = annualAGI > MS_AGI_HIGH_THRESHOLD;
   const requiresFindingLowIncome = annualAGI < MS_AGI_LOW_THRESHOLD;
@@ -106,7 +180,15 @@ export function calculateMS(inputs: MSInputs): MSOutputs {
     );
   }
 
+  if (inputs.agiBasis === "imputed") {
+    warnings.push(
+      "Gross income is marked imputed. Under § 43-19-101(5) (effective 2022-07-01), imputation must be based on specific fact-gathering, not a standard amount.",
+    );
+  }
+
   return {
+    suspensionApplies,
+    suspensionReason,
     annualAGI,
     monthlyAGI,
     statutoryPercentage,
@@ -114,6 +196,7 @@ export function calculateMS(inputs: MSInputs): MSOutputs {
     healthInsuranceAddOnMonthly,
     totalDeviationsMonthly,
     proposedFinalMonthly,
+    positionB,
     requiresFindingHighIncome,
     requiresFindingLowIncome,
     warnings,
