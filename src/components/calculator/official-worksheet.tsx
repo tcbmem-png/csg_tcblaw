@@ -523,15 +523,8 @@ export function OfficialWorksheet({
         </div>
       </div>
 
-      <div className="mt-4 flex justify-end gap-2 no-print">
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          Print / Save PDF
-        </button>
-      </div>
+      {/* Download buttons live at the top of the worksheet view; the
+          footer-level button is redundant with the dual-mode controls. */}
     </div>
   );
 }
