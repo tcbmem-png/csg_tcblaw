@@ -27,6 +27,7 @@ import { Route as MsAboutRouteImport } from './routes/ms_.about'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout/return'
 import { Route as TnHowItWorksIncomeRouteImport } from './routes/tn_.how-it-works.income'
+import { Route as MsHowItWorksIncomeRouteImport } from './routes/ms_.how-it-works.income'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -126,6 +127,11 @@ const TnHowItWorksIncomeRoute = TnHowItWorksIncomeRouteImport.update({
   path: '/income',
   getParentRoute: () => TnHowItWorksRoute,
 } as any)
+const MsHowItWorksIncomeRoute = MsHowItWorksIncomeRouteImport.update({
+  id: '/income',
+  path: '/income',
+  getParentRoute: () => MsHowItWorksRoute,
+} as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -185,12 +191,13 @@ export interface FileRoutesByFullPath {
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/ms/about': typeof MsAboutRoute
-  '/ms/how-it-works': typeof MsHowItWorksRoute
+  '/ms/how-it-works': typeof MsHowItWorksRouteWithChildren
   '/tn/about': typeof TnAboutRoute
   '/tn/how-it-works': typeof TnHowItWorksRouteWithChildren
   '/tn/why-we-built-this': typeof TnWhyWeBuiltThisRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/ms/how-it-works/income': typeof MsHowItWorksIncomeRoute
   '/tn/how-it-works/income': typeof TnHowItWorksIncomeRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
   '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
@@ -213,12 +220,13 @@ export interface FileRoutesByTo {
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/ms/about': typeof MsAboutRoute
-  '/ms/how-it-works': typeof MsHowItWorksRoute
+  '/ms/how-it-works': typeof MsHowItWorksRouteWithChildren
   '/tn/about': typeof TnAboutRoute
   '/tn/how-it-works': typeof TnHowItWorksRouteWithChildren
   '/tn/why-we-built-this': typeof TnWhyWeBuiltThisRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/ms/how-it-works/income': typeof MsHowItWorksIncomeRoute
   '/tn/how-it-works/income': typeof TnHowItWorksIncomeRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
   '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
@@ -242,12 +250,13 @@ export interface FileRoutesById {
   '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/ms_/about': typeof MsAboutRoute
-  '/ms_/how-it-works': typeof MsHowItWorksRoute
+  '/ms_/how-it-works': typeof MsHowItWorksRouteWithChildren
   '/tn_/about': typeof TnAboutRoute
   '/tn_/how-it-works': typeof TnHowItWorksRouteWithChildren
   '/tn_/why-we-built-this': typeof TnWhyWeBuiltThisRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/ms_/how-it-works/income': typeof MsHowItWorksIncomeRoute
   '/tn_/how-it-works/income': typeof TnHowItWorksIncomeRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
   '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/tn/why-we-built-this'
     | '/unlock/$token'
     | '/lovable/email/suppression'
+    | '/ms/how-it-works/income'
     | '/tn/how-it-works/income'
     | '/api/public/admin/fulfill'
     | '/api/public/payments/retry-stuck'
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/tn/why-we-built-this'
     | '/unlock/$token'
     | '/lovable/email/suppression'
+    | '/ms/how-it-works/income'
     | '/tn/how-it-works/income'
     | '/api/public/admin/fulfill'
     | '/api/public/payments/retry-stuck'
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/tn_/why-we-built-this'
     | '/unlock/$token'
     | '/lovable/email/suppression'
+    | '/ms_/how-it-works/income'
     | '/tn_/how-it-works/income'
     | '/api/public/admin/fulfill'
     | '/api/public/payments/retry-stuck'
@@ -357,7 +369,7 @@ export interface RootRouteChildren {
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   MsAboutRoute: typeof MsAboutRoute
-  MsHowItWorksRoute: typeof MsHowItWorksRoute
+  MsHowItWorksRoute: typeof MsHowItWorksRouteWithChildren
   TnAboutRoute: typeof TnAboutRoute
   TnHowItWorksRoute: typeof TnHowItWorksRouteWithChildren
   TnWhyWeBuiltThisRoute: typeof TnWhyWeBuiltThisRoute
@@ -500,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TnHowItWorksIncomeRouteImport
       parentRoute: typeof TnHowItWorksRoute
     }
+    '/ms_/how-it-works/income': {
+      id: '/ms_/how-it-works/income'
+      path: '/income'
+      fullPath: '/ms/how-it-works/income'
+      preLoaderRoute: typeof MsHowItWorksIncomeRouteImport
+      parentRoute: typeof MsHowItWorksRoute
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -559,6 +578,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface MsHowItWorksRouteChildren {
+  MsHowItWorksIncomeRoute: typeof MsHowItWorksIncomeRoute
+}
+
+const MsHowItWorksRouteChildren: MsHowItWorksRouteChildren = {
+  MsHowItWorksIncomeRoute: MsHowItWorksIncomeRoute,
+}
+
+const MsHowItWorksRouteWithChildren = MsHowItWorksRoute._addFileChildren(
+  MsHowItWorksRouteChildren,
+)
+
 interface TnHowItWorksRouteChildren {
   TnHowItWorksIncomeRoute: typeof TnHowItWorksIncomeRoute
 }
@@ -584,7 +615,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutReturnRoute: CheckoutReturnRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   MsAboutRoute: MsAboutRoute,
-  MsHowItWorksRoute: MsHowItWorksRoute,
+  MsHowItWorksRoute: MsHowItWorksRouteWithChildren,
   TnAboutRoute: TnAboutRoute,
   TnHowItWorksRoute: TnHowItWorksRouteWithChildren,
   TnWhyWeBuiltThisRoute: TnWhyWeBuiltThisRoute,
