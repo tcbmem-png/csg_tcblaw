@@ -172,26 +172,40 @@ export function MSPartyFactorBlock({
           }
         >
           {(inPlay === "obligor" || inPlay === "both") && (
-            <PartyColumn
-              header={obligorLabel}
-              accent="obligor"
-              factorLetter={letter}
-              deviation={obligor}
-              onChange={setObligor}
-              showDetailDisclosure
-            />
+            <div className={obligorLocked ? "pointer-events-none opacity-60" : ""}>
+              {obligorLocked && (
+                <div className="mb-1 text-[11px] text-muted-foreground">
+                  Locked — from originating counsel
+                </div>
+              )}
+              <PartyColumn
+                header={obligorLabel}
+                accent="obligor"
+                factorLetter={letter}
+                deviation={obligor}
+                onChange={setObligor}
+                showDetailDisclosure
+              />
+            </div>
           )}
           {sideBySide &&
             setObligee &&
             obligee &&
             (inPlay === "obligee" || inPlay === "both") && (
-              <PartyColumn
-                header={obligeeLabel}
-                accent="obligee"
-                factorLetter={letter}
-                deviation={obligee}
-                onChange={setObligee}
-              />
+              <div className={obligeeLocked ? "pointer-events-none opacity-60" : ""}>
+                {obligeeLocked && (
+                  <div className="mb-1 text-[11px] text-muted-foreground">
+                    Locked — from originating counsel
+                  </div>
+                )}
+                <PartyColumn
+                  header={obligeeLabel}
+                  accent="obligee"
+                  factorLetter={letter}
+                  deviation={obligee}
+                  onChange={setObligee}
+                />
+              </div>
             )}
         </div>
       )}
