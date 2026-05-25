@@ -324,76 +324,86 @@ function ChildAgesInput({
 }
 
 function DeviationPickList({
-  slate,
-  onChange,
-  label,
+  inputs,
+  setInputs,
 }: {
-  slate: MSDeviation[];
-  onChange: (next: MSDeviation[]) => void;
-  label: string | null;
+  inputs: MSInputs;
+  setInputs: Setter;
 }) {
-  const update = (letter: string, patch: Partial<MSDeviation>) => {
-    onChange(slate.map((d) => (d.letter === letter ? { ...d, ...patch } : d)));
+  const sideBySide =
+    inputs.comparisonMode === "side_by_side" && !!inputs.deviationsB;
+  const slateA = inputs.deviationsA;
+  const slateB = inputs.deviationsB;
+
+  const setObligor = (letter: string) => (next: MSDeviation) =>
+    setInputs({
+      ...inputs,
+      deviationsA: slateA.map((d) => (d.letter === letter ? next : d)),
+    });
+
+  const setObligee = (letter: string) => (next: MSDeviation) => {
+    if (!slateB) return;
+    setInputs({
+      ...inputs,
+      deviationsB: slateB.map((d) => (d.letter === letter ? next : d)),
+    });
   };
 
-  const total = slate
+  const totalA = slateA
+    .filter((d) => d.applicable)
+    .reduce((s, d) => s + (Number(d.proposedMonthly) || 0), 0);
+  const totalB = (slateB ?? [])
     .filter((d) => d.applicable)
     .reduce((s, d) => s + (Number(d.proposedMonthly) || 0), 0);
 
   return (
     <div className="space-y-3">
-      {label && (
-        <div className="font-mono text-[10px] uppercase tracking-widest text-primary">
-          {label}
-        </div>
-      )}
-      {slate.map((d) => (
-        <div
-          key={d.letter}
-          className={
-            "rounded-md border p-4 transition-colors " +
-            (d.applicable
-              ? "border-primary/40 bg-primary/5"
-              : "border-rule bg-background")
-          }
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                Factor ({d.letter})
-              </div>
-              <div className="mt-1 text-sm font-medium text-ink">
-                {FACTOR_TITLES[d.letter]}
-              </div>
-            </div>
-            <Toggle
-              checked={d.applicable}
-              onChange={(b) =>
-                update(d.letter, {
-                  applicable: b,
-                  structured:
-                    b && !d.structured ? defaultStructured(d.letter) : d.structured,
-                })
-              }
-              label="Applicable"
-            />
-          </div>
-          {d.applicable && (
-            <div className="mt-4 border-t border-rule pt-4">
-              <MSStructuredFactorForm
-                deviation={d}
-                onChange={(next) => update(d.letter, next)}
-              />
-            </div>
-          )}
-        </div>
-      ))}
+      {slateA.map((dA, i) => {
+        const dB = slateB ? slateB[i] : undefined;
+        return (
+          <MSPartyFactorBlock
+            key={dA.letter}
+            letter={dA.letter}
+            obligor={dA}
+            setObligor={setObligor(dA.letter)}
+            obligee={dB}
+            setObligee={dB ? setObligee(dA.letter) : undefined}
+            obligorLabel={inputs.obligorLabel || "Obligor"}
+            obligeeLabel={inputs.obligeeLabel || "Obligee"}
+            sideBySide={sideBySide}
+            buildContextInputs={() => inputs}
+          />
+        );
+      })}
       <div className="flex items-center justify-between rounded-md border border-rule bg-cream px-4 py-3">
-        <span className="text-sm text-ink">Net proposed deviations</span>
+        <span className="text-sm text-ink">
+          {sideBySide
+            ? `Net proposed (${inputs.obligorLabel} / ${inputs.obligeeLabel})`
+            : "Net proposed deviations"}
+        </span>
         <span className="font-mono text-base text-ink">
-          {total < 0 ? "-" : ""}$
-          {Math.abs(total).toLocaleString("en-US", { maximumFractionDigits: 0 })}{" "}
-          / mo
+          {sideBySide ? (
+            <>
+              {totalA < 0 ? "-" : ""}$
+              {Math.abs(totalA).toLocaleString("en-US", {
+                maximumFractionDigits: 0,
+              })}{" "}
+              /{" "}
+              {totalB < 0 ? "-" : ""}$
+              {Math.abs(totalB).toLocaleString("en-US", {
+                maximumFractionDigits: 0,
+              })}{" "}
+              / mo
+            </>
+          ) : (
+            <>
+              {totalA < 0 ? "-" : ""}$
+              {Math.abs(totalA).toLocaleString("en-US", {
+                maximumFractionDigits: 0,
+              })}{" "}
+              / mo
+            </>
+          )}
         </span>
       </div>
     </div>
