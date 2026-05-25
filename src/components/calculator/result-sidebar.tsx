@@ -185,6 +185,61 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
+function ImputationMiniSummary({
+  inputs,
+  outputs,
+  onViewComparison,
+}: {
+  inputs: CalcInputs;
+  outputs: CalcOutputs;
+  onViewComparison: () => void;
+}) {
+  const pair = computeScenarioPair(inputs);
+  const imputedNet = pair.imputed.outputs.netPresumptiveSupport;
+  const actualNet = pair.actual.outputs.netPresumptiveSupport;
+  const delta = imputedNet - actualNet;
+  // Sanity: use current outputs as the active "imputed" row to match what's on screen.
+  const activeImputed = outputs.netPresumptiveSupport;
+  return (
+    <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
+      <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        Imputed vs actual · Rule .04(3)(a)(2)
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Imputed
+          </div>
+          <div className="font-mono text-sm text-ink">
+            ${fmt(activeImputed)}/mo
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Actual
+          </div>
+          <div className="font-mono text-sm text-ink">
+            ${fmt(actualNet)}/mo
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 flex items-baseline justify-between border-t border-rule pt-2">
+        <span className="text-[11px] text-muted-foreground">Difference</span>
+        <span className="font-mono text-[11px] text-ink">
+          {delta >= 0 ? "+" : "−"}${fmt(Math.abs(delta))}/mo
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={onViewComparison}
+        className="mt-2 text-[11px] text-primary underline-offset-2 hover:underline"
+      >
+        See full comparison →
+      </button>
+    </div>
+  );
+}
+
 function CopyLinkButton() {
   const [status, setStatus] = useState<"idle" | "copied" | "error">("idle");
   const onClick = async () => {
