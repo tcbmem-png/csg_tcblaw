@@ -94,13 +94,15 @@ export function MSCalculatorInputs({
         <p className="text-xs text-muted-foreground">
           MS uses obligor-only AGI. All figures are <strong>annual</strong>{" "}
           except the in-home deduction. Use the obligor's actual tax liability,
-          not over-withholding.
+          not over-withholding. <strong>Tip:</strong> If you have a monthly
+          figure, multiply by 12 before entering. Each annual field below shows
+          its monthly equivalent for sanity-checking.
         </p>
         <MSImputationBasis inputs={inputs} setInputs={setInputs} />
         <Grid>
           <Field
             label="Gross annual income (all sources)"
-            help="Wages, salary, bonuses, self-employment, rental income, etc."
+            help={`Wages, salary, bonuses, self-employment, rental income, etc. ${monthlyHint(inputs.obligorAnnualGross)}`}
           >
             <NumInput
               value={inputs.obligorAnnualGross}
