@@ -271,12 +271,12 @@ function WhyWeBuiltThis() {
         <p>
           It is open source. The repository lives at{" "}
           <a
-            href="https://github.com/tcb-law/tn-child-support-calculator"
+            href="https://github.com/tcbmem-png/tn-child-support-helper"
             className="underline"
             target="_blank"
             rel="noreferrer"
           >
-            github.com/tcb-law/tn-child-support-calculator
+            github.com/tcbmem-png/tn-child-support-helper
           </a>
           . Every formula is annotated with its rule citation. Every calculation can be traced
           from input to output. Any attorney, any party, any judge, any contributor can audit the
@@ -369,12 +369,12 @@ function WhyWeBuiltThis() {
           guidance on your specific case. The TN Child Support Calculator is open source under
           the MIT License; the code repository is available at{" "}
           <a
-            href="https://github.com/tcb-law/tn-child-support-calculator"
+            href="https://github.com/tcbmem-png/tn-child-support-helper"
             className="underline"
             target="_blank"
             rel="noreferrer"
           >
-            github.com/tcb-law/tn-child-support-calculator
+            github.com/tcbmem-png/tn-child-support-helper
           </a>
           .
         </p>
