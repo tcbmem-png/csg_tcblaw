@@ -198,7 +198,7 @@ describe("Special Expenses 7% threshold", () => {
       numChildren: 3,
       parentingType: "equal",
       includeSpecialExpenses: true,
-      specialExpensesMonthly: 100,
+      specialExpensesAnnual: 100 * 12,
       specialExpensesWaiveThreshold: true,
       specialExpensesPaidBy: "parent_a",
     });
