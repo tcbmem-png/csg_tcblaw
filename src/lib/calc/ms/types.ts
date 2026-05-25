@@ -98,8 +98,35 @@ export interface MSStructuredF {
   evidence: { receipts: boolean; photos: boolean; testimony: boolean; other: boolean; otherNote: string };
 }
 
-export interface MSStructuredG {
+// Factor (g) per statute: Total available assets of obligee, obligor, and child.
+export interface MSStructuredAssets {
   letter: "g";
+  obligor: { realEstate: number; equity: number; investments: number; retirement: number; business: number; other: number; otherNote: string };
+  obligee: { realEstate: number; equity: number; investments: number; retirement: number; business: number; other: number; otherNote: string };
+  child: { value: number; note: string };
+  incomeFromAssets: "yes_in_agi" | "no_additional" | "partial" | "";
+  partialNote: string;
+  description: string;
+}
+
+// Factor (h) per statute: Payment by obligee of child care expenses
+// (employment or disability).
+export interface MSStructuredChildcare {
+  letter: "h";
+  reason: "employment" | "disability" | "no" | "";
+  provider: string;
+  monthlyCost: number;
+  hoursPerWeek: number;
+  childrenCoveredNote: string;
+  taxCredit: "yes" | "no" | "partial" | "";
+  netOutOfPocket: number;
+  allocation: "full" | "pro_rata" | "other" | "";
+  allocationOther: string;
+}
+
+// Factor (i) per statute: The particular shared parental arrangement.
+export interface MSStructuredParental {
+  letter: "i";
   arrangement: "standard" | "substantially_shared" | "equal" | "other" | "";
   arrangementOther: string;
   obligorOvernights: number;
@@ -119,28 +146,11 @@ export interface MSStructuredG {
   approachOther: string;
 }
 
-export interface MSStructuredH {
-  letter: "h";
-  obligor: { realEstate: number; equity: number; investments: number; retirement: number; business: number; other: number; otherNote: string };
-  obligee: { realEstate: number; equity: number; investments: number; retirement: number; business: number; other: number; otherNote: string };
-  child: { value: number; note: string };
-  incomeFromAssets: "yes_in_agi" | "no_additional" | "partial" | "";
-  partialNote: string;
-  description: string;
-}
-
-export interface MSStructuredI {
-  letter: "i";
-  reason: "employment" | "disability" | "no" | "";
-  provider: string;
-  monthlyCost: number;
-  hoursPerWeek: number;
-  childrenCoveredNote: string;
-  taxCredit: "yes" | "no" | "partial" | "";
-  netOutOfPocket: number;
-  allocation: "full" | "pro_rata" | "other" | "";
-  allocationOther: string;
-}
+// Back-compat aliases (kept so existing imports don't break, but the
+// interface NAMES above describe the actual statutory content).
+export type MSStructuredG = MSStructuredAssets;
+export type MSStructuredH = MSStructuredChildcare;
+export type MSStructuredI = MSStructuredParental;
 
 export interface MSStructuredJ {
   letter: "j";
@@ -161,9 +171,9 @@ export type MSDeviationStructured =
   | MSStructuredD
   | MSStructuredE
   | MSStructuredF
-  | MSStructuredG
-  | MSStructuredH
-  | MSStructuredI
+  | MSStructuredAssets
+  | MSStructuredChildcare
+  | MSStructuredParental
   | MSStructuredJ;
 
 /**

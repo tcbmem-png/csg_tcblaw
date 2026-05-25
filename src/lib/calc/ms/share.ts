@@ -26,6 +26,41 @@ export function encodeMSShare(inputs: MSInputs, caption: CaseCaption): string {
   return b64urlEncode(JSON.stringify(payload));
 }
 
+/** Canonical position-to-letter mapping (a..j). */
+const CANONICAL_LETTERS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"] as const;
+
+/**
+ * Returns true when an incoming deviation entry is structurally consistent
+ * with the canonical letter for its position. Pre-fix MS share URLs encoded
+ * (g)/(h)/(i) with the wrong structured shapes (parental/assets/childcare
+ * were mis-assigned). We detect that mismatch and reset just those slots
+ * rather than crash or render mislabelled data.
+ */
+function deviationMatchesLetter(d: unknown, expectedLetter: string): boolean {
+  if (!d || typeof d !== "object") return false;
+  const dev = d as { letter?: string; structured?: { letter?: string } };
+  if (dev.letter !== expectedLetter) return false;
+  // If no structured payload, the bare entry is letter-agnostic — keep it.
+  if (!dev.structured) return true;
+  return dev.structured.letter === expectedLetter;
+}
+
+function migrateSlate(
+  incoming: unknown[],
+  base: MSInputs["deviationsA"],
+): MSInputs["deviationsA"] {
+  if (incoming.length !== 10) return base;
+  return base.map((defaultEntry, idx) => {
+    const expected = CANONICAL_LETTERS[idx];
+    const candidate = incoming[idx];
+    if (deviationMatchesLetter(candidate, expected)) {
+      return candidate as MSInputs["deviationsA"][number];
+    }
+    // Slot mismatched — reset to defaults (consistent with v1→v2 precedent).
+    return defaultEntry;
+  });
+}
+
 export function decodeMSShare(
   s: string,
 ): { inputs: MSInputs; caption: CaseCaption } | null {
@@ -55,18 +90,22 @@ export function decodeMSShare(
       ? parsed.i.deviationsB
       : null;
 
+    // Per § 43-19-103 letter-mapping bugfix: pre-fix URLs may encode (g)/(h)/(i)
+    // slots with the wrong structured shape. migrateSlate detects per-slot
+    // mismatch and resets only the affected slots.
+    const migratedA = incomingDevA
+      ? migrateSlate(incomingDevA, base.deviationsA)
+      : base.deviationsA;
+    const migratedB = incomingDevB
+      ? migrateSlate(incomingDevB, base.deviationsA)
+      : undefined;
+
     const inputs: MSInputs = {
       ...base,
       ...parsed.i,
       // Defensive: drop any v1 `deviations` field that snuck through ...spread.
-      deviationsA:
-        incomingDevA && incomingDevA.length === 10
-          ? (incomingDevA as MSInputs["deviationsA"])
-          : base.deviationsA,
-      deviationsB:
-        incomingDevB && incomingDevB.length === 10
-          ? (incomingDevB as MSInputs["deviationsB"])
-          : undefined,
+      deviationsA: migratedA,
+      deviationsB: migratedB,
       incarceration: { ...base.incarceration, ...(parsed.i.incarceration ?? {}) },
       imputationBasis: {
         ...base.imputationBasis,

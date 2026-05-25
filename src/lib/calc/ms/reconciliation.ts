@@ -16,9 +16,9 @@ export const FACTOR_TITLES: Record<MSFactorLetter, string> = {
   d: "Seasonal variations in one or both parents' incomes or expenses",
   e: "The age of the child",
   f: "Special needs traditionally met within the family budget",
-  g: "The particular shared parental arrangement",
-  h: "Total available assets of obligee, obligor, and child",
-  i: "Payment by obligee of child care expenses for employment or disability",
+  g: "Total available assets of obligee, obligor, and child",
+  h: "Payment by obligee of child care expenses for employment or disability",
+  i: "The particular shared parental arrangement",
   j: "Any other adjustment needed to achieve an equitable result",
 };
 
@@ -29,9 +29,9 @@ export const FACTOR_STATUTORY_TEXT: Record<MSFactorLetter, string> = {
   d: "Seasonal variations in one or both parents' incomes or expenses.",
   e: "The age of the child, taking into account the greater needs of older children.",
   f: "Special needs that have traditionally been met within the family budget even though the fulfilling of those needs will cause a deviation from the guidelines.",
-  g: "The particular shared parental arrangement, such as where the noncustodial parent has physical access to the child for substantial portions of time as a result of joint custody or visitation rights, or the refusal of the noncustodial parent to become involved in the activities of the child.",
-  h: "Total available assets of the obligee, obligor and the child.",
-  i: "Payment by the obligee of child care expenses in order that the obligee may seek or retain employment, or because of the disability of the obligee.",
+  g: "Total available assets of the obligee, obligor and the child.",
+  h: "Payment by the obligee of child care expenses in order that the obligee may seek or retain employment, or because of the disability of the obligee.",
+  i: "The particular shared parental arrangement, such as where the noncustodial parent has physical access to the child for substantial portions of time as a result of joint custody or visitation rights, or the refusal of the noncustodial parent to become involved in the activities of the child.",
   j: "Any other adjustment which is needed to achieve an equitable result which may include, but not be limited to, a reasonable and necessary existing expense or debt.",
 };
 

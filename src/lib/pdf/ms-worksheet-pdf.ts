@@ -265,7 +265,7 @@ function structuredLines(s: MSDeviationStructured): string[] {
       if (s.monthlyCost) out.push(`Monthly cost: ${m(s.monthlyCost)}`);
       break;
     }
-    case "g": {
+    case "i": {
       if (s.arrangement) out.push(`Arrangement: ${s.arrangement === "other" ? s.arrangementOther : s.arrangement}`);
       if (s.obligorOvernights || s.obligeeOvernights)
         out.push(`Overnights — obligor: ${s.obligorOvernights}, obligee: ${s.obligeeOvernights}`);
@@ -281,7 +281,7 @@ function structuredLines(s: MSDeviationStructured): string[] {
       if (s.downwardAmount) out.push(`Downward amount: ${m(s.downwardAmount)}`);
       break;
     }
-    case "h": {
+    case "g": {
       const sumAssets = (a: typeof s.obligor) =>
         a.realEstate + a.equity + a.investments + a.retirement + a.business + a.other;
       out.push(`Obligor assets total: ${m(sumAssets(s.obligor))}`);
@@ -291,7 +291,7 @@ function structuredLines(s: MSDeviationStructured): string[] {
       if (s.description) out.push(s.description);
       break;
     }
-    case "i": {
+    case "h": {
       if (s.reason) out.push(`Reason: ${s.reason}`);
       if (s.provider) out.push(`Provider: ${s.provider}`);
       if (s.monthlyCost) out.push(`Monthly cost: ${m(s.monthlyCost)}`);
