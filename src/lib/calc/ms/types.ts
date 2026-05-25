@@ -272,8 +272,6 @@ export interface MSInputs {
   // --- Deviations ---
   comparisonMode: MSComparisonMode;
   deviationEntryMode: MSDeviationEntryMode;
-  positionALabel: string;
-  positionBLabel: string;
   /** Position A's § 43-19-103 deviation slate (10 items, a–j). */
   deviationsA: MSDeviation[];
   /** Position B's slate — only populated when comparisonMode === 'side_by_side'. */
