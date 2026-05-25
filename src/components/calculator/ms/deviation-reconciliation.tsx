@@ -3,6 +3,7 @@
  * "The Reconciliation View". Always renders both sides; in single-position
  * mode the obligee column is suppressed.
  */
+import { useState } from "react";
 import type { MSInputs } from "@/lib/calc/ms/types";
 import {
   buildReconciliation,
