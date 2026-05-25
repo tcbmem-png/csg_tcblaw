@@ -65,7 +65,7 @@ export function MSCalculatorInputs({
       <p className="mb-6 -mt-2 text-xs text-muted-foreground">
         Mississippi assumes the obligor is the non-custodial parent and
         applies the statutory percentage to their AGI; the number of custody
-        days is not an input. For 50/50 arrangements, use the Factor (g)
+        days is not an input. For 50/50 arrangements, use the Factor (i)
         deviation below.
       </p>
 
