@@ -596,12 +596,12 @@ export function CalculatorInputs({
           <>
             <Grid>
               <Field
-                label="Monthly total"
-                help="Camp, lessons, travel, school clubs/athletics."
+                label="Annual total"
+                help="Camp, lessons, travel, school clubs/athletics — annual total across all children."
               >
                 <NumInput
-                  value={inputs.specialExpensesMonthly}
-                  onChange={(n) => u({ specialExpensesMonthly: n })}
+                  value={inputs.specialExpensesAnnual}
+                  onChange={(n) => u({ specialExpensesAnnual: n })}
                 />
               </Field>
               <Field label="Paid by">
