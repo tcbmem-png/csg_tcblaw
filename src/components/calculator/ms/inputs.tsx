@@ -194,7 +194,7 @@ export function MSCalculatorInputs({
         )}
       </Section>
 
-      <Section title="Parenting arrangement" cite="§ 43-19-103(g)">
+      <Section title="Parenting arrangement" cite="§ 43-19-103(i)">
         <Toggle
           checked={inputs.sharedCustodyFlag}
           onChange={(b) => u({ sharedCustodyFlag: b })}
@@ -204,12 +204,16 @@ export function MSCalculatorInputs({
           <div className="rounded-md border-l-4 border-accent bg-accent/10 p-3 text-sm text-ink">
             Mississippi has <strong>no statutory 50/50 formula</strong>. Any
             adjustment for shared parenting must be made as a discretionary
-            deviation under Factor (g) below.
+            deviation under Factor (i) below.
           </div>
         )}
       </Section>
 
-      <MSDeviationsSection inputs={inputs} setInputs={setInputs} />
+      <MSDeviationsSection
+        inputs={inputs}
+        setInputs={setInputs}
+        lockedSide={lockedSide}
+      />
     </div>
   );
 }
@@ -217,9 +221,11 @@ export function MSCalculatorInputs({
 function MSDeviationsSection({
   inputs,
   setInputs,
+  lockedSide,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
+  lockedSide: HandoffSide | null;
 }) {
   const updateMode = (m: typeof inputs.comparisonMode) => {
     if (m === "side_by_side" && !inputs.deviationsB) {
