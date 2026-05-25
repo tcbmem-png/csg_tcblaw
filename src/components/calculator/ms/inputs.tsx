@@ -16,8 +16,9 @@ import {
   MSDeviationWalkthrough,
   FACTOR_TITLES,
 } from "./deviation-walkthrough";
-import { MSStructuredFactorForm, defaultStructured } from "./deviation-factor-form";
-import { MSDeviationComparison } from "./deviation-comparison";
+import { defaultStructured } from "./deviation-factor-form";
+import { MSPartyFactorBlock } from "./party-factor-block";
+import { MSDeviationReconciliation } from "./deviation-reconciliation";
 
 type Setter = (next: MSInputs) => void;
 
