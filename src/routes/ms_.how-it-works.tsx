@@ -99,9 +99,30 @@ function HowItWorks() {
       <h2 className="mt-10 font-serif text-2xl">The 10 deviation factors</h2>
       <p className="mt-3">
         § 43-19-103 lists ten criteria the court may consider to deviate
-        upward or downward from the presumptive award. The calculator lets you
-        toggle each factor on, enter a signed monthly dollar adjustment, and
-        produce a worksheet that lays out the math and citation for each.
+        upward or downward from the presumptive award. The calculator offers
+        two entry modes: a guided <strong>walk-through</strong> that asks
+        about each factor in turn, or a <strong>pick</strong> list that
+        shows all ten factors at once. Each applicable factor opens a
+        structured sub-form capturing the specific evidence chancellors
+        consider for that factor. You can also run a{" "}
+        <strong>side-by-side comparison</strong> of two proposed
+        deviation slates (e.g., yours vs. opposing counsel's) with a per-
+        factor and aggregate gap.
+      </p>
+
+      <h2 className="mt-10 font-serif text-2xl">Incarceration & imputation</h2>
+      <p className="mt-3">
+        The form checks{" "}
+        <Link
+          to="/ms/how-it-works/income"
+          className="underline decoration-rule underline-offset-2 hover:text-primary"
+        >
+          § 43-19-36 (incarceration suspension)
+        </Link>{" "}
+        before computing AGI: incarceration over 180 days suspends the
+        obligation by operation of law unless a statutory carve-out
+        applies. The AGI section also captures the § 43-19-101(5)
+        imputation basis when gross income is imputed rather than actual.
       </p>
 
       <div className="mt-12 flex justify-center">
