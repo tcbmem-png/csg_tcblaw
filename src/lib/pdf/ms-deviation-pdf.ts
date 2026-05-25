@@ -691,7 +691,7 @@ export function renderMSDeviationPdf(args: {
   for (const letter of letters) {
     const row = report.rows.find((r) => r.letter === letter);
     if (!row) continue;
-    factorBlock(ctx, row, inputs, sideBySide);
+    factorBlock(ctx, row, inputs, sideBySide, handoff);
   }
 
   newPage(ctx);
