@@ -561,7 +561,7 @@ function FormParental({ s, set }: { s: MSStructuredParental; set: (n: MSStructur
   );
 }
 
-// ===== Factor (g) — available assets =====
+// ===== Factor (h) — available assets =====
 function FormAssets({ s, set }: { s: MSStructuredAssets; set: (n: MSStructuredAssets) => void }) {
   const u = (p: Partial<MSStructuredAssets>) => set({ ...s, ...p });
   const Block = ({ who, val, on }: { who: "obligor" | "obligee"; val: MSStructuredAssets["obligor"]; on: (p: Partial<MSStructuredAssets["obligor"]>) => void }) => (
