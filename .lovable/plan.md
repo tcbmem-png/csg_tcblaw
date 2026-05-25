@@ -1,121 +1,94 @@
-# Two-attorney handoff — MS calculator — SHIPPED
+# TN Income Module — Phase 2 (Paths B–F)
 
-All items in the original plan have shipped, including the deferred closures from the prior cycle:
+Build all five remaining income paths in a single cycle, on top of the existing simple-path helper. URL state stays canonical (no DB). Path E extends the already-shipped imputation infrastructure; Path F exposes already-shipped engine logic. No "Help me decide" triage — six labeled cards self-route.
 
-- Letter-fix stragglers (item 1 closure): `FACTOR_TITLES` in `ms-worksheet-pdf.ts` and `worksheet-preview.tsx` now match the statute (g=assets, h=childcare, i=parental). `calc.ts` shared-custody warning cites § 43-19-103(i). `calc.test.ts` assertion updated and now also guards against regression to (g). `deviation-factor-form.tsx` FormParental callout cites factor (i).
-- Per-row PDF attribution (item 5): `ms-deviation-pdf.ts` renders a "Per {counsel} ({firm})" sub-line under each party's column header when a handoff is in effect. Originating slate → `originatingAttorney`; receiving slate → `receivingAttorney` or "Per opposing counsel (name not provided)". Single-attorney PDFs unchanged.
-- Tests (item 6): `share.test.ts` (v3 round-trip, v2→v3 upgrade incl. letter-fix migration, ?side= parse helpers, scrubbing), `handoff.test.ts` (four-state transitions incl. PDF auto-flip, scrubbing, C2 token compare, caption-driven labels), `letter-mapping.test.ts` (regression guard).
+## Scope
 
+In scope:
+1. **Path B — Variable income** (bonuses/commissions/OT, year averaging)
+2. **Path C — Self-employed** (gross receipts − ordinary expenses + add-backs)
+3. **Path D — Multi-source** (sum of arbitrary annual income sources)
+4. **Path E — Imputed income** (basis-driven; writes through to existing `useImputationForA/B` + `parentA/BActualGrossMonthly`)
+5. **Path F — Special situations** (SSI-only, incarcerated, military, federal benefit to child — UI exposure of existing engine logic)
+6. **401(k) add-back input** on the existing Simple path
+7. **Worksheet methodology appendix** extended for all new paths
+8. **Share URL** extended to round-trip the per-parent path state with back-compat
 
+Out of scope:
+- `income_components` DB migration (deferred indefinitely)
+- "Help me decide" triage flow
+- Citation framework / dual PDF output (separate future cycles)
+- Any change to BCSO / parenting-time / cap / SSR / federal-benefit-offset engine logic
+- Audit of already-verified math
 
-## Data model
+## Architectural Constraints (non-negotiable)
 
-`src/lib/calc/ms/types.ts` — add a `handoff` object hanging off the share payload (not off `MSInputs`, so calc/reconciliation stay untouched):
+**(1) Path E extends, does not duplicate.** The existing `useImputationForA/B`, `parentA/BActualGrossMonthly`, `ImputationMiniSummary`, `ComparisonView`, `hasImputation`, `computeScenarioPair`, and the cumulative-through-majority chart all already work. Path E's only job is to provide a UI that *sets* these fields. After Path E writes, the existing Comparison tab and sidebar light up automatically. No parallel comparison view, no parallel sidebar, no parallel chart. This is the lesson learned from the MS `migrateSlate` revert.
 
-```ts
-export type HandoffStatus = "none" | "originated" | "in_progress" | "completed";
-export type HandoffSide = "A" | "B";
+**(2) Path F exposes, does not reimplement.** SSI-only $0-order, incarceration carve-outs, military BAH/BAS treatment, and federal-benefit-to-child line 16 offset already exist in the engine. Path F gives them a guided UI on TN that writes into existing inputs (`parentAMeansTestedOnly`, `parentAFederalBenefit`, etc.) — no new engine code.
 
-export interface HandoffState {
-  status: HandoffStatus;
-  originatingSide: HandoffSide;        // which slate the originator filled
-  originatingAttorney: { name: string; firm: string } | null;
-  receivingAttorney:  { name: string; firm: string } | null;
-  createdAt: string;                    // ISO
-  lastReceivingEditAt: string | null;   // ISO — bumped on each receiving-side edit
-  completedAt: string | null;           // ISO when receiving side finishes / PDF generated
-}
-```
+**(3) No triage.** Six clearly labeled path cards. Practitioners self-route.
 
-Slate A/B carry **no** obligor/obligee semantics. Caption (`obligorLabel`/`obligeeLabel`) plus `originatingSide` drives every label and PDF attribution string.
+## File Plan
 
-## Share encoding — v3 with v2 backward compat
+### New files
 
-`src/lib/calc/ms/share.ts`:
+- `src/components/calculator/income/path-router.tsx` — six labeled cards (Simple / Variable / Self-employed / Multi-source / Imputed / Special situations) replacing the current "Set up {label}'s income →" button inside each `ParentCard`.
+- `src/components/calculator/income/path-simple-form.tsx` — extracted from current `SimplePathForm` in `income-helper-panel.tsx` + new 401(k) add-back field.
+- `src/components/calculator/income/path-variable-form.tsx` — Path B: years table (1–5 rows), averaging method (3-yr / 5-yr / custom), rationale, computed monthly.
+- `src/components/calculator/income/path-self-employed-form.tsx` — Path C: business type, gross receipts, ordinary expenses, per-line add-backs (depreciation / §179 / vehicle / meals / home office), optional multi-year averaging, computed monthly.
+- `src/components/calculator/income/path-multi-source-form.tsx` — Path D: dynamic list of `{ label, annual, methodology }` rows summed to monthly.
+- `src/components/calculator/income/path-imputed-form.tsx` — Path E: basis radio (Voluntary underemployment / Failure to produce evidence / Substantial non-income-producing assets), basis-specific sub-flow:
+  - *Prior-year earnings* → embed Path B averaging
+  - *Vocational capacity* → occupation, area, hours/wk, rationale, proposed monthly
+  - *Asset-based* → assets, rate of return, computed annual ÷ 12
+  - On apply: writes `parentXActualGrossMonthly = current real income (collected separately)`, `parentXGrossMonthly = imputed`, `useImputationForX = true`.
+- `src/components/calculator/income/path-special-form.tsx` — Path F: four sub-flows (SSI-only / Incarcerated / Military / Federal benefit to child). Writes into existing flags + `parentXFederalBenefit`. Includes incarceration reason flags (DV / abuse / criminal nonpayment) + means-to-pay exception, consistent with the MS incarceration UX.
 
-- New `MSSharePayloadV3 = { v:3; s:"MS"; i:MSInputs; c:CaseCaption; h:HandoffState }`.
-- `encodeMSShare(inputs, caption, handoff)` emits v3.
-- `decodeMSShare` accepts v2 and v3. v2 → synthesize `handoff = { status:"none", … }` and continue through existing `migrateSlate` letter-fix path. v1 path unchanged.
+### Modified files
 
-## `?side=` transport
+- `src/components/calculator/income-helper-panel.tsx` — replace inline SimplePathForm with router → form dispatch; per-parent active form is one of six. Drop the "Phase 1 covers simple" footer note.
+- `src/lib/calc/types.ts` — extend `IncomeMethodology` to a discriminated union over `path: "simple" | "variable" | "self_employed" | "multi_source" | "imputed" | "special"`. All new variant fields optional. Preserve existing `"simple"` shape verbatim plus a new optional `voluntaryRetirementMonthly` field for the 401(k) add-back.
+- `src/lib/calc/share.ts` — bump payload to `v: 2`. `decodeShare` accepts both `v: 1` (legacy, methodology fields read straight through unchanged) and `v: 2`. Round-trip guarantee: any `v: 1` URL decodes to identical state and re-encodes as `v: 2` without data loss.
+- `src/components/calculator/income-methodology-appendix.tsx` — render path-specific blocks for variable / self-employed / multi-source / imputed / special. Imputed block cross-references the existing Comparison Appendix.
+- `src/lib/calc/__tests__/` — add `income-paths.test.ts` covering: each path's computed monthly arithmetic; Path E sets the imputation triple; Path F SSI sets means-tested flag; share v1→v2 round-trip; 401(k) add-back arithmetic.
 
-- Originator's "Generate handoff URL" produces `…/ms?s=<payload>&side=<other-side>` where `other-side = originatingSide === "A" ? "B" : "A"`.
-- Landing logic (`src/routes/ms.tsx`):
-  1. Parse `?s=` (existing).
-  2. Parse `?side=` only when `handoff.status !== "none"`. Lock the editable slate to `?side=`'s value; the other slate is read-only and clearly labeled as "from originating counsel".
-  3. **C1**: When `handoff.status === "completed"`, the URL auto-sync keeps `?side=` in the URL so any downstream copy is also locked. Until completion, `?side=` is dropped from the originator's URL but kept on the receiving session (so mid-edit reload survives).
-- Receiving side's first edit flips `handoff.status` from `"originated"` → `"in_progress"` and stamps `lastReceivingEditAt`; subsequent edits bump `lastReceivingEditAt`.
+### Untouched
 
-## Status lifecycle and visibility (addition #1)
+- `src/lib/calc/calc.ts`, `bcso.ts`, `scenarios.ts` — engine unchanged.
+- `src/components/calculator/comparison.tsx`, `result-sidebar.tsx` — already render correctly when Path E flips the flags.
+- All MS files.
 
-Four-state enum: `none → originated → in_progress → completed`.
+## Methodology Appendix Structure (per path)
 
-- **Landing indicator.** When a session loads a URL with `status === "in_progress"`, the landing banner shows: *"Worksheet in progress — last updated by receiving counsel on {lastReceivingEditAt, formatted}."* When `status === "completed"`, banner shows: *"Worksheet completed in calculator on {completedAt}."* When `status === "originated"` and no `lastReceivingEditAt` yet: *"Awaiting receiving counsel's entries."*
-- **PDF auto-completion.** Generating either PDF (`downloadMSDeviationPdf` or the print-PDF path) from the *receiving* side, when `status === "in_progress"`, flips `status → "completed"` and stamps `completedAt = now()` before rendering. The originator generating a PDF pre-handoff is unchanged (status stays `"none"`).
+| Path | Appendix content |
+|---|---|
+| Simple | (existing) + 401(k) add-back amount if > 0 |
+| Variable | Years table, averaging method, rationale, arithmetic |
+| Self-employed | Business type, gross receipts, expenses, itemized add-backs, arithmetic, "subject to verification against business return" footnote |
+| Multi-source | Each source: label + annual + methodology note |
+| Imputed | Rule .04(3)(a)(2) sub-paragraph cite, basis, inputs, rationale, final imputed figure. Cross-ref to Comparison Appendix. |
+| Special | Situation, rule cite, carve-out applied |
 
-## C2 — originator-opens-their-own-handoff detection
+Each parent renders independently — Parent A may be Path B while Parent B is Path F.
 
-- When the originator generates a handoff URL, write an opaque token (random 16 bytes hex) into `localStorage["ms.handoff.origins"]` keyed by `sha256(payload-without-handoff)`.
-- On landing with `?side=` set opposite `handoff.originatingSide`, if the local token matches → render a one-line yellow notice: *"This browser generated this handoff URL. Entries here will be attributed to opposing counsel in the PDF."* **No block.** Different browser → silent.
-- **Token GC (addition #2).** Deferred. No expiration or pruning in this cycle — tokens are ~40 bytes each and accumulation is slow. Documented as a deferred decision via a code comment at the write site so a future maintainer (or you) can revisit if `localStorage` quota ever becomes a concern.
+## Acceptance Criteria
 
-## C3 — receiving attorney capture
+- All six labeled path cards render and route to the correct form.
+- Each path's computed monthly updates live as the user fills inputs and applies to `parentA/BGrossMonthly`.
+- Path E correctly sets `useImputationForA/B`, `parentA/BGrossMonthly` (imputed), and `parentA/BActualGrossMonthly` (real). The existing Comparison tab, sidebar `ImputationMiniSummary`, and cumulative chart light up automatically — no parallel components created.
+- Path F SSI-only writes `parentXMeansTestedOnly = true`. Federal-benefit sub-flow writes `parentXFederalBenefit`. Incarcerated/military sub-flows write nothing to calc inputs that wasn't already wired; they capture rationale for the appendix.
+- 401(k) add-back input on Simple path adds to entered monthly gross before write; appendix documents both entered gross and add-back.
+- Worksheet methodology appendix renders per-parent path-specific blocks.
+- Share URLs round-trip: `v: 1` URLs from production decode identically; new `v: 2` URLs decode losslessly.
+- All existing TN tests still pass; new `income-paths.test.ts` passes.
+- No edits to `calc.ts`, `bcso.ts`, `scenarios.ts`, `comparison.tsx`, `result-sidebar.tsx`.
 
-New component `src/components/calculator/ms/handoff-landing-banner.tsx`, rendered above the inputs when `handoff.status !== "none"` and the active session is the receiving side:
+## Verification
 
-- Single-line yellow banner: case caption summary, status line per addition #1, "originating counsel: {name} ({firm})", inline optional fields *Your name* / *Your firm* (controlled, writes into `handoff.receivingAttorney` on blur).
-- Never blocks editing. Dismissable; reappears on hard reload only if attribution is still blank.
-- Blank → PDF renders *"Per opposing counsel (name not provided)"*.
+After implementation, run the full TN+MS test suite. Confirm:
+- Existing comparison view continues to work for Path E users.
+- A `v: 1` share URL captured from current production round-trips through `v: 2`.
+- Each path's appendix renders with the correct math shown to the user.
 
-## "Share" dialog (originator side)
-
-New `src/components/calculator/ms/handoff-share-dialog.tsx`, opened from a new "Hand off to opposing counsel" button in `result-sidebar.tsx`:
-
-- Field 1 (required): "Which side does your client represent?" → `originatingSide`.
-- Field 2 (optional): Your name / firm → `originatingAttorney`.
-- Field 3 (toggle, default ON): "Scrub my financial entries before handoff" → applies the scrubbing transform (zero out the opposite slate's `proposedMonthly` + `party.proposedMonthly`, clear `factsAsserted`/`documentationReferenced` on the opposite slate; the originator's own slate is preserved verbatim).
-- Generate button: stamps `handoff.status = "originated"`, `createdAt = now()`, builds the URL, copies it to clipboard, shows confirmation.
-
-## PDF attribution
-
-`src/lib/pdf/ms-deviation-pdf.ts` and `ms-worksheet-pdf.ts`:
-
-- Per-row attribution strings derived from `caption.obligorLabel`/`obligeeLabel` plus `handoff.originatingSide` (never from "A means obligor"):
-  - Originating slate: `"Per {originatingAttorney.name || 'originating counsel'} ({obligor|obligeeLabel for originatingSide}): …"`
-  - Receiving slate: `"Per {receivingAttorney.name || 'opposing counsel (name not provided)'} ({the other label}): …"`
-- Single-slate (pre-handoff) PDFs unchanged.
-- **Completion footer (addition #3).** When `handoff.status === "completed"`, the deviation PDF gets a footer line: *"Case: {caption}. Originating counsel: {…}. Receiving counsel: {… or 'name not provided'}. Worksheet completed in calculator: {completedAt, formatted MMMM D, YYYY}."* Explicit "completed in calculator" labeling so a chancellor doesn't read the date as filing or signature.
-
-## URL auto-sync
-
-`src/routes/ms.tsx`:
-
-- Debounced effect serializes `handoff` and writes `?side=` when (a) `status === "completed"`, or (b) the active session is the receiving side mid-edit.
-- Originator session pre-handoff or post-generate-but-still-editing: `?side=` is stripped.
-
-## Tests
-
-- `__tests__/share.test.ts` — v3 round-trip; v2 → v3 upgrade with `status === "none"`; `?side=` parse/preserve rules across all four states.
-- `__tests__/handoff.test.ts` — scrubbing transform leaves originator's slate intact and zeros opposite slate; status transitions `none → originated → in_progress → completed` including the PDF-triggered auto-flip; `lastReceivingEditAt` bumps; labels derive from caption + `originatingSide` regardless of A/B identifier; C2 token compare.
-- `__tests__/letter-mapping.test.ts` (already shipped in item 1).
-
-## Files touched
-
-```text
-src/lib/calc/ms/types.ts              # add HandoffState, HandoffStatus, HandoffSide
-src/lib/calc/ms/share.ts              # v3 encoder; v2-compat decoder; ?side= helpers
-src/routes/ms.tsx                     # handoff state, ?side= lock, auto-sync rules
-src/components/calculator/ms/result-sidebar.tsx        # "Hand off to opposing counsel"
-src/components/calculator/ms/handoff-share-dialog.tsx  # NEW
-src/components/calculator/ms/handoff-landing-banner.tsx# NEW
-src/components/calculator/ms/inputs.tsx                # lock non-active slate read-only
-src/components/calculator/ms/party-factor-block.tsx    # read-only render variant
-src/lib/pdf/ms-deviation-pdf.ts       # attribution lines + completion footer; PDF-triggered status flip
-src/lib/pdf/ms-worksheet-pdf.ts       # attribution lines; PDF-triggered status flip
-src/lib/calc/ms/__tests__/share.test.ts    # NEW
-src/lib/calc/ms/__tests__/handoff.test.ts  # NEW
-```
-
-## Explicit non-goals (unchanged from brief)
-
-No auth, no realtime, no server storage, no TN-side changes, no calc/reconciliation math changes, no obligor/obligee semantics attached to A/B, no localStorage token GC in this cycle.
+Ready to implement on approval.
