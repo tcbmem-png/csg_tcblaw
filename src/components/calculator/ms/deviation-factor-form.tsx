@@ -489,13 +489,13 @@ function FormF({ s, set }: { s: MSStructuredF; set: (n: MSStructuredF) => void }
   );
 }
 
-// ===== Factor (i) — shared parental arrangement =====
+// ===== Factor (g) — shared parental arrangement =====
 function FormParental({ s, set }: { s: MSStructuredParental; set: (n: MSStructuredParental) => void }) {
   const u = (p: Partial<MSStructuredParental>) => set({ ...s, ...p });
   return (
     <>
       <div className="rounded-md border-l-4 border-accent bg-accent/10 p-3 text-xs text-ink">
-        Mississippi has no statutory shared-parenting formula. Factor (i) is
+        Mississippi has no statutory shared-parenting formula. Factor (g) is
         the vehicle for any custody-based adjustment. Expect this factor to
         be the most contested in shared-parenting cases.
       </div>
