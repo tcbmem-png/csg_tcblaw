@@ -63,6 +63,7 @@ function Line({
   n,
   label,
   cite,
+  citation,
   a,
   b,
   total,
@@ -71,6 +72,7 @@ function Line({
   n?: string;
   label: string;
   cite?: string;
+  citation?: CitationKey;
   a?: string;
   b?: string;
   total?: string;
@@ -79,14 +81,22 @@ function Line({
   const base =
     "grid grid-cols-[2.5rem_1fr_8rem_8rem_8rem] gap-2 border-b border-rule px-3 py-2 text-[12px]";
   const emph = emphasis ? "bg-cream font-semibold text-ink" : "text-ink";
+  // Citation-driven label/cite takes precedence: derived from a CitationKey,
+  // it stays in lockstep with citations.ts so paragraph upgrades propagate
+  // without per-line edits.
+  const resolvedCite =
+    citation !== undefined ? `Rule ${CITATIONS[citation].rule.replace(/^1240-02-04-/, "")}` : cite;
   return (
     <div className={`${base} ${emph}`}>
       <div className="font-mono text-muted-foreground">{n}</div>
       <div>
-        <div>{label}</div>
-        {cite && (
+        <div className="flex items-center gap-1.5">
+          <span>{label}</span>
+          {citation && <RuleInfo citation={citation} />}
+        </div>
+        {resolvedCite && (
           <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            {cite}
+            {resolvedCite}
           </div>
         )}
       </div>
