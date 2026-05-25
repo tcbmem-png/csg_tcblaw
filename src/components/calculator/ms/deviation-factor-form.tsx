@@ -165,19 +165,15 @@ interface Props {
   onChange: (next: MSDeviation) => void;
 }
 
+/**
+ * Legacy entry point — renders the structured per-factor fields plus the
+ * "Additional context" textarea and a "Proposed monthly $" footer. Still
+ * used by the experienced-user pick list when comparison mode is "single".
+ */
 export function MSStructuredFactorForm({ deviation, onChange }: Props) {
-  // Lazy-initialize structured payload to the right variant for this letter.
-  const structured =
-    deviation.structured && deviation.structured.letter === deviation.letter
-      ? deviation.structured
-      : defaultStructured(deviation.letter);
-
-  const setStructured = (next: MSDeviationStructured) =>
-    onChange({ ...deviation, structured: next });
-
   return (
     <div className="space-y-4">
-      {renderForLetter(structured, setStructured)}
+      <MSStructuredDetailFields deviation={deviation} onChange={onChange} />
 
       <div className="rounded-md border border-rule bg-background p-3">
         <Field label="Additional context (optional)">
@@ -205,6 +201,23 @@ export function MSStructuredFactorForm({ deviation, onChange }: Props) {
       </div>
     </div>
   );
+}
+
+/**
+ * Just the structured FormA–FormJ fields, with no footer. Used by the
+ * brief's per-party block as an optional "Detailed evidence" disclosure on
+ * the Position A side.
+ */
+export function MSStructuredDetailFields({ deviation, onChange }: Props) {
+  const structured =
+    deviation.structured && deviation.structured.letter === deviation.letter
+      ? deviation.structured
+      : defaultStructured(deviation.letter);
+
+  const setStructured = (next: MSDeviationStructured) =>
+    onChange({ ...deviation, structured: next });
+
+  return <div className="space-y-4">{renderForLetter(structured, setStructured)}</div>;
 }
 
 function renderForLetter(
