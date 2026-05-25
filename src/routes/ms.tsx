@@ -80,12 +80,8 @@ function MSCalculatorPage() {
     activeSide !== handoff.originatingSide;
 
   const setInputsWithReceivingEdit = useCallback(
-    (next: MSInputs | ((prev: MSInputs) => MSInputs)) => {
-      const value =
-        typeof next === "function"
-          ? (next as (p: MSInputs) => MSInputs)(inputs)
-          : next;
-      setInputs(value);
+    (next: MSInputs) => {
+      setInputs(next);
       if (isReceivingSession && handoff.status !== "completed") {
         setHandoff((h) => ({
           ...h,
@@ -94,7 +90,7 @@ function MSCalculatorPage() {
         }));
       }
     },
-    [inputs, isReceivingSession, handoff.status],
+    [isReceivingSession, handoff.status],
   );
 
   // ---- URL auto-sync ----
