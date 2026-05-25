@@ -183,7 +183,7 @@ describe("Special Expenses 7% threshold", () => {
       numChildren: 3,
       parentingType: "equal",
       includeSpecialExpenses: true,
-      specialExpensesMonthly: 500, // 500 - 135.31 = ~365
+      specialExpensesAnnual: 500 * 12, // 500/mo - 135.31 = ~365
       specialExpensesPaidBy: "parent_a",
     });
     expect(out.specialExpensesIncludedAsDeviation).toBeGreaterThanOrEqual(364);
