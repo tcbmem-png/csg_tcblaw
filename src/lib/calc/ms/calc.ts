@@ -17,7 +17,19 @@ const ALL_FACTOR_LETTERS: MSFactorLetter[] = [
 ];
 
 export function defaultDeviation(letter: MSFactorLetter): MSDeviation {
-  return { letter, applicable: false, description: "", proposedMonthly: 0 };
+  return {
+    letter,
+    applicable: false,
+    description: "",
+    proposedMonthly: 0,
+    party: {
+      position: "",
+      factsAsserted: "",
+      documentationReferenced: "",
+      proposedMonthly: 0,
+      legalAuthority: "",
+    },
+  };
 }
 
 export function defaultMSInputs(): MSInputs {
