@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { CalcInputs, IncomeMethodology } from "@/lib/calc/types";
+import { PATH_LABELS, fmt } from "./income/shared";
+import { PathRouter, type PathKey } from "./income/path-router";
+import { PathSimpleForm } from "./income/path-simple-form";
+import { PathVariableForm } from "./income/path-variable-form";
+import { PathSelfEmployedForm } from "./income/path-self-employed-form";
+import { PathMultiSourceForm } from "./income/path-multi-source-form";
+import { PathImputedForm } from "./income/path-imputed-form";
+import { PathSpecialForm } from "./income/path-special-form";
 
 const STORAGE_KEY = "tn.incomeHelper.expanded";
 
@@ -16,6 +24,7 @@ export function IncomeHelperPanel({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [activeParent, setActiveParent] = useState<ParentKey | null>(null);
+  const [activePath, setActivePath] = useState<PathKey | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -41,6 +50,15 @@ export function IncomeHelperPanel({
   const aMeth = inputs.parentAIncomeMethodology;
   const bMeth = inputs.parentBIncomeMethodology;
 
+  const openFor = (p: ParentKey, path: PathKey) => {
+    setActiveParent(p);
+    setActivePath(path);
+  };
+  const close = () => {
+    setActiveParent(null);
+    setActivePath(null);
+  };
+
   return (
     <section className="mb-6 rounded-lg border border-rule bg-card shadow-sm">
       <button
@@ -55,9 +73,9 @@ export function IncomeHelperPanel({
           </div>
           <h2 className="mt-1 font-serif text-lg text-ink">Income Helper</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Already know each parent's monthly gross income? Skip this section.
-            Need help figuring it out (especially the W-2 Box 5 gotcha)? Click
-            to expand.
+            Already know each parent's monthly gross? Skip this section. Need
+            help — variable pay, self-employment, imputation, or a special
+            situation? Click to expand.
           </p>
         </div>
         <span
@@ -71,9 +89,8 @@ export function IncomeHelperPanel({
       {expanded && (
         <div className="border-t border-rule px-6 py-5">
           <p className="text-sm text-ink">
-            We'll help you figure out monthly gross income for each parent
-            using Tennessee's rules. This number flows into the calculation
-            below.
+            Six paths cover every income situation in Tennessee's guidelines.
+            Pick the one that fits each parent.
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
             Want the law first?{" "}
@@ -89,18 +106,14 @@ export function IncomeHelperPanel({
             <ParentCard
               parent="A"
               label={inputs.parentALabel}
-              currentMonthly={inputs.parentAGrossMonthly}
+              inputs={inputs}
               methodology={aMeth}
-              active={activeParent === "A"}
-              onOpen={() => setActiveParent("A")}
-              onClose={() => setActiveParent(null)}
-              onApply={(monthly, methodology) => {
-                setInputs({
-                  ...inputs,
-                  parentAGrossMonthly: monthly,
-                  parentAIncomeMethodology: methodology,
-                });
-                setActiveParent(null);
+              activePath={activeParent === "A" ? activePath : null}
+              onPick={(path) => openFor("A", path)}
+              onClose={close}
+              onApply={(updates) => {
+                setInputs({ ...inputs, ...updates });
+                close();
               }}
               onClear={() => {
                 const next = { ...inputs };
@@ -111,18 +124,14 @@ export function IncomeHelperPanel({
             <ParentCard
               parent="B"
               label={inputs.parentBLabel}
-              currentMonthly={inputs.parentBGrossMonthly}
+              inputs={inputs}
               methodology={bMeth}
-              active={activeParent === "B"}
-              onOpen={() => setActiveParent("B")}
-              onClose={() => setActiveParent(null)}
-              onApply={(monthly, methodology) => {
-                setInputs({
-                  ...inputs,
-                  parentBGrossMonthly: monthly,
-                  parentBIncomeMethodology: methodology,
-                });
-                setActiveParent(null);
+              activePath={activeParent === "B" ? activePath : null}
+              onPick={(path) => openFor("B", path)}
+              onClose={close}
+              onApply={(updates) => {
+                setInputs({ ...inputs, ...updates });
+                close();
               }}
               onClear={() => {
                 const next = { ...inputs };
@@ -131,13 +140,6 @@ export function IncomeHelperPanel({
               }}
             />
           </div>
-
-          <p className="mt-5 rounded-md border border-rule bg-cream p-3 text-[11px] leading-relaxed text-muted-foreground">
-            Phase 1 covers the steady-income (W-2) path. Variable income,
-            self-employment, imputation, and special-situation flows are
-            coming in later phases. Until then, enter those parents' figures
-            directly in the calculator below.
-          </p>
         </div>
       )}
     </section>
@@ -147,24 +149,28 @@ export function IncomeHelperPanel({
 function ParentCard({
   parent,
   label,
-  currentMonthly,
+  inputs,
   methodology,
-  active,
-  onOpen,
+  activePath,
+  onPick,
   onClose,
   onApply,
   onClear,
 }: {
   parent: ParentKey;
   label: string;
-  currentMonthly: number;
+  inputs: CalcInputs;
   methodology: IncomeMethodology | undefined;
-  active: boolean;
-  onOpen: () => void;
+  activePath: PathKey | null;
+  onPick: (path: PathKey) => void;
   onClose: () => void;
-  onApply: (monthly: number, methodology: IncomeMethodology) => void;
+  onApply: (updates: Partial<CalcInputs>) => void;
   onClear: () => void;
 }) {
+  const currentGross =
+    parent === "A" ? inputs.parentAGrossMonthly : inputs.parentBGrossMonthly;
+  const initialPath = methodology?.path;
+
   return (
     <div className="rounded-md border border-rule bg-background p-4">
       <div className="flex items-baseline justify-between gap-2">
@@ -174,32 +180,141 @@ function ParentCard({
         </div>
       </div>
 
-      {methodology && !active ? (
+      {methodology && !activePath && (
         <MethodologySummary
           methodology={methodology}
-          currentMonthly={currentMonthly}
-          onRedo={onOpen}
+          currentMonthly={currentGross}
+          onRedo={() => onPick(methodology.path as PathKey)}
+          onChangePath={() => onPick("simple")}
           onClear={onClear}
         />
-      ) : !active ? (
-        <button
-          type="button"
-          onClick={onOpen}
-          className="mt-3 w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          Set up {label}'s income →
-        </button>
-      ) : null}
+      )}
 
-      {active && (
-        <SimplePathForm
-          label={label}
-          initial={methodology}
-          onCancel={onClose}
-          onApply={onApply}
-        />
+      {!methodology && !activePath && (
+        <div className="mt-3">
+          <PathRouter label={label} onPick={onPick} />
+        </div>
+      )}
+
+      {activePath && (
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-[11px] text-muted-foreground hover:text-ink"
+            >
+              ← Back to paths
+            </button>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {PATH_LABELS[activePath]}
+            </span>
+          </div>
+          <FormFor
+            parent={parent}
+            label={label}
+            path={activePath}
+            initial={initialPath === activePath ? methodology : undefined}
+            currentGross={currentGross}
+            onCancel={onClose}
+            onApply={(updates, m) =>
+              onApply({
+                ...updates,
+                [parent === "A" ? "parentAIncomeMethodology" : "parentBIncomeMethodology"]: m,
+              } as Partial<CalcInputs>)
+            }
+          />
+        </div>
       )}
     </div>
+  );
+}
+
+function FormFor({
+  parent,
+  label,
+  path,
+  initial,
+  currentGross,
+  onCancel,
+  onApply,
+}: {
+  parent: ParentKey;
+  label: string;
+  path: PathKey;
+  initial: IncomeMethodology | undefined;
+  currentGross: number;
+  onCancel: () => void;
+  onApply: (updates: Partial<CalcInputs>, m: IncomeMethodology) => void;
+}) {
+  const applyMonthly = (monthly: number, m: IncomeMethodology) => {
+    const updates: Partial<CalcInputs> =
+      parent === "A"
+        ? { parentAGrossMonthly: monthly }
+        : { parentBGrossMonthly: monthly };
+    onApply(updates, m);
+  };
+
+  if (path === "simple") {
+    return (
+      <PathSimpleForm
+        label={label}
+        initial={initial?.path === "simple" ? initial : undefined}
+        onCancel={onCancel}
+        onApply={applyMonthly}
+      />
+    );
+  }
+  if (path === "variable") {
+    return (
+      <PathVariableForm
+        label={label}
+        initial={initial?.path === "variable" ? initial : undefined}
+        onCancel={onCancel}
+        onApply={applyMonthly}
+      />
+    );
+  }
+  if (path === "self_employed") {
+    return (
+      <PathSelfEmployedForm
+        label={label}
+        initial={initial?.path === "self_employed" ? initial : undefined}
+        onCancel={onCancel}
+        onApply={applyMonthly}
+      />
+    );
+  }
+  if (path === "multi_source") {
+    return (
+      <PathMultiSourceForm
+        label={label}
+        initial={initial?.path === "multi_source" ? initial : undefined}
+        onCancel={onCancel}
+        onApply={applyMonthly}
+      />
+    );
+  }
+  if (path === "imputed") {
+    return (
+      <PathImputedForm
+        parent={parent}
+        label={label}
+        initial={initial?.path === "imputed" ? initial : undefined}
+        onCancel={onCancel}
+        onApply={onApply}
+      />
+    );
+  }
+  return (
+    <PathSpecialForm
+      parent={parent}
+      label={label}
+      initial={initial?.path === "special" ? initial : undefined}
+      currentGross={currentGross}
+      onCancel={onCancel}
+      onApply={onApply}
+    />
   );
 }
 
@@ -207,11 +322,13 @@ function MethodologySummary({
   methodology,
   currentMonthly,
   onRedo,
+  onChangePath,
   onClear,
 }: {
   methodology: IncomeMethodology;
   currentMonthly: number;
   onRedo: () => void;
+  onChangePath: () => void;
   onClear: () => void;
 }) {
   const stale =
@@ -219,27 +336,11 @@ function MethodologySummary({
   return (
     <div className="mt-3 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs text-ink">
       <div className="font-mono text-[10px] uppercase tracking-widest text-primary">
-        Income source documented
+        {PATH_LABELS[methodology.path]} · documented
       </div>
-      {methodology.source === "w2_box5_annual" ? (
-        <div className="mt-1">
-          W-2 Box 5 (Medicare wages):{" "}
-          <span className="font-mono">
-            ${fmt(methodology.w2Box5Annual ?? 0)}/yr
-          </span>{" "}
-          ÷ 12 ={" "}
-          <span className="font-mono">
-            ${fmt(methodology.monthlyGrossResult)}/mo
-          </span>
-        </div>
-      ) : (
-        <div className="mt-1">
-          Current monthly gross:{" "}
-          <span className="font-mono">
-            ${fmt(methodology.monthlyGrossResult)}/mo
-          </span>
-        </div>
-      )}
+      <div className="mt-1">
+        <SummaryLine m={methodology} />
+      </div>
       {stale && (
         <div className="mt-2 text-[11px] text-accent-foreground">
           ⚠ The monthly figure has been edited directly in the calculator since
@@ -247,13 +348,20 @@ function MethodologySummary({
           avoid mismatched worksheet notes.
         </div>
       )}
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onRedo}
           className="rounded-md border border-input bg-background px-2.5 py-1 text-xs text-ink hover:bg-accent/40"
         >
           Edit
+        </button>
+        <button
+          type="button"
+          onClick={onChangePath}
+          className="rounded-md border border-input bg-background px-2.5 py-1 text-xs text-ink hover:bg-accent/40"
+        >
+          Change path
         </button>
         <button
           type="button"
@@ -267,157 +375,60 @@ function MethodologySummary({
   );
 }
 
-function SimplePathForm({
-  label,
-  initial,
-  onCancel,
-  onApply,
-}: {
-  label: string;
-  initial?: IncomeMethodology;
-  onCancel: () => void;
-  onApply: (monthly: number, methodology: IncomeMethodology) => void;
-}) {
-  const [source, setSource] = useState<"w2_box5_annual" | "monthly_gross">(
-    initial?.source ?? "w2_box5_annual",
-  );
-  const [annual, setAnnual] = useState<number>(initial?.w2Box5Annual ?? 0);
-  const [monthly, setMonthly] = useState<number>(
-    initial?.monthlyGrossEntered ?? 0,
-  );
-
-  const result =
-    source === "w2_box5_annual"
-      ? annual > 0
-        ? Math.round((annual / 12) * 100) / 100
-        : 0
-      : monthly;
-
-  const canApply = result > 0;
-
+function SummaryLine({ m }: { m: IncomeMethodology }) {
+  if (m.path === "simple") {
+    if (m.source === "w2_box5_annual") {
+      return (
+        <>
+          W-2 Box 5: <span className="font-mono">${fmt(m.w2Box5Annual ?? 0)}/yr</span>{" "}
+          ÷ 12 = <span className="font-mono">${fmt(m.monthlyGrossResult)}/mo</span>
+        </>
+      );
+    }
+    return (
+      <>
+        Monthly gross{m.voluntaryRetirementMonthly ? ` + $${fmt(m.voluntaryRetirementMonthly)} 401(k) add-back` : ""}:{" "}
+        <span className="font-mono">${fmt(m.monthlyGrossResult)}/mo</span>
+      </>
+    );
+  }
+  if (m.path === "variable") {
+    return (
+      <>
+        {m.averagingMethod === "3yr" ? "3-year" : m.averagingMethod === "5yr" ? "5-year" : "Custom"} average ={" "}
+        <span className="font-mono">${fmt(m.monthlyGrossResult)}/mo</span>
+      </>
+    );
+  }
+  if (m.path === "self_employed") {
+    return (
+      <>
+        Receipts − expenses + add-backs ={" "}
+        <span className="font-mono">${fmt(m.monthlyGrossResult)}/mo</span>
+      </>
+    );
+  }
+  if (m.path === "multi_source") {
+    return (
+      <>
+        {m.sources.length} source{m.sources.length === 1 ? "" : "s"} ={" "}
+        <span className="font-mono">${fmt(m.monthlyGrossResult)}/mo</span>
+      </>
+    );
+  }
+  if (m.path === "imputed") {
+    return (
+      <>
+        Imputed <span className="font-mono">${fmt(m.monthlyGrossResult)}/mo</span> vs actual{" "}
+        <span className="font-mono">${fmt(m.actualMonthlyGross)}/mo</span>
+      </>
+    );
+  }
+  // special
   return (
-    <div className="mt-3 space-y-3 rounded-md border border-rule bg-background p-3 text-sm text-ink">
-      <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-        {label} · Simple steady income
-      </div>
-
-      <div className="space-y-2">
-        <label className="flex items-start gap-2">
-          <input
-            type="radio"
-            className="mt-1"
-            checked={source === "w2_box5_annual"}
-            onChange={() => setSource("w2_box5_annual")}
-          />
-          <div className="flex-1">
-            <div className="font-medium">Annual gross from W-2 Box 5</div>
-            <div className="mt-0.5 text-xs text-muted-foreground">
-              "Medicare wages and tips" — compensation BEFORE any voluntary
-              retirement contributions (401(k), 403(b), etc).
-            </div>
-            {source === "w2_box5_annual" && (
-              <DollarInput value={annual} onChange={setAnnual} />
-            )}
-          </div>
-        </label>
-
-        <label className="flex items-start gap-2">
-          <input
-            type="radio"
-            className="mt-1"
-            checked={source === "monthly_gross"}
-            onChange={() => setSource("monthly_gross")}
-          />
-          <div className="flex-1">
-            <div className="font-medium">Current monthly gross pay</div>
-            <div className="mt-0.5 text-xs text-muted-foreground">
-              Gross pay from your most recent paystub, before deductions. If
-              you contribute to a 401(k) or similar plan, add those
-              contributions back.
-            </div>
-            {source === "monthly_gross" && (
-              <DollarInput value={monthly} onChange={setMonthly} />
-            )}
-          </div>
-        </label>
-      </div>
-
-      <div className="rounded-md border border-accent/60 bg-accent/10 p-3 text-xs leading-relaxed text-ink">
-        <strong>⚠ Box 5 vs Box 1.</strong> Tennessee uses W-2 Box 5, NOT
-        Box 1. If your annual salary is $100,000 and you contribute $20,000 to
-        a 401(k), Box 1 says $80,000 but Box 5 says $100,000. For child
-        support purposes, you owe on $100,000.{" "}
-        <Link
-          to="/tn/how-it-works/income"
-          className="underline decoration-rule underline-offset-2 hover:text-primary"
-        >
-          Read more →
-        </Link>
-      </div>
-
-      <div className="flex items-baseline justify-between rounded-md bg-cream px-3 py-2 text-sm">
-        <span className="text-muted-foreground">
-          Calculated monthly gross income
-        </span>
-        <span className="font-mono text-base text-ink">${fmt(result)}/mo</span>
-      </div>
-
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-md border border-input bg-background px-3 py-1.5 text-xs text-ink hover:bg-accent/40"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          disabled={!canApply}
-          onClick={() =>
-            onApply(result, {
-              path: "simple",
-              source,
-              w2Box5Annual: source === "w2_box5_annual" ? annual : undefined,
-              monthlyGrossEntered:
-                source === "monthly_gross" ? monthly : undefined,
-              monthlyGrossResult: result,
-            })
-          }
-          className="flex-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
-        >
-          Use this value
-        </button>
-      </div>
-    </div>
+    <>
+      {m.situation.replace(/_/g, " ")}:{" "}
+      <span className="font-mono">${fmt(m.monthlyGrossResult)}/mo</span>
+    </>
   );
-}
-
-function DollarInput({
-  value,
-  onChange,
-}: {
-  value: number;
-  onChange: (n: number) => void;
-}) {
-  return (
-    <div className="mt-2 flex items-center rounded-md border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
-      <span className="mr-1 text-muted-foreground">$</span>
-      <input
-        type="text"
-        inputMode="decimal"
-        className="w-full bg-transparent text-right font-mono text-sm text-ink outline-none"
-        value={value === 0 ? "" : value.toLocaleString("en-US")}
-        placeholder="0"
-        onChange={(e) => {
-          const raw = e.target.value.replace(/[^0-9.]/g, "");
-          const n = parseFloat(raw);
-          onChange(isNaN(n) ? 0 : n);
-        }}
-      />
-    </div>
-  );
-}
-
-function fmt(n: number) {
-  return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
 }

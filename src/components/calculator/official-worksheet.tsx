@@ -14,8 +14,15 @@ import {
 
 function incomeSourceLabel(m: IncomeMethodology | undefined): string {
   if (!m) return "Source: entered directly";
-  if (m.source === "w2_box5_annual") return "Source: W-2 Box 5 (annual ÷ 12)";
-  if (m.source === "monthly_gross") return "Source: monthly gross (Income Helper)";
+  if (m.path === "simple") {
+    if (m.source === "w2_box5_annual") return "Source: W-2 Box 5 (annual ÷ 12)";
+    return "Source: monthly gross (Income Helper)";
+  }
+  if (m.path === "variable") return "Source: variable income, multi-year averaging";
+  if (m.path === "self_employed") return "Source: self-employment net + add-backs";
+  if (m.path === "multi_source") return "Source: multiple income sources";
+  if (m.path === "imputed") return "Source: imputed income (see appendix)";
+  if (m.path === "special") return "Source: special situation (see appendix)";
   return "Source: entered directly";
 }
 
