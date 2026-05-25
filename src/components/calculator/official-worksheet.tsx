@@ -393,10 +393,18 @@ export function OfficialWorksheet({
                       : "—"
                   }
                 />
+                <div className="border-b border-rule bg-cream/40 px-3 py-2 text-[11px] leading-snug text-muted-foreground">
+                  {specialExpensesThresholdLine({
+                    monthly: (inputs.specialExpensesAnnual || 0) / 12,
+                    threshold: outputs.specialExpensesThresholdAmount,
+                    basis: outputs.specialExpensesIncludedAsDeviation,
+                  })}
+                </div>
               </>
             )}
           </>
         )}
+
 
         {/* Final */}
         <SectionHeader title="VII · Final Order" />
