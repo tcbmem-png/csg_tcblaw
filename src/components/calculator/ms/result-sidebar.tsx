@@ -52,11 +52,11 @@ export function MSResultSidebar({
           </div>
           <div className="mt-3 space-y-1 text-sm">
             <Row
-              label={`${inputs.positionALabel} / mo`}
+              label={`${inputs.obligorLabel} / mo`}
               value={`$${fmt(outputs.proposedFinalMonthly)}`}
             />
             <Row
-              label={`${inputs.positionBLabel} / mo`}
+              label={`${inputs.obligeeLabel} / mo`}
               value={`$${fmt(outputs.positionB!.proposedFinalMonthly)}`}
             />
             <Row
