@@ -1,109 +1,50 @@
-## P1 — TN Citation Framework Completion
+# P1.5 — Citation Audit
 
-Implements Part One of `TN_Rule_Citation_Dual_PDF_Brief.md`. Annotation-only — no math changes, no state migration, no share-URL schema bump.
+Verify every entry in `citations.ts` and every resolver mapping in `citation-resolvers.ts` matches the actual text of Tenn. Comp. R. & Regs. **1240-02-04** (TN Secretary of State chapter PDF, 2023-12-15 effective date) and Tenn. Code Ann. **§ 36-5-101(e)(1)(B)**. Annotation-only. No engine math, no schema bump, no UI restructure.
 
-### 1. Save the brief into the repo
+## In scope
 
-- Add `docs/TN_Rule_Citation_Dual_PDF_Brief.md` (verbatim from the upload) so the spec lives next to the inventory.
+1. **Fetch authoritative source.** Pull the chapter PDF from `publications.tnsosfiles.com/rules/1240/1240-02/1240-02-04.20231215.pdf` and parse it. Cross-check the statutory cap text from the TN Code annotated for `§ 36-5-101(e)(1)(B)` to confirm the per-child dollar amounts (currently asserted as $2,100 / $3,200 / $4,100 / $4,600 / $5,000) and the burden-of-proof language.
 
-### 2. Citation inventory — `docs/TN_Citation_Inventory.md`
+2. **Line-by-line verification.** For every key in `CITATIONS` (29 keys), confirm:
+   - The paragraph reference (e.g. `.04(7)(b)(2)(i)`) exists in the rule and addresses the topic claimed.
+   - The `name` matches the rule's actual heading/topic.
+   - The `plain` explanation is faithful to the rule text (no overstatement, no missing exceptions).
+   - The `url` is the canonical chapter PDF (already uniform, but reconfirm).
+   - For `pcso_max`, the `caseNote` cites the three cases correctly (Nash 1993, Richardson 2005, Smallman 2023) and the cap dollar amounts agree with current statute.
 
-Walk the rendered worksheet (`OfficialWorksheet`, `official-worksheet-pdf.ts`, and `ResultSidebar`) line by line. Each entry:
+3. **Resolver mapping verification.** Walk each branch of `citationForIncomePath`, `citationForParentingMode`, `citationForBcso` and confirm the returned key is the right paragraph for that input state. Spot-check edge cases:
+   - 50/50 parenting → `.04(7)(b)(2)(i)` (cross-credit subparagraph).
+   - 92+ ARP days → `.04(7)(h)` (reduction formula) — confirm `(h)` vs `(g)`/`(i)` in the actual rule.
+   - ≤68 ARP days → `.04(7)(i)` — confirm direction (increase vs reduction).
+   - Above-cap BCSO → `.09(2)(d)` — confirm the per-child percentages (6.81% / 7.22% / 7.77% / 8.05% / 8.66%) match the schedule appendix.
+   - SE tax credit → `.04(5)(a)` (previously `.04(4)`, flagged as correction).
+   - In-home credit → `.04(5)(b)(1)` (previously `.04(6)`, flagged as correction).
+   - SSR → `.04(12)` (previously `.02(25)`, flagged as correction).
 
-```
-Line N — <label>
-  Computation: <what the engine does>
-  Currently displayed: <e.g. "Rule .04(7)">
-  Correct: <e.g. "Rule .04(7)(b)(2)(i)">
-  Match: yes | no
-```
+4. **Manifest coverage check.** Walk `manifestFor()` for representative input fixtures (standard, above-cap, 50/50, SSR-engaged, federal-benefit, means-tested) and confirm every emitted line resolves to a citation that the audit confirmed as correct.
 
-Lines that are practitioner input (parent labels, case caption, raw entered gross before path) are labeled "Practitioner input — no rule basis" rather than fabricated.
+5. **Deliverables.**
+   - **`docs/TN_Citation_Audit.md`** — single audit report. One row per `CITATIONS` key with columns: key, claimed rule, audited rule, claimed topic vs rule heading, plain-English verdict (faithful / overstated / understated / wrong), action (keep / amend / replace).
+   - **Citation corrections** — for any "amend" or "replace" row, edit the corresponding `CITATIONS[key]` entry. Resolver mappings only change if a key is renamed.
+   - **`docs/TN_Citation_Inventory.md`** — update the "Currently displayed → Correct" table to reflect post-audit values; any rows where the audit confirmed P1's upgrade flip from "upgrade" to "yes" once verified.
+   - **`src/lib/calc/__tests__/citations.test.ts`** — extend with a regex assertion that every `rule` either matches `/^1240-02-04-\.\d{2}(\([^)]+\))*$/` or starts with `Tenn. Code Ann. § `, catching malformed paragraphs in future edits.
 
-### 3. Rewrite `src/lib/calc/citations.ts`
+## Out of scope
 
-Restructure to the brief's Lines-1-12 spec. Each `Citation` gains:
+- Engine math, BCSO/AGI/parenting-time formulas — annotation-only audit.
+- `share.ts` schema, state migration, URL versioning.
+- P2 (dual AOC + annotated PDF), MS calculator, any UI restyle.
+- Adding new `CitationKey` entries unless the audit finds a rule paragraph that's referenced by an existing resolver but missing from `CITATIONS`.
 
-- `rule` — paragraph-specific (`.04(7)(b)(2)(i)`, `.09(2)(d)`, `.04(3)(a)(2)(iii)`, etc.)
-- `name`, `plain` (kept)
-- `url` — set on every entry to the chapter-level Secretary of State PDF: `https://publications.tnsosfiles.com/rules/1240/1240-02/1240-02-04.20231215.pdf`. No paragraph anchors.
-- `caseNote?` — only on `pcso_max`, containing the *Nash / Richardson / Smallman* footnote text + one-sentence standard.
+## Risks / known unknowns
 
-Add entries the brief requires that don't exist yet: SE-tax credit `.04(5)(a)`, in-home/not-in-home credits `.04(5)(b)(1)/(2)`, pro-rata `.04(6)(b)`, schedule-within `.09(2)(a)`, schedule-table `.09(2)(c)`, ARP-reduction threshold `.04(7)(a)`, 92-day variable `.04(7)(b)`, day constants `.04(7)(h)/(i)`, add-on health `.04(8)(b)`, childcare `.04(8)(c)`, medical `.04(8)(d)`, special-expenses 7% `.07(2)(d)`, SSR `.04(12)`, FCSO-deviation `.07(2)(a-d)`, imputation sub-paragraphs (`.04(3)(a)(2)(i)` prior-year / `(ii)` vocational / `(iii)` incarceration carve-out / `(iv)` means-tested).
+- The official chapter PDF is the December 2023 version. If the rule has been amended since, the audit will flag the discrepancy and we'll decide together whether to pin to the 2023 effective date (current behavior) or update to a newer version.
+- Two paragraph numbers I want to double-check against the actual rule text: `.04(7)(h)` vs `.04(7)(g)` for the reduction formula, and `.04(3)(a)(2)(iv)` vs `.04(3)(a)(2)(v)` for means-tested-only — older drafts of the rule numbered these differently.
+- If the audit surfaces a citation that's *materially wrong* (not just imprecise), the fix is still annotation-only; no engine number changes, so no recalculation of any saved or shared scenario.
 
-Imputation, income-path, parenting-mode resolvers (small pure helpers) live alongside `CITATIONS` so a methodology object → citation key is one call:
+## Technical notes
 
-```
-citationForIncomePath(m: IncomeMethodology, parent): CitationKey
-citationForParentingMode(inputs): CitationKey
-citationForBcso(outputs): CitationKey   // .09(2)(a) within-table vs .09(2)(c) row vs .09(2)(d) above-cap
-citationForFcso(outputs): CitationKey | null
-```
-
-### 4. Render citations next to every number
-
-- **`official-worksheet.tsx`** — every existing `<Line cite=…>` upgraded to the specific paragraph (using the new resolvers). The `.04(7)` placeholder on Line 2 (parenting time) resolves through `citationForParentingMode`. Source-line under Line 3 gets a per-parent paragraph cite via `citationForIncomePath`. Cap panel adds the case-note footnote when `pcsoExceedsStatutoryMax`.
-- **`official-worksheet-pdf.ts`** — mirror the same resolver calls so each PDF line prints the format the brief requires: *"Line 4 BCSO: $6,043 — Tenn. Comp. R. & Regs. 1240-02-04-.09(2)(d) (above-cap formula)."* Citations in smaller font (existing 8-9pt style) immediately right-of-number or directly under the label.
-- Categorical determinations the brief calls out (SSR engaged, cap exceeded, means-tested zero, incarceration/military carve-out, each add-on present) each emit their cite via the same `CITATIONS` table.
-
-### 5. Interactive citation indicator — `<RuleInfo citation="key" />`
-
-New small component in `src/components/calculator/rule-info.tsx`:
-
-- Renders a 12px `ⓘ` glyph in `text-muted-foreground` (testing-agent nit D-2: small, doesn't compete with the dollar number).
-- Wraps the existing shadcn `Tooltip` for desktop hover and `Popover` for mobile tap (one component, both behaviors).
-- Tooltip body: `name` (bold) · `rule` · `plain` · "Open chapter PDF →" link (`target="_blank" rel="noopener"`) to the SoS URL.
-
-Wire into `ResultSidebar` next to every dollar figure (BCSO, presumptive, add-ons, all-in monthly, cap excess, SSR note) and into `OfficialWorksheet` on every emphasized line. No layout reflow — indicator floats inline after the figure.
-
-### 6. Mechanical test — `src/lib/calc/__tests__/citations.test.ts`
-
-(Repo convention is `src/lib/calc/__tests__/`, not `src/lib/calc/tn/__tests__/` — there's no `tn/` subfolder. Same intent.)
-
-- Run the engine over a curated fixture set (the five Stories + a synthetic above-cap + SSR + means-tested + imputation case).
-- For each fixture, build a `WorksheetManifest` = the set of `{lineLabel, citationKey}` the renderers would emit. Both `OfficialWorksheet` and `official-worksheet-pdf.ts` import a single `manifestFor(inputs, outputs): ManifestEntry[]` helper so the test exercises the same source of truth the UI/PDF do — no parallel list.
-- Assertions:
-  1. Every entry's `citationKey` exists in `CITATIONS`.
-  2. Every entry resolves to a rule string matching `/^(1240-02-04-\.\d+|Tenn\. Code Ann\.)/`.
-  3. Every numeric line that is *not* practitioner-input has a non-null citation.
-  4. The `url` on every citation equals the canonical SoS chapter URL (or is `undefined` for case-only citations).
-
-CI fails if a new line is added to the manifest without a matching `CITATIONS` entry, mechanically enforcing the article's "every formula annotated" claim.
-
-### 7. Share-URL stability
-
-No `share.ts` changes. No `v: 3` bump. No `migrateCitations`. Citations are computed from `inputs`/`outputs` at render — old URLs decode unchanged and render with the upgraded paragraph-specific citations automatically. Add one regression test in the existing share suite that decodes a captured `v: 1` URL and asserts the manifest still passes the citation test.
-
-### Files
-
-**Created**
-- `docs/TN_Rule_Citation_Dual_PDF_Brief.md`
-- `docs/TN_Citation_Inventory.md`
-- `src/lib/calc/citation-resolvers.ts` (small pure resolvers + `manifestFor`)
-- `src/components/calculator/rule-info.tsx`
-- `src/lib/calc/__tests__/citations.test.ts`
-
-**Modified**
-- `src/lib/calc/citations.ts` — paragraph-specific rules + `url` + `caseNote` + new entries
-- `src/components/calculator/official-worksheet.tsx` — resolver-driven cites + `<RuleInfo>` on emphasized lines + cap-panel case footnote
-- `src/lib/pdf/official-worksheet-pdf.ts` — mirror cites in the brief's format
-- `src/components/calculator/result-sidebar.tsx` — `<RuleInfo>` next to each computed dollar
-
-**Untouched**
-- `calc.ts`, `bcso.ts`, `scenarios.ts`, `share.ts` (no schema bump), all MS files, P2 dual-PDF work.
-
-### Out of scope
-
-- Part Two (dual AOC + annotated PDF) — that's P2 after this lands.
-- Any engine math change.
-- 0-day minimum-floor issue.
-- MS calculator.
-
-### Acceptance
-
-- Every computed cell in the worksheet PDF prints a paragraph-specific citation in the brief's format.
-- `citations.test.ts` passes; removing a citation entry or adding an uncited manifest line fails CI.
-- `docs/TN_Citation_Inventory.md` lists every line, current vs. correct, with non-rule lines explicitly labeled.
-- Hover or tap on any sidebar/worksheet figure surfaces name + rule + plain-English + chapter-PDF link.
-- A captured production `v: 1` share URL still renders, with upgraded citations and no state mutation.
-- Cap panel displays *Nash / Richardson / Smallman* footnote when `pcsoExceedsStatutoryMax`.
+- I'll fetch the chapter PDF with `document--parse_document` and grep for paragraph headers; if that's not granular enough I'll fall back to a targeted `websearch--web_search` on TN SoS for the specific paragraph.
+- The audit report is the source of truth for which entries change; edits to `CITATIONS` will be small surgical replacements per key, not a wholesale rewrite of the file.
+- The new regex test goes in the existing `citations.test.ts` (already created in P1) so CI gains the check with one file edit.
