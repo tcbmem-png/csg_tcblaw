@@ -193,9 +193,42 @@ const POSITION_LABEL: Record<string, string> = {
   "": "(no position recorded)",
 };
 
+/**
+ * Per-row attribution string for one side of the deviation worksheet.
+ *
+ * "Slate" identifies which slate in `MSInputs` this column reads from:
+ * obligor column reads `deviationsA` (slate "A"), obligee column reads
+ * `deviationsB` (slate "B"). The handoff's `originatingSide` tells us
+ * which slate the originating attorney filled in — the OTHER slate's
+ * entries are attributed to the receiving attorney.
+ *
+ * Returns `null` when there is no handoff (single-attorney workflow),
+ * in which case the column header is just the party label, unchanged
+ * from the pre-handoff PDF.
+ */
+function attributionFor(
+  handoff: HandoffState | undefined,
+  slate: "A" | "B",
+): string | null {
+  if (!handoff || handoff.status === "none") return null;
+  const isOriginating = slate === handoff.originatingSide;
+  if (isOriginating) {
+    const a = handoff.originatingAttorney;
+    const name = a?.name?.trim() || "originating counsel";
+    const firm = a?.firm?.trim();
+    return firm ? `Per ${name} (${firm})` : `Per ${name}`;
+  }
+  const r = handoff.receivingAttorney;
+  const name = r?.name?.trim();
+  if (!name) return "Per opposing counsel (name not provided)";
+  const firm = r?.firm?.trim();
+  return firm ? `Per ${name} (${firm})` : `Per ${name}`;
+}
+
 function partyColumn(
   ctx: Ctx,
   sideLabel: string,
+  attribution: string | null,
   d: { applicable: boolean; amount: number; entry?: { party?: { position?: string; factsAsserted?: string; documentationReferenced?: string; legalAuthority?: string }; description?: string } },
   x: number,
   width: number,
@@ -210,6 +243,15 @@ function partyColumn(
   const startY = ctx.y;
   drawText(ctx, sideLabel, x + padding, startY - 10, { size: 9, bold: true });
   let y = startY - 10 - labelLh;
+
+  // Attribution sub-line — present only when a handoff is in effect.
+  if (attribution) {
+    drawText(ctx, attribution, x + padding, y - lineSize, {
+      size: lineSize,
+      color: MUTED,
+    });
+    y -= lh;
+  }
 
   if (!d.applicable) {
     drawText(ctx, "Not asserted by this party.", x + padding, y - lineSize, {
@@ -288,6 +330,7 @@ function factorBlock(
   row: ReconciliationRow,
   inputs: MSInputs,
   sideBySide: boolean,
+  handoff: HandoffState | undefined,
 ) {
   ensure(ctx, 80);
 
@@ -319,6 +362,9 @@ function factorBlock(
     return;
   }
 
+  const obligorAttribution = attributionFor(handoff, "A");
+  const obligeeAttribution = attributionFor(handoff, "B");
+
   // Per-party columns
   if (sideBySide) {
     const gap = 8;
@@ -327,6 +373,7 @@ function factorBlock(
     const leftEndY = partyColumn(
       ctx,
       inputs.obligorLabel,
+      obligorAttribution,
       row.obligor,
       MARGIN,
       colW,
@@ -336,6 +383,7 @@ function factorBlock(
     const rightEndY = partyColumn(
       ctx,
       inputs.obligeeLabel,
+      obligeeAttribution,
       row.obligee,
       MARGIN + colW + gap,
       colW,
@@ -357,6 +405,7 @@ function factorBlock(
     const endY = partyColumn(
       ctx,
       inputs.obligorLabel,
+      obligorAttribution,
       row.obligor,
       MARGIN,
       ROW_W,
@@ -642,7 +691,7 @@ export function renderMSDeviationPdf(args: {
   for (const letter of letters) {
     const row = report.rows.find((r) => r.letter === letter);
     if (!row) continue;
-    factorBlock(ctx, row, inputs, sideBySide);
+    factorBlock(ctx, row, inputs, sideBySide, handoff);
   }
 
   newPage(ctx);

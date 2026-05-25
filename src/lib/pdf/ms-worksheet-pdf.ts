@@ -36,9 +36,9 @@ const FACTOR_TITLES: Record<MSFactorLetter, string> = {
   d: "Seasonal variations in one or both parents' incomes or expenses",
   e: "The age of the child",
   f: "Special needs traditionally met within the family budget",
-  g: "The particular shared parental arrangement",
-  h: "Total available assets of obligee, obligor, and child",
-  i: "Payment by obligee of child care expenses for employment or disability",
+  g: "Total available assets of obligee, obligor, and child",
+  h: "Payment by obligee of child care expenses for employment or disability",
+  i: "The particular shared parental arrangement",
   j: "Any other adjustment needed to achieve an equitable result",
 };
 

@@ -1,6 +1,12 @@
-# Two-attorney handoff — MS calculator
+# Two-attorney handoff — MS calculator — SHIPPED
 
-Implements the previously approved plan with the three clarifications you reconfirmed, plus the three additions from your approval message. No auth, no realtime, no server storage. Frontend + URL only.
+All items in the original plan have shipped, including the deferred closures from the prior cycle:
+
+- Letter-fix stragglers (item 1 closure): `FACTOR_TITLES` in `ms-worksheet-pdf.ts` and `worksheet-preview.tsx` now match the statute (g=assets, h=childcare, i=parental). `calc.ts` shared-custody warning cites § 43-19-103(i). `calc.test.ts` assertion updated and now also guards against regression to (g). `deviation-factor-form.tsx` FormParental callout cites factor (i).
+- Per-row PDF attribution (item 5): `ms-deviation-pdf.ts` renders a "Per {counsel} ({firm})" sub-line under each party's column header when a handoff is in effect. Originating slate → `originatingAttorney`; receiving slate → `receivingAttorney` or "Per opposing counsel (name not provided)". Single-attorney PDFs unchanged.
+- Tests (item 6): `share.test.ts` (v3 round-trip, v2→v3 upgrade incl. letter-fix migration, ?side= parse helpers, scrubbing), `handoff.test.ts` (four-state transitions incl. PDF auto-flip, scrubbing, C2 token compare, caption-driven labels), `letter-mapping.test.ts` (regression guard).
+
+
 
 ## Data model
 
