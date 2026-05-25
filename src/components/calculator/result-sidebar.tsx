@@ -30,7 +30,10 @@ export function ResultSidebar({
       <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         Live result
       </div>
-      <div className="mt-1 font-serif text-sm text-ink">Net presumptive support</div>
+      <div className="mt-1 flex items-center gap-1.5 font-serif text-sm text-ink">
+        Net presumptive support
+        <RuleInfo citation="pro_rata" />
+      </div>
       <div className="mt-2 font-serif text-4xl text-primary">
         ${fmt(outputs.netPresumptiveSupport)}
         <span className="text-base text-muted-foreground"> /mo</span>
@@ -85,8 +88,9 @@ export function ResultSidebar({
 
       {outputs.pcsoExceedsStatutoryMax && (
         <div className="mt-4 rounded-md border border-accent/60 bg-accent/10 p-3 text-xs leading-relaxed text-ink">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             Statutory cap check · §36-5-101(e)(1)(B)
+            <RuleInfo citation="pcso_max" />
           </div>
           <div className="space-y-1">
             <div className="flex items-baseline justify-between">
@@ -121,21 +125,30 @@ export function ResultSidebar({
 
       {outputs.equalParentingLowSupportNote && (
         <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
-          <div className="mb-1 font-semibold">Why is this support amount so low?</div>
+          <div className="mb-1 flex items-center gap-1.5 font-semibold">
+            Why is this support amount so low?
+            <RuleInfo citation="parenting_time_5050" />
+          </div>
           {outputs.equalParentingLowSupportNote}
         </div>
       )}
 
       {outputs.nonEarnerArpNote && (
         <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
-          <div className="mb-1 font-semibold">Why is presumptive support $0?</div>
+          <div className="mb-1 flex items-center gap-1.5 font-semibold">
+            Why is presumptive support $0?
+            <RuleInfo citation="parenting_time_arp_reduction" />
+          </div>
           {outputs.nonEarnerArpNote}
         </div>
       )}
 
       {outputs.zeroPresumptiveNote && (
         <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
-          <div className="mb-1 font-semibold">Why doesn't the $100 minimum apply?</div>
+          <div className="mb-1 flex items-center gap-1.5 font-semibold">
+            Why doesn't the $100 minimum apply?
+            <RuleInfo citation="minimum" />
+          </div>
           {outputs.zeroPresumptiveNote}
         </div>
       )}
