@@ -9,7 +9,7 @@
  * letter regression.
  */
 import { describe, it, expect } from "vitest";
-import { calc } from "@/lib/calc/calc";
+import { calculate as calc } from "@/lib/calc/calc";
 import { CITATIONS, TN_CHAPTER_URL } from "@/lib/calc/citations";
 import { manifestFor } from "@/lib/calc/citation-resolvers";
 import type { CalcInputs } from "@/lib/calc/types";
