@@ -219,7 +219,7 @@ export function OfficialWorksheet({
         <Line
           n="2"
           label="Parenting time"
-          cite="Rule .04(7)"
+          citation={citationForParentingMode(outputs)}
           total={
             inputs.parentingType === "equal"
               ? "Equal (182.5 / 182.5)"
@@ -234,7 +234,7 @@ export function OfficialWorksheet({
         <Line
           n="3"
           label="Gross monthly income"
-          cite="Rule .04(3)"
+          citation="gross_income"
           a={`$${fmt(inputs.parentAGrossMonthly)}`}
           b={`$${fmt(inputs.parentBGrossMonthly)}`}
         />
@@ -245,27 +245,28 @@ export function OfficialWorksheet({
         <Line
           n="3a"
           label="Less: self-employment tax credit"
-          cite="Rule .04(4)"
+          citation="se_tax_credit"
           a={`$${fmt(inputs.parentASECredit)}`}
           b={`$${fmt(inputs.parentBSECredit)}`}
         />
         <Line
           n="3b"
           label="Less: pre-existing child support paid"
-          cite="Rule .04(5)"
+          citation="credit_not_in_home_children"
           a={`$${fmt(inputs.parentAPriorSupport)}`}
           b={`$${fmt(inputs.parentBPriorSupport)}`}
         />
         <Line
           n="3c"
           label="Less: in-home children credit"
-          cite="Rule .04(6)"
+          citation="credit_other_in_home_children"
           a={`$${fmt(inputs.parentAInhomeCredit)}`}
           b={`$${fmt(inputs.parentBInhomeCredit)}`}
         />
         <Line
           n="4"
           label="Adjusted Gross Income (AGI)"
+          citation="agi"
           a={`$${fmt(outputs.parentAAGI)}`}
           b={`$${fmt(outputs.parentBAGI)}`}
           total={`$${fmt(outputs.combinedAGI)}`}
@@ -274,6 +275,7 @@ export function OfficialWorksheet({
         <Line
           n="5"
           label="Percentage of income (PI)"
+          citation="pro_rata"
           a={`${(outputs.piA * 100).toFixed(2)}%`}
           b={`${(outputs.piB * 100).toFixed(2)}%`}
           total="100.00%"
@@ -288,17 +290,14 @@ export function OfficialWorksheet({
               ? "BCSO (above-cap formula)"
               : "BCSO (schedule lookup, rounded up)"
           }
-          cite={
-            outputs.bcsoSource === "above_cap"
-              ? "Rule .09(2)(d)"
-              : "Rule .09"
-          }
+          citation={citationForBcso(outputs)}
           total={`$${fmt(outputs.bcso)}`}
           emphasis
         />
         {outputs.scheduleAgiUsed !== null && (
           <Line
             label={`Schedule row used: $${fmt(outputs.scheduleAgiUsed)} combined AGI / ${inputs.numChildren} children`}
+            citation="bcso_schedule_table"
           />
         )}
         {outputs.bcsoAboveCapBreakdown && (
@@ -313,7 +312,7 @@ export function OfficialWorksheet({
             />
             <Line
               label={`Above-cap rate × excess (${(outputs.bcsoAboveCapBreakdown.rate * 100).toFixed(2)}%)`}
-              cite="Rule .09(2)(d)"
+              citation="above_cap"
               total={`+ $${fmt(outputs.bcsoAboveCapBreakdown.addition)}`}
             />
           </>
@@ -344,7 +343,7 @@ export function OfficialWorksheet({
             <Line
               n="7"
               label={label}
-              cite="Rule .04"
+              citation="pro_rata"
               a={`$${fmt(adjA)}`}
               b={`$${fmt(adjB)}`}
             />
@@ -356,15 +355,7 @@ export function OfficialWorksheet({
         <Line
           n="8"
           label={`Band: ${outputs.parentingTimeBand}`}
-          cite={
-            outputs.parentingTimeBand === "equal"
-              ? "Rule .04(7)(b)(2)(i)"
-              : outputs.parentingTimeBand === "reduction"
-                ? "Rule .04(7)(h)"
-                : outputs.parentingTimeBand === "increase"
-                  ? "Rule .04(7)(i)"
-                  : "Rule .04(7)(a)"
-          }
+          citation={citationForParentingMode(outputs)}
           total={
             outputs.variableMultiplier !== null
               ? `multiplier ${outputs.variableMultiplier.toFixed(4)}`
@@ -374,13 +365,14 @@ export function OfficialWorksheet({
         <Line
           n="9"
           label="Net presumptive child support"
+          citation="pro_rata"
           a=""
           b=""
           total={`$${fmt(outputs.netPresumptiveSupport)} ${dirLabel(outputs.presumptiveDirection, a, b)}`}
           emphasis
         />
         {outputs.ssrApplied && outputs.ssrNote && (
-          <Line label={outputs.ssrNote} cite="Rule .02(25)" />
+          <Line label={outputs.ssrNote} citation="ssr" />
         )}
 
         {/* Add-ons */}
@@ -388,7 +380,7 @@ export function OfficialWorksheet({
         <Line
           n="10"
           label={`Health insurance — paid by ${inputs.healthPaidBy === "parent_a" ? a : b}`}
-          cite="Rule .04(8)(b)"
+          citation="addon_health"
           total={
             inputs.healthPremiumMonthly > 0
               ? `$${fmt(inputs.healthPremiumMonthly)}/mo · ${a} net ${fmt(outputs.addOnHealthFromA)}`
@@ -398,7 +390,7 @@ export function OfficialWorksheet({
         <Line
           n="11"
           label="Recurring uninsured medical (pro-rata)"
-          cite="Rule .04(8)(d)"
+          citation="addon_medical"
           a={`$${fmt(inputs.uninsuredMedicalMonthly * outputs.piA)}`}
           b={`$${fmt(inputs.uninsuredMedicalMonthly * outputs.piB)}`}
           total={`$${fmt(inputs.uninsuredMedicalMonthly)}/mo`}
@@ -406,7 +398,7 @@ export function OfficialWorksheet({
         <Line
           n="12"
           label={`Work-related childcare — paid by ${inputs.childcarePaidBy === "parent_a" ? a : b}`}
-          cite="Rule .04(8)(c)"
+          citation="addon_childcare"
           total={
             inputs.childcareMonthly > 0
               ? `$${fmt(inputs.childcareMonthly)}/mo · ${a} net ${fmt(outputs.addOnChildcareFromA)}`
@@ -422,7 +414,7 @@ export function OfficialWorksheet({
               <Line
                 n="13"
                 label="Private school tuition (deviation, pro-rata)"
-                cite="Rule .07(2)(d)"
+                citation="private_school"
                 total={`$${fmt(outputs.privateSchoolMonthlyTotal)}/mo · ${a} net ${fmt(outputs.privateSchoolDeviationFromA)}`}
               />
             )}
@@ -431,7 +423,7 @@ export function OfficialWorksheet({
                 <Line
                   n="14"
                   label="Special expenses — 7% of BCSO threshold"
-                  cite="Rule .07(2)(d)"
+                  citation="special_expenses"
                   total={`Threshold $${fmt(outputs.specialExpensesThresholdAmount)}/mo`}
                 />
                 <Line
