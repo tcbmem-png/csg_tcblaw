@@ -365,80 +365,112 @@ function HowItWorksIncome() {
         answer.
       </P>
 
-      <H2>6. Imputation: Mississippi's judicial approach</H2>
+      <H2>6. Imputation under § 43-19-101(5) (2022 amendment)</H2>
       <P>
-        Sometimes a Mississippi court will use an imputed income figure
-        rather than what the parent actually earns. Imputation requires a
-        court determination, and Mississippi's approach to imputation is
-        largely judicial — driven by case law rather than by statute or
-        rule.
+        For decades Mississippi's approach to imputation was almost entirely
+        judicial — built case-by-case on <em>Gillespie v. Gillespie</em>,
+        594 So. 2d 620 (Miss. 1992), and its progeny. That changed on July
+        1, 2022, when House Bill 1067 added a dedicated imputation
+        subsection at <strong>Miss. Code Ann. § 43-19-101(5)</strong>.
+        Mississippi now has a statutory framework, not just case law.
       </P>
       <P>
-        The framework comes primarily from <em>Gillespie v. Gillespie</em>{" "}
-        and the line of cases that follow it. The chancellor may impute
-        income when:
-      </P>
-      <P>
+        The headline rule of § 43-19-101(5) is that{" "}
         <strong>
-          The parent is voluntarily underemployed or unemployed.
+          imputation must be based on specific fact-gathering, not on a
+          standard amount.
         </strong>{" "}
-        The chancellor considers the parent's education, training, work
-        history, available employment opportunities, the reasons for any
-        income reduction, and the parent's obligation to support the
-        children. Voluntary reduction in income — quitting a job, going
-        from full-time to part-time, refusing available work — can
-        support imputation. Job loss for legitimate reasons (layoff,
-        medical issue, family emergency) typically does not.
+        The statute directs the court to consider the parent's:
+      </P>
+      <ul className="mt-3 list-disc space-y-2 pl-6">
+        <li>past and present employment and earnings history;</li>
+        <li>education, training, and job skills;</li>
+        <li>
+          the prevailing earnings level in the local community for the
+          parent's occupation or skill set;
+        </li>
+        <li>available employers willing to hire the parent;</li>
+        <li>
+          other relevant background factors — assets, residence, age,
+          health, criminal record, record of seeking work, and similar
+          circumstances bearing on earning capacity.
+        </li>
+      </ul>
+      <P>
+        This means Mississippi has departed from the older practice (still
+        seen in some states) of pegging imputed income to a generic
+        median-wage figure. After HB 1067, the chancellor must build the
+        imputed number from facts in the record. A finding that "the
+        obligor could earn $X per month" without record support for the
+        listed factors is now vulnerable on appeal in a way it was not
+        before 2022.
       </P>
       <P>
-        <strong>
-          The parent has refused to participate in the proceeding or to
-          provide reliable income evidence.
-        </strong>{" "}
-        In default judgment situations or where the parent has been
-        uncooperative with discovery, the chancellor can use the
-        available evidence — including imputed amounts based on past
-        earnings, vocational evidence, or general earning capacity — to
-        set a reasonable figure.
+        The calculator surfaces this directly. When you mark gross income
+        as "imputed" instead of "actual," the inputs panel asks you to
+        check off which § 43-19-101(5) factors support the imputed figure
+        and to describe any "other" facts. The worksheet and PDF then
+        carry that basis statement into Section I so the chancellor sees
+        the foundation alongside the dollar amount.
       </P>
       <P>
-        <strong>
-          The parent has substantial non-income-producing assets.
-        </strong>{" "}
-        When a parent owns significant assets that could be producing
-        income but aren't, the chancellor may impute income at a
-        reasonable rate of return.
+        The older case law has not been displaced — <em>Gillespie</em>{" "}
+        and similar decisions still guide when imputation is appropriate
+        (voluntary underemployment, refusal to provide evidence,
+        substantial non-income-producing assets). HB 1067 layered a
+        statutory how on top of the existing case law about when.
+      </P>
+
+      <H2>6a. Incarceration: § 43-19-36 (2023 amendment)</H2>
+      <P>
+        A second 2020s amendment, House Bill 1349 (effective July 1,
+        2023), added <strong>Miss. Code Ann. § 43-19-36</strong>. This
+        section reverses the older Mississippi practice of treating
+        incarceration as voluntary unemployment that could justify
+        imputation. Under the new statute:
+      </P>
+      <ul className="mt-3 list-disc space-y-2 pl-6">
+        <li>
+          When the obligor is incarcerated for{" "}
+          <strong>180 consecutive days or more</strong>, the child support
+          obligation is <strong>suspended by operation of law</strong> for
+          the duration of incarceration and for{" "}
+          <strong>60 days after release</strong>.
+        </li>
+        <li>
+          Suspension is automatic — no motion required — though either
+          party may move to confirm or contest it.
+        </li>
+        <li>
+          Three carve-outs prevent suspension: (i) the incarceration is
+          for non-payment of child support itself; (ii) the incarceration
+          is for a crime against the child or the child's custodian; or
+          (iii) the obligor has the <strong>means to pay</strong> support
+          despite being incarcerated.
+        </li>
+      </ul>
+      <P>
+        The "means to pay" carve-out is the most fact-intensive. An
+        obligor with substantial liquid assets, a working business, or
+        passive income that continues during incarceration is not
+        automatically suspended. The chancellor makes the call.
       </P>
       <P>
-        Mississippi does not have a statutory equivalent to Tennessee's
-        specific carve-outs for incarcerated parents or active-duty
-        military servicemembers. The general principle in Mississippi
-        practice is that imputation requires "willful" conduct on the
-        part of the parent, and incarceration or military service
-        typically would not satisfy that standard. But the analysis is
-        case-by-case, and a chancellor's specific approach may vary.
-      </P>
-      <P>
-        Mississippi also does not have a statutory default income figure
-        equivalent to Tennessee's gender-specific median income. When
-        imputation is appropriate but no specific evidence supports a
-        particular figure, the chancellor exercises discretion based on
-        the available evidence — sometimes prior earnings, sometimes
-        vocational expert testimony, sometimes general earning capacity
-        figures from regional labor market data.
+        The calculator implements § 43-19-36 as a short-circuit. If you
+        check the incarceration box, set the expected duration to 180+
+        days, and none of the three carve-outs apply, the worksheet stops
+        at Section I and prints a suspension finding instead of running
+        the percentage calculation. The PDF prints the same finding as a
+        standalone page citing § 43-19-36(2).
       </P>
       <P>
         For the calculator's purposes: the inputs form accepts the AGI
         figure the user enters, whether that figure represents actual
-        earnings or imputed earnings. The worksheet doesn't treat the two
-        differently because Mississippi law doesn't structurally treat
-        them differently — both are the chancellor's determination of
-        what the parent's income is for purposes of the calculation.
-        Where actual and imputed figures differ significantly, the
-        calculator can be run twice (once with each figure) to see the
-        dollar difference between scenarios. This isn't built into the
-        current UI but the calculator's URL share state makes it easy to
-        maintain two versions of the same case.
+        earnings or imputed earnings. The worksheet flags imputed AGI
+        with the § 43-19-101(5) factor basis so the record reflects how
+        the number was derived. Where actual and imputed figures differ
+        significantly, you can also use the side-by-side mode to model
+        both positions in one worksheet.
       </P>
 
       <H2>7. The health insurance question</H2>
@@ -547,8 +579,16 @@ function HowItWorksIncome() {
         <li>
           § 43-19-101(4) — High-income and low-income threshold findings
         </li>
+        <li>
+          § 43-19-101(5) — Imputation framework (added by HB 1067, eff.
+          July 1, 2022)
+        </li>
         <li>§ 43-19-101(6) — Health insurance treatment</li>
         <li>§ 43-19-103 — The ten deviation criteria (a)–(j)</li>
+        <li>
+          § 43-19-36 — Suspension of support during incarceration of 180+
+          days (added by HB 1349, eff. July 1, 2023)
+        </li>
         <li>§ 93-11-65(8) — Emancipation age and conditions</li>
       </ul>
       <P>
