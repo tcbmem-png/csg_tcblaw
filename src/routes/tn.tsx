@@ -7,6 +7,8 @@ import { IncomeHelperPanel } from "@/components/calculator/income-helper-panel";
 import { IncomeMethodologyAppendix } from "@/components/calculator/income-methodology-appendix";
 import { ResultSidebar } from "@/components/calculator/result-sidebar";
 import { OfficialWorksheet } from "@/components/calculator/official-worksheet";
+import { AocWorksheet } from "@/components/calculator/aoc-worksheet";
+import { PdfDownloadButtons } from "@/components/calculator/pdf-download-buttons";
 import { ComparisonView } from "@/components/calculator/comparison";
 import { CaseCaptionForm } from "@/components/calculator/case-caption";
 import { ComparisonAppendix } from "@/components/calculator/comparison-appendix";
