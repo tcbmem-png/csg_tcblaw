@@ -453,6 +453,14 @@ export function OfficialWorksheet({
           </div>
         )}
 
+        {/* Methodology footnote — mirrors the AOC PDF page-2 footnote so
+            the on-screen worksheet explains itself the same way. */}
+        {(inputs.includePrivateSchool || inputs.includeSpecialExpenses) && (
+          <div className="border-t border-rule bg-cream/60 px-6 py-3 text-[10px] leading-relaxed text-muted-foreground">
+            {DEVIATION_METHODOLOGY_NOTE}
+          </div>
+        )}
+
         {/* Footer */}
         <div className="border-t border-rule bg-cream px-6 py-4 text-[10px] text-muted-foreground">
           Calculated using the Tennessee Child Support Guidelines under Rule
