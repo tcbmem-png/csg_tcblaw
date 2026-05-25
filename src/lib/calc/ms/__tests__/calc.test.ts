@@ -110,11 +110,13 @@ describe("MS calc — additional invariants", () => {
     expect(out.proposedFinalMonthly).toBe(0);
   });
 
-  it("shared custody flag emits a Factor (g) note", () => {
+  it("shared custody flag emits a Factor (i) note", () => {
     const out = calculateMS(
       withDefaults({ obligorAnnualGross: 50000, sharedCustodyFlag: true }),
     );
-    expect(out.warnings.some((w) => w.includes("§ 43-19-103(g)"))).toBe(true);
+    expect(out.warnings.some((w) => w.includes("§ 43-19-103(i)"))).toBe(true);
+    // Guard against regression to the pre-fix letter mapping.
+    expect(out.warnings.some((w) => w.includes("§ 43-19-103(g)"))).toBe(false);
   });
 });
 

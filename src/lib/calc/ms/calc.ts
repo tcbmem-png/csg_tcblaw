@@ -187,7 +187,7 @@ export function calculateMS(inputs: MSInputs): MSOutputs {
 
   if (inputs.sharedCustodyFlag) {
     warnings.push(
-      "Shared / 50-50 parenting indicated. Mississippi has no statutory 50-50 formula; address via § 43-19-103(g) deviation (the 'particular shared parental arrangement' factor).",
+      "Shared / 50-50 parenting indicated. Mississippi has no statutory 50-50 formula; address via § 43-19-103(i) deviation (the 'particular shared parental arrangement' factor).",
     );
   }
 
