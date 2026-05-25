@@ -14,63 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      beta_leads: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          ip: string | null
-          matter_name: string | null
-          name: string
-          order_id: string | null
-          state: string
-          user_agent: string | null
-          worksheet_hash: string | null
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          ip?: string | null
-          matter_name?: string | null
-          name: string
-          order_id?: string | null
-          state: string
-          user_agent?: string | null
-          worksheet_hash?: string | null
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          ip?: string | null
-          matter_name?: string | null
-          name?: string
-          order_id?: string | null
-          state?: string
-          user_agent?: string | null
-          worksheet_hash?: string | null
-        }
-        Relationships: []
-      }
-      checkout_rate_limits: {
-        Row: {
-          attempts: number
-          ip: string
-          window_start: string
-        }
-        Insert: {
-          attempts?: number
-          ip: string
-          window_start?: string
-        }
-        Update: {
-          attempts?: number
-          ip?: string
-          window_start?: string
-        }
-        Relationships: []
-      }
       email_send_log: {
         Row: {
           created_at: string
@@ -155,54 +98,6 @@ export type Database = {
           id?: string
           token?: string
           used_at?: string | null
-        }
-        Relationships: []
-      }
-      orders: {
-        Row: {
-          amount_cents: number
-          created_at: string
-          delivered_at: string | null
-          email: string
-          id: string
-          paid_at: string | null
-          payload_json: Json
-          pdf_official_storage_path: string | null
-          pdf_storage_path: string | null
-          status: string
-          stripe_session_id: string | null
-          unlock_token: string
-          worksheet_hash: string
-        }
-        Insert: {
-          amount_cents?: number
-          created_at?: string
-          delivered_at?: string | null
-          email: string
-          id?: string
-          paid_at?: string | null
-          payload_json: Json
-          pdf_official_storage_path?: string | null
-          pdf_storage_path?: string | null
-          status?: string
-          stripe_session_id?: string | null
-          unlock_token?: string
-          worksheet_hash: string
-        }
-        Update: {
-          amount_cents?: number
-          created_at?: string
-          delivered_at?: string | null
-          email?: string
-          id?: string
-          paid_at?: string | null
-          payload_json?: Json
-          pdf_official_storage_path?: string | null
-          pdf_storage_path?: string | null
-          status?: string
-          stripe_session_id?: string | null
-          unlock_token?: string
-          worksheet_hash?: string
         }
         Relationships: []
       }

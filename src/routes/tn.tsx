@@ -7,8 +7,6 @@ import { IncomeHelperPanel } from "@/components/calculator/income-helper-panel";
 import { IncomeMethodologyAppendix } from "@/components/calculator/income-methodology-appendix";
 import { ResultSidebar } from "@/components/calculator/result-sidebar";
 import { OfficialWorksheet } from "@/components/calculator/official-worksheet";
-import { UnlockPdfPanel } from "@/components/calculator/unlock-pdf-panel";
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ComparisonView } from "@/components/calculator/comparison";
 import { CaseCaptionForm } from "@/components/calculator/case-caption";
 import { ComparisonAppendix } from "@/components/calculator/comparison-appendix";
@@ -94,7 +92,6 @@ function TNCalculatorPage() {
 
   return (
     <div>
-      <PaymentTestModeBanner />
       <div className="border-b border-rule bg-cream no-print">
         <div className="mx-auto max-w-6xl px-6 py-6">
           <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
@@ -152,7 +149,6 @@ function TNCalculatorPage() {
               />
               <IncomeMethodologyAppendix inputs={inputs} />
               <ComparisonAppendix inputs={inputs} caption={caption} />
-              <UnlockPdfPanel inputs={inputs} outputs={outputs} caption={caption} />
             </>
           )}
         </div>

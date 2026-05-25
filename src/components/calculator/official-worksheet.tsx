@@ -10,7 +10,7 @@ import {
   DEVIATION_METHODOLOGY_NOTE,
   specialExpensesThresholdLine,
 } from "@/lib/calc/citations";
-import { useIsUnlocked } from "@/lib/calc/unlock";
+
 
 function incomeSourceLabel(m: IncomeMethodology | undefined): string {
   if (!m) return "Source: entered directly";
@@ -105,7 +105,7 @@ export function OfficialWorksheet({
 }) {
   const a = inputs.parentALabel;
   const b = inputs.parentBLabel;
-  const unlocked = useIsUnlocked();
+  
   const hasCaption =
     caption.matterName ||
     caption.docketNumber ||
@@ -503,19 +503,10 @@ export function OfficialWorksheet({
       <div className="mt-4 flex justify-end gap-2 no-print">
         <button
           type="button"
-          onClick={() => {
-            if (unlocked) {
-              window.print();
-            } else {
-              document
-                .getElementById("pdf-info-panel")
-                ?.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-          }}
-          title={unlocked ? undefined : "Unlock the PDF to print or export"}
+          onClick={() => window.print()}
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          {unlocked ? "Print / Save PDF" : "🔒 Unlock to Print / Export"}
+          Print / Save PDF
         </button>
       </div>
     </div>

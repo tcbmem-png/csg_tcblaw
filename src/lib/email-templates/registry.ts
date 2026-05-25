@@ -9,8 +9,6 @@ export interface TemplateEntry {
   to?: string
 }
 
-import { template as worksheetReady } from './worksheet-ready'
-
-export const TEMPLATES: Record<string, TemplateEntry> = {
-  'worksheet-ready': worksheetReady,
-}
+// No transactional templates are currently registered. Re-add entries here
+// when introducing future transactional emails.
+export const TEMPLATES: Record<string, TemplateEntry> = {}
