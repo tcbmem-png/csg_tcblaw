@@ -14,9 +14,7 @@ import { MSImputationBasis } from "./imputation-basis";
 import {
   MSDeviationModePicker,
   MSDeviationWalkthrough,
-  FACTOR_TITLES,
 } from "./deviation-walkthrough";
-import { defaultStructured, MSStructuredFactorForm } from "./deviation-factor-form";
 import { MSPartyFactorBlock } from "./party-factor-block";
 import { MSDeviationReconciliation } from "./deviation-reconciliation";
 
