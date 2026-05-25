@@ -1,6 +1,10 @@
 import type { CalcInputs, CalcOutputs } from "@/lib/calc/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import {
+  DEVIATION_METHODOLOGY_NOTE,
+  specialExpensesThresholdLine,
+} from "@/lib/calc/citations";
+import {
   SimplePdf,
   MARGIN,
   PAGE_W,
@@ -816,15 +820,12 @@ export async function renderOfficialWorksheetPdf(args: {
     const seMonthly = (inputs.specialExpensesAnnual || 0) / 12;
     const threshold = outputs.specialExpensesThresholdAmount;
     const basis = outputs.specialExpensesIncludedAsDeviation;
-    if (basis > 0) {
-      devBreakdownLines.push(
-        `Extracurriculars deviation basis: $${fmt(seMonthly)}/mo - $${fmt(threshold)}/mo (7% of BCSO per Rule .07(2)(d)) = $${fmt(basis)}/mo, allocated pro rata.`,
-      );
-    } else {
-      devBreakdownLines.push(
-        `Extracurriculars: $${fmt(seMonthly)}/mo is at or below the 7% of BCSO threshold ($${fmt(threshold)}/mo, Rule .07(2)(d)) and is presumed already in BCSO; no deviation applied.`,
-      );
-    }
+    devBreakdownLines.push(
+      specialExpensesThresholdLine({ monthly: seMonthly, threshold, basis })
+        // The PDF renderer's font subset lacks the U+2212 minus glyph,
+        // so normalize to ASCII hyphen for safe drawing.
+        .replace(/\u2212/g, "-"),
+    );
   }
   const devFromAForNote =
     outputs.privateSchoolDeviationFromA + outputs.specialExpensesDeviationFromA;
@@ -865,7 +866,7 @@ export async function renderOfficialWorksheetPdf(args: {
   // computed vs. Rule .04(8) mandatory add-ons.
   ctx.y -= 4;
   const methodNote = wrapText(
-    "Discretionary deviations under Rule 1240-02-04-.07(2)(d) are calculated as net-transfer line items: the parent paying the third-party expense directly is reimbursed for the other parent's pro-rata share. This is distinct from Rule .04(8) mandatory add-ons, which are not subject to the 7% threshold.",
+    DEVIATION_METHODOLOGY_NOTE,
     7,
     ROW_W,
   );
