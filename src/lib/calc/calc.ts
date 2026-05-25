@@ -66,8 +66,11 @@ function computePresumptive(
   }
 
   // band === "increase"
-  // Rule .04(7)(i): ARP's share increased by (69 - ARP_days) / 365.
-  const daysBelow = 69 - arpDays;
+  // Rule .04(7)(i): ARP's share increased by (THRESHOLD - ARP_days) / 365.
+  // Using THRESHOLD=68 (matches PARENTING_TIME.INCREASE_THRESHOLD) so the
+  // adjustment cleanly zeroes out at the 68-day boundary instead of carrying
+  // a residual 1/365 step.
+  const daysBelow = PARENTING_TIME.INCREASE_THRESHOLD - arpDays;
   const increasePct = daysBelow / 365;
   if (arpIsA) {
     const adjusted = proRataA + proRataA * increasePct;
