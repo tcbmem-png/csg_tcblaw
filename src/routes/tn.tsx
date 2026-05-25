@@ -162,6 +162,7 @@ function TNCalculatorPage() {
             inputs={inputs}
             outputs={outputs}
             onViewWorksheet={() => setTab("worksheet")}
+            onViewComparison={() => setTab("comparison")}
           />
         </aside>
       </div>
