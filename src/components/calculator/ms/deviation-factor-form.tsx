@@ -611,7 +611,7 @@ function FormAssets({ s, set }: { s: MSStructuredAssets; set: (n: MSStructuredAs
   );
 }
 
-// ===== Factor (h) — obligee child-care costs =====
+// ===== Factor (i) — obligee child-care costs =====
 function FormChildcare({ s, set }: { s: MSStructuredChildcare; set: (n: MSStructuredChildcare) => void }) {
   const u = (p: Partial<MSStructuredChildcare>) => set({ ...s, ...p });
   return (
