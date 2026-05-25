@@ -98,9 +98,11 @@ export interface MSDecoded {
 
 export function decodeMSShare(s: string): MSDecoded | null {
   try {
-    const parsed = JSON.parse(b64urlDecode(s)) as Partial<MSSharePayloadV3> & {
+    const parsed = JSON.parse(b64urlDecode(s)) as {
       v?: number;
+      s?: string;
       i?: Partial<MSInputs> & { deviations?: unknown };
+      c?: Partial<CaseCaption>;
       h?: Partial<HandoffState>;
     };
     if (parsed.s !== "MS" || !parsed.i) return null;
