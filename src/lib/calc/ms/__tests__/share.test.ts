@@ -209,3 +209,52 @@ describe("MS share — scrubOppositeSlate", () => {
     expect(scrubbed.deviationsB![0].description).toBe("Keep me");
   });
 });
+
+describe("MS share — legacy positionA/BLabel migration", () => {
+  function encodeLegacy(i: Record<string, unknown>): string {
+    const payload = { v: 2, s: "MS", i, c: defaultCaption() };
+    return b64urlEncode(JSON.stringify(payload));
+  }
+
+  it("preserves a customized positionALabel into obligorLabel", () => {
+    const i = { ...defaultMSInputs() } as Record<string, unknown>;
+    delete i.obligorLabel;
+    delete i.obligeeLabel;
+    i.positionALabel = "Petitioner";
+    i.positionBLabel = "Respondent";
+    const decoded = decodeMSShare(encodeLegacy(i));
+    expect(decoded).not.toBeNull();
+    expect(decoded!.inputs.obligorLabel).toBe("Petitioner");
+    expect(decoded!.inputs.obligeeLabel).toBe("Respondent");
+    expect(
+      (decoded!.inputs as unknown as { positionALabel?: unknown })
+        .positionALabel,
+    ).toBeUndefined();
+    expect(
+      (decoded!.inputs as unknown as { positionBLabel?: unknown })
+        .positionBLabel,
+    ).toBeUndefined();
+  });
+
+  it("falls back to Obligor/Obligee when legacy fields hold the old defaults", () => {
+    const i = { ...defaultMSInputs() } as Record<string, unknown>;
+    delete i.obligorLabel;
+    delete i.obligeeLabel;
+    i.positionALabel = "Position A";
+    i.positionBLabel = "Position B";
+    const decoded = decodeMSShare(encodeLegacy(i));
+    expect(decoded!.inputs.obligorLabel).toBe("Obligor");
+    expect(decoded!.inputs.obligeeLabel).toBe("Obligee");
+  });
+
+  it("does not overwrite an obligor/obligee label already set in the new shape", () => {
+    const i = { ...defaultMSInputs() } as Record<string, unknown>;
+    i.obligorLabel = "Father";
+    i.obligeeLabel = "Mother";
+    i.positionALabel = "Petitioner";
+    i.positionBLabel = "Respondent";
+    const decoded = decodeMSShare(encodeLegacy(i));
+    expect(decoded!.inputs.obligorLabel).toBe("Father");
+    expect(decoded!.inputs.obligeeLabel).toBe("Mother");
+  });
+});
