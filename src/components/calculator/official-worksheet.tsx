@@ -457,6 +457,7 @@ export function OfficialWorksheet({
         <Line
           n="15"
           label="All-in monthly obligation"
+          citation="fcso"
           total={`$${fmt(outputs.allInMonthly)} ${dirLabel(outputs.allInDirection, a, b)}`}
           emphasis
         />
@@ -482,6 +483,11 @@ export function OfficialWorksheet({
             </div>
             {outputs.pcsoCapNote && (
               <p className="mt-3 text-[11px] leading-relaxed">{outputs.pcsoCapNote}</p>
+            )}
+            {CITATIONS.pcso_max.caseNote && (
+              <p className="mt-3 border-t border-rule pt-3 text-[11px] italic leading-relaxed text-muted-foreground">
+                {CITATIONS.pcso_max.caseNote}
+              </p>
             )}
           </div>
         )}
