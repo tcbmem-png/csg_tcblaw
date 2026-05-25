@@ -22,16 +22,10 @@ export function setStoredUnlock(token: string, email?: string) {
 }
 
 export function useIsUnlocked(): boolean {
-  const [unlocked, setUnlocked] = useState<boolean>(() => !!getStoredUnlock());
-  useEffect(() => {
-    const update = () => setUnlocked(!!getStoredUnlock());
-    update();
-    window.addEventListener("storage", update);
-    window.addEventListener("tncsg:unlock-changed", update);
-    return () => {
-      window.removeEventListener("storage", update);
-      window.removeEventListener("tncsg:unlock-changed", update);
-    };
-  }, []);
-  return unlocked;
+  // Free beta: PDF downloads are unlocked for all testers.
+  // Re-enable the paywall by restoring the previous implementation that
+  // read from getStoredUnlock() / tncsg:unlock-changed events.
+  void useState;
+  void useEffect;
+  return true;
 }
