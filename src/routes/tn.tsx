@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { calculate, defaultInputs } from "@/lib/calc/calc";
 import type { CalcInputs } from "@/lib/calc/types";
 import { CalculatorInputs } from "@/components/calculator/inputs";
+import { IncomeHelperPanel } from "@/components/calculator/income-helper-panel";
+import { IncomeMethodologyAppendix } from "@/components/calculator/income-methodology-appendix";
 import { ResultSidebar } from "@/components/calculator/result-sidebar";
 import { OfficialWorksheet } from "@/components/calculator/official-worksheet";
 import { UnlockPdfPanel } from "@/components/calculator/unlock-pdf-panel";
@@ -114,6 +116,7 @@ function TNCalculatorPage() {
           {tab === "inputs" && (
             <>
               <CaseCaptionForm caption={caption} setCaption={setCaption} />
+              <IncomeHelperPanel inputs={inputs} setInputs={setInputs} />
               <CalculatorInputs inputs={inputs} setInputs={setInputs} />
               <FilingDetailsForm
                 caption={caption}
@@ -132,6 +135,7 @@ function TNCalculatorPage() {
                 outputs={outputs}
                 caption={caption}
               />
+              <IncomeMethodologyAppendix inputs={inputs} />
               <ComparisonAppendix inputs={inputs} caption={caption} />
               <UnlockPdfPanel inputs={inputs} outputs={outputs} caption={caption} />
             </>

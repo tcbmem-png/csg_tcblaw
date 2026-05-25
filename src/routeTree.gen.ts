@@ -26,6 +26,7 @@ import { Route as MsHowItWorksRouteImport } from './routes/ms_.how-it-works'
 import { Route as MsAboutRouteImport } from './routes/ms_.about'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout/return'
+import { Route as TnHowItWorksIncomeRouteImport } from './routes/tn_.how-it-works.income'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -120,6 +121,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TnHowItWorksIncomeRoute = TnHowItWorksIncomeRouteImport.update({
+  id: '/income',
+  path: '/income',
+  getParentRoute: () => TnHowItWorksRoute,
+} as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -181,10 +187,11 @@ export interface FileRoutesByFullPath {
   '/ms/about': typeof MsAboutRoute
   '/ms/how-it-works': typeof MsHowItWorksRoute
   '/tn/about': typeof TnAboutRoute
-  '/tn/how-it-works': typeof TnHowItWorksRoute
+  '/tn/how-it-works': typeof TnHowItWorksRouteWithChildren
   '/tn/why-we-built-this': typeof TnWhyWeBuiltThisRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/tn/how-it-works/income': typeof TnHowItWorksIncomeRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
   '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -208,10 +215,11 @@ export interface FileRoutesByTo {
   '/ms/about': typeof MsAboutRoute
   '/ms/how-it-works': typeof MsHowItWorksRoute
   '/tn/about': typeof TnAboutRoute
-  '/tn/how-it-works': typeof TnHowItWorksRoute
+  '/tn/how-it-works': typeof TnHowItWorksRouteWithChildren
   '/tn/why-we-built-this': typeof TnWhyWeBuiltThisRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/tn/how-it-works/income': typeof TnHowItWorksIncomeRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
   '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -236,10 +244,11 @@ export interface FileRoutesById {
   '/ms_/about': typeof MsAboutRoute
   '/ms_/how-it-works': typeof MsHowItWorksRoute
   '/tn_/about': typeof TnAboutRoute
-  '/tn_/how-it-works': typeof TnHowItWorksRoute
+  '/tn_/how-it-works': typeof TnHowItWorksRouteWithChildren
   '/tn_/why-we-built-this': typeof TnWhyWeBuiltThisRoute
   '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/tn_/how-it-works/income': typeof TnHowItWorksIncomeRoute
   '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
   '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -269,6 +278,7 @@ export interface FileRouteTypes {
     | '/tn/why-we-built-this'
     | '/unlock/$token'
     | '/lovable/email/suppression'
+    | '/tn/how-it-works/income'
     | '/api/public/admin/fulfill'
     | '/api/public/payments/retry-stuck'
     | '/api/public/payments/webhook'
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/tn/why-we-built-this'
     | '/unlock/$token'
     | '/lovable/email/suppression'
+    | '/tn/how-it-works/income'
     | '/api/public/admin/fulfill'
     | '/api/public/payments/retry-stuck'
     | '/api/public/payments/webhook'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/tn_/why-we-built-this'
     | '/unlock/$token'
     | '/lovable/email/suppression'
+    | '/tn_/how-it-works/income'
     | '/api/public/admin/fulfill'
     | '/api/public/payments/retry-stuck'
     | '/api/public/payments/webhook'
@@ -347,7 +359,7 @@ export interface RootRouteChildren {
   MsAboutRoute: typeof MsAboutRoute
   MsHowItWorksRoute: typeof MsHowItWorksRoute
   TnAboutRoute: typeof TnAboutRoute
-  TnHowItWorksRoute: typeof TnHowItWorksRoute
+  TnHowItWorksRoute: typeof TnHowItWorksRouteWithChildren
   TnWhyWeBuiltThisRoute: typeof TnWhyWeBuiltThisRoute
   UnlockTokenRoute: typeof UnlockTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -481,6 +493,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tn_/how-it-works/income': {
+      id: '/tn_/how-it-works/income'
+      path: '/income'
+      fullPath: '/tn/how-it-works/income'
+      preLoaderRoute: typeof TnHowItWorksIncomeRouteImport
+      parentRoute: typeof TnHowItWorksRoute
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -540,6 +559,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface TnHowItWorksRouteChildren {
+  TnHowItWorksIncomeRoute: typeof TnHowItWorksIncomeRoute
+}
+
+const TnHowItWorksRouteChildren: TnHowItWorksRouteChildren = {
+  TnHowItWorksIncomeRoute: TnHowItWorksIncomeRoute,
+}
+
+const TnHowItWorksRouteWithChildren = TnHowItWorksRoute._addFileChildren(
+  TnHowItWorksRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -555,7 +586,7 @@ const rootRouteChildren: RootRouteChildren = {
   MsAboutRoute: MsAboutRoute,
   MsHowItWorksRoute: MsHowItWorksRoute,
   TnAboutRoute: TnAboutRoute,
-  TnHowItWorksRoute: TnHowItWorksRoute,
+  TnHowItWorksRoute: TnHowItWorksRouteWithChildren,
   TnWhyWeBuiltThisRoute: TnWhyWeBuiltThisRoute,
   UnlockTokenRoute: UnlockTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
@@ -570,13 +601,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
