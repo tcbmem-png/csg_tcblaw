@@ -69,7 +69,11 @@ export function decodeMSShare(s: string): MSDecoded | null {
     const parsed = JSON.parse(b64urlDecode(s)) as {
       v?: number;
       s?: string;
-      i?: Partial<MSInputs> & { deviations?: unknown };
+      i?: Partial<MSInputs> & {
+        deviations?: unknown;
+        positionALabel?: unknown;
+        positionBLabel?: unknown;
+      };
       c?: Partial<CaseCaption>;
       h?: Partial<HandoffState>;
     };
@@ -96,10 +100,34 @@ export function decodeMSShare(s: string): MSDecoded | null {
       ? (parsed.i.deviationsB as MSInputs["deviationsA"])
       : null;
 
+    // Legacy label migration: positionALabel / positionBLabel were removed
+    // from MSInputs but older v2/v3 URLs may still encode them. Preserve a
+    // practitioner-customized value (anything other than the old default
+    // "Position A" / "Position B") into the current obligor/obligee slots
+    // when the current field isn't already set. This is data-preserving;
+    // it never overwrites a value the user already has in the new shape.
+    const legacyA =
+      typeof parsed.i.positionALabel === "string" ? parsed.i.positionALabel : "";
+    const legacyB =
+      typeof parsed.i.positionBLabel === "string" ? parsed.i.positionBLabel : "";
+    const resolvedObligor =
+      typeof parsed.i.obligorLabel === "string" && parsed.i.obligorLabel
+        ? parsed.i.obligorLabel
+        : legacyA && legacyA !== "Position A"
+          ? legacyA
+          : base.obligorLabel;
+    const resolvedObligee =
+      typeof parsed.i.obligeeLabel === "string" && parsed.i.obligeeLabel
+        ? parsed.i.obligeeLabel
+        : legacyB && legacyB !== "Position B"
+          ? legacyB
+          : base.obligeeLabel;
 
     const inputs: MSInputs = {
       ...base,
       ...parsed.i,
+      obligorLabel: resolvedObligor,
+      obligeeLabel: resolvedObligee,
       deviationsA: incomingDevA ?? base.deviationsA,
       deviationsB: incomingDevB ?? undefined,
       incarceration: { ...base.incarceration, ...(parsed.i.incarceration ?? {}) },
