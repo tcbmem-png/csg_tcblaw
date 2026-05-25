@@ -87,7 +87,7 @@ export interface CalcInputs {
 
   /** Special Expenses deviation per Rule .07(2)(d) — 7% threshold rule. */
   includeSpecialExpenses: boolean;
-  specialExpensesMonthly: number;
+  specialExpensesAnnual: number;
   specialExpensesWaiveThreshold: boolean;
   specialExpensesPaidBy: "parent_a" | "parent_b" | "split_pro_rata";
 }
