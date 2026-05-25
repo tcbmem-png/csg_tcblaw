@@ -3,6 +3,7 @@ import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
 import { computeScenarioPair, hasImputation } from "@/lib/calc/scenarios";
 import { citationForBcso } from "@/lib/calc/citation-resolvers";
 import { RuleInfo } from "./rule-info";
+import { printPdf } from "@/lib/print-mode";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
