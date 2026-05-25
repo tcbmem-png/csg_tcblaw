@@ -1,64 +1,79 @@
-## Remaining work to finish MS Phase 1 + Phase 2
+## Goal
 
-Core types/calc/share/tests already landed. The build is currently broken because three files still reference the old `deviations` field. This plan closes that out and ships the copy + PDF updates.
+Keep worksheet PDFs free during beta, but require a name and email before the user can download/print. Capture the lead in the database, email the PDF(s) via the existing fulfillment pipeline, and unlock the on-page Print/Save button. Identical behavior on TN and MS.
 
-### 1. Repair the build (rename fan-out)
+## UX
 
-- `src/components/calculator/ms/inputs.tsx`
-  - Mount `MSIncarcerationCheck` at the top. When `suspensionApplies`, collapse the rest of the form to an informational banner (still editable, but de-emphasized).
-  - Add `MSImputationBasis` under the AGI/gross-income block; bind to `agiBasis` + `imputationBasis`.
-  - Add the comparison-mode toggle (single vs side-by-side) and `positionALabel` / `positionBLabel` inputs (shown only in side-by-side).
-  - Add `MSDeviationModePicker`. If `deviationEntryMode === 'walkthrough'` render `MSDeviationWalkthrough`; otherwise render the existing card list rebuilt against `deviationsA` and using `MSStructuredFactorForm` inline when a factor is marked applicable.
-  - In side-by-side mode, render a second deviation column bound to `deviationsB` (lazy-init from `deviationsA` defaults on first toggle).
-  - Replace every `inputs.deviations` reference with `inputs.deviationsA`.
+Replace the current "Free during beta" panel (TN and MS) with a compact lead-capture card:
 
-- `src/components/calculator/ms/worksheet-preview.tsx`
-  - Suspension short-circuit: render the § 43-19-36 finding card and skip Sections II–V.
-  - Section I: annotate AGI line with "(imputed — § 43-19-101(5))" when `agiBasis === 'imputed'` and list the basis checkboxes selected.
-  - Section IV: iterate `deviationsA` and render structured sub-fields per factor via a small `<StructuredDeviationSummary />` helper local to this file.
-  - In side-by-side mode, render `MSDeviationComparison` instead of the single column and append the aggregate-gap footer.
+- Fields: **Full name** (required, 1–200 chars), **Email** (required, validated, ≤320 chars)
+- Submit button: "Email me my worksheet"
+- On success: unlocks the on-page Print/Save PDF button, shows a confirmation ("Sent to {email} — check your inbox"), and persists the unlock locally so reloads don't re-prompt
+- Small print: "Free during beta. We'll only use your email to send your worksheet and occasional product updates. Unsubscribe anytime." + link to the existing unsubscribe flow
+- Error states: inline validation + a single retry message for server/rate-limit errors
 
-- `src/components/calculator/ms/result-sidebar.tsx`
-  - When `outputs.suspensionApplies`, show "Obligation suspended — § 43-19-36" + the resumption note instead of the monthly figure.
-  - In side-by-side mode, show A / B totals and the gap.
+## Data model
 
-- `src/components/calculator/ms/unlock-pdf-panel.tsx`
-  - Only touch if the unlock payload shape changed; otherwise leave alone. (Expect it stays as-is — payload is still `{inputs, outputs}`.)
+New table `beta_leads`:
 
-### 2. PDF (`src/lib/pdf/ms-worksheet-pdf.ts`)
+- `id` uuid pk
+- `email` text (lowercased, indexed)
+- `name` text
+- `state` text ('TN' | 'MS')
+- `matter_name` text nullable (from caption)
+- `worksheet_hash` text nullable
+- `order_id` uuid nullable (FK-style reference to `orders.id`, no constraint to keep it loose)
+- `ip` text nullable (truncated, same pattern as `checkout_rate_limits`)
+- `user_agent` text nullable
+- `created_at` timestamptz default now()
+- Unique on `(email, worksheet_hash)` to dedupe reloads
+- RLS enabled, no client policies (service-role only — same posture as `orders`)
 
-- Top of `renderMSWorksheetPDF`: if `outputs.suspensionApplies`, render a single-page finding ("Obligation suspended by operation of law — § 43-19-36(2)") with the resumption rule and stop. No Sections II–V.
-- Section I: add an "Imputed under § 43-19-101(5)" note line + bullet list of selected basis factors when `agiBasis === 'imputed'`.
-- Section IV: replace the current `description + amount` block with a structured printer that switches on `factor.structured.kind` and prints the spec §7 sub-fields. Fall back to `description` when `structured` is missing.
-- New helper `renderSideBySide(doc, inputs, outputs)`: two-column factor blocks with per-factor gap and aggregate-gap summary. Invoked when `inputs.comparisonMode === 'side_by_side'`.
-- Update the section index/TOC if there is one.
+## Server
 
-### 3. Copy updates
+New file `src/lib/free-unlock.functions.ts` exporting `requestFreeWorksheet` (`createServerFn`, POST):
 
-- `src/routes/ms_.how-it-works.income.tsx`
-  - Retitle Section 6 around § 43-19-101(5) (2022 amendment); remove the Gillespie attribution.
-  - Add a new subsection on § 43-19-36 incarceration suspension: 180-day trigger, 60-day post-release resumption, three carve-outs (§ 97-3-7, § 97-5-39, § 97-5-3), means-to-pay exception.
-  - Update `head()` title/description to reflect the new content.
+- Reuse the `captionSchema` and `payload` shape from `src/lib/checkout.functions.ts`
+- Zod-validate `{ name, email, state, payload }`
+- Rate-limit by IP via the existing `checkout_rate_limits` table (reuse `enforceCheckoutRateLimit`)
+- Insert into `beta_leads`
+- Insert into `orders` with `status='pending'`, `amount_cents=0`, `payload_json={...payload, state}`, `email` lowercased — same shape `createUnlockCheckout` writes
+- Call `fulfillOrder(sb, order.id, origin)` from `src/lib/fulfill.server.ts`. That already: renders the TN summary + official PDFs (or MS PDF), uploads to the `worksheet-pdfs` bucket, sends the Resend email with attachments, marks the order delivered
+- Backfill `beta_leads.order_id` after order insert
+- Return `{ unlockToken, orderId }`
 
-- `src/routes/ms_.about.tsx`
-  - Note the 2022 imputation amendment and remove any implication that incarceration is unhandled. Trim the "known limitations" list accordingly.
+No webhook, no Stripe, no payment. The `orders` table is reused as the canonical fulfillment record (keeps the existing `/unlock/{token}` download route, the email-resend flow, and the admin tools working unchanged).
 
-- `src/routes/ms_.how-it-works.tsx`
-  - Surface the walk-through + side-by-side features and link to the new income/incarceration sections.
+## Client changes
 
-### 4. Verification
+- `src/lib/calc/unlock.ts`: revert `useIsUnlocked()` to its real implementation (read `getStoredUnlock()`, subscribe to `tncsg:unlock-changed`). The locally-stored token re-gates the worksheet's Print/Save button, same mechanism as the paid flow.
+- `src/components/calculator/unlock-pdf-panel.tsx` (TN): replace the static notice with the lead-capture form. On submit, call `requestFreeWorksheet` via `useServerFn`, then `setStoredUnlock(token)` and show the success state.
+- `src/components/calculator/ms/unlock-pdf-panel.tsx` (MS): same form, pass `state: 'MS'` and the MS inputs/outputs.
+- Both panels keep the same shell/spacing so existing layout doesn't shift.
 
-- Re-run `src/lib/calc/ms/__tests__/calc.test.ts` (already extended) — confirm green.
-- Type-check the project (auto-run by harness).
-- Visual smoke: load `/ms`, exercise (a) walkthrough mode, (b) pick mode, (c) side-by-side, (d) incarceration > 180 days with no carve-out → suspension banner + PDF finding page.
-- Generate a PDF in single and side-by-side modes; QA pages as images to confirm no clipped sub-fields and the suspension page renders standalone.
+## Things left intact (for re-enabling paid mode later)
 
-### Out of scope (still)
+- `StripeWorksheetCheckout`, `StripeMSWorksheetCheckout`, `createUnlockCheckout`, `getOrderStatus`, webhook handler, return route — all untouched
+- `PaymentTestModeBanner` stays a no-op
+- `fulfillOrder` / `resendWorksheetEmail` — unchanged; the free flow just calls them with a $0 order
 
-- v1 share-URL shim.
-- Bar journal draft.
-- New routes.
+## Out of scope
 
-### Open question while building
+- No admin UI for leads (read via the existing Cloud → Database view)
+- No marketing-email opt-in toggle (single combined consent in the small-print copy)
+- No changes to calculator logic, PDF rendering, or the worksheet UI
+- No edits to auto-generated files
 
-If `inputs.tsx` grows unwieldy after wiring four new sub-components, I may extract a `ms-deviation-section.tsx` wrapper. Cosmetic — won't bounce back for approval.
+## Technical notes
+
+- Migration via `supabase--migration` for `beta_leads` (table + RLS + unique index)
+- `requestFreeWorksheet` lives in `src/lib/free-unlock.functions.ts` (client-safe path; pairs with `fulfill.server.ts` which already exists)
+- Email send uses the existing Resend setup (`CSG_Resend_API_Key`) — no new secrets
+- IP capture uses the same `clientIp()` helper pattern from `checkout.functions.ts` (extract into a shared helper if convenient, otherwise duplicate)
+
+## Verification
+
+- Submit form on TN with a test email → row appears in `beta_leads` and `orders` (status `delivered`), email arrives with both TN PDFs, on-page Print/Save unlocks, reload keeps it unlocked
+- Same flow on MS → single MS PDF attached, `state='MS'` on both rows
+- Submitting twice with same email + same worksheet → no duplicate `beta_leads` row (unique constraint), order is re-fulfilled idempotently (existing `fulfillOrder` early-returns if already delivered)
+- Rate limit kicks in after 10 submissions/hour from the same IP
