@@ -30,7 +30,10 @@ export function ResultSidebar({
       <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         Live result
       </div>
-      <div className="mt-1 font-serif text-sm text-ink">Net presumptive support</div>
+      <div className="mt-1 flex items-center gap-1.5 font-serif text-sm text-ink">
+        Net presumptive support
+        <RuleInfo citation="pro_rata" />
+      </div>
       <div className="mt-2 font-serif text-4xl text-primary">
         ${fmt(outputs.netPresumptiveSupport)}
         <span className="text-base text-muted-foreground"> /mo</span>
