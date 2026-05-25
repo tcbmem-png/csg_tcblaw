@@ -76,8 +76,10 @@ export function decodeMSShare(
         ? (parsed.i.childAges as number[]).filter((n) => Number.isFinite(n))
         : base.childAges,
     };
-    // Strip stray v1 field if it ended up on the object via the spread above.
+    // Strip stray v1/legacy fields that snuck through ...spread.
     delete (inputs as unknown as { deviations?: unknown }).deviations;
+    delete (inputs as unknown as { positionALabel?: unknown }).positionALabel;
+    delete (inputs as unknown as { positionBLabel?: unknown }).positionBLabel;
 
     const caption: CaseCaption = { ...defaultCaption(), ...(parsed.c ?? {}) };
     return { inputs, caption };
