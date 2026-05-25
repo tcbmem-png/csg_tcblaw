@@ -188,6 +188,10 @@ export function OfficialWorksheet({
           a={`$${fmt(inputs.parentAGrossMonthly)}`}
           b={`$${fmt(inputs.parentBGrossMonthly)}`}
         />
+        <SourceLine
+          a={incomeSourceLabel(inputs.parentAIncomeMethodology)}
+          b={incomeSourceLabel(inputs.parentBIncomeMethodology)}
+        />
         <Line
           n="3a"
           label="Less: self-employment tax credit"
