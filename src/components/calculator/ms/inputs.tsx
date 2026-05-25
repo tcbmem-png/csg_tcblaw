@@ -21,6 +21,12 @@ import { MSDeviationComparison } from "./deviation-comparison";
 
 type Setter = (next: MSInputs) => void;
 
+function monthlyHint(annual: number): string {
+  if (!annual || annual <= 0) return "";
+  const m = Math.round(annual / 12);
+  return `(≈ $${m.toLocaleString("en-US")}/mo)`;
+}
+
 const ALL_LETTERS: MSInputs["deviationsA"][number]["letter"][] = [
   "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
 ];
