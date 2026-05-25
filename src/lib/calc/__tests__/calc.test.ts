@@ -169,7 +169,7 @@ describe("Special Expenses 7% threshold", () => {
       numChildren: 3,
       parentingType: "equal",
       includeSpecialExpenses: true,
-      specialExpensesMonthly: 100, // 7% of $1,933 = $135.31
+      specialExpensesAnnual: 100 * 12, // 7% of $1,933 = $135.31/mo
       specialExpensesPaidBy: "parent_a",
     });
     expect(out.specialExpensesIncludedAsDeviation).toBe(0);
@@ -183,7 +183,7 @@ describe("Special Expenses 7% threshold", () => {
       numChildren: 3,
       parentingType: "equal",
       includeSpecialExpenses: true,
-      specialExpensesMonthly: 500, // 500 - 135.31 = ~365
+      specialExpensesAnnual: 500 * 12, // 500/mo - 135.31 = ~365
       specialExpensesPaidBy: "parent_a",
     });
     expect(out.specialExpensesIncludedAsDeviation).toBeGreaterThanOrEqual(364);
@@ -198,7 +198,7 @@ describe("Special Expenses 7% threshold", () => {
       numChildren: 3,
       parentingType: "equal",
       includeSpecialExpenses: true,
-      specialExpensesMonthly: 100,
+      specialExpensesAnnual: 100 * 12,
       specialExpensesWaiveThreshold: true,
       specialExpensesPaidBy: "parent_a",
     });
