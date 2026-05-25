@@ -194,7 +194,7 @@ export function MSCalculatorInputs({
         )}
       </Section>
 
-      <Section title="Parenting arrangement" cite="§ 43-19-103(i)">
+      <Section title="Parenting arrangement" cite="§ 43-19-103(g)">
         <Toggle
           checked={inputs.sharedCustodyFlag}
           onChange={(b) => u({ sharedCustodyFlag: b })}
@@ -204,7 +204,7 @@ export function MSCalculatorInputs({
           <div className="rounded-md border-l-4 border-accent bg-accent/10 p-3 text-sm text-ink">
             Mississippi has <strong>no statutory 50/50 formula</strong>. Any
             adjustment for shared parenting must be made as a discretionary
-            deviation under Factor (i) below.
+            deviation under Factor (g) below.
           </div>
         )}
       </Section>
