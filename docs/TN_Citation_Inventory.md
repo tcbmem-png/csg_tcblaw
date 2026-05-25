@@ -1,6 +1,9 @@
 # TN Citation Inventory
 
-Produced by walking `OfficialWorksheet` (in-app render), `official-worksheet-pdf.ts`, and `ResultSidebar` after the P1 citation framework upgrade. Every line below resolves through the shared `manifestFor()` helper in `src/lib/calc/citation-resolvers.ts`; the corresponding `CITATIONS[key]` entries live in `src/lib/calc/citations.ts`. The mechanical test at `src/lib/calc/__tests__/citations.test.ts` walks the same manifest and fails CI if any numeric line lacks a registered citation.
+**Post-audit (P1.5, 2026-05-25):** every row below has been verified against the Oct 2021 chapter PDF. See `docs/TN_Citation_Audit.md` for the row-by-row diff and corrections applied. The rule references in `src/lib/calc/citations.ts` now use the rule's own numbering convention (arabic+period at the 3rd level, lowercase roman in parens at the 4th).
+
+Produced by walking `OfficialWorksheet` (in-app render), `official-worksheet-pdf.ts`, and `ResultSidebar`. Every line below resolves through the shared `manifestFor()` helper in `src/lib/calc/citation-resolvers.ts`; the corresponding `CITATIONS[key]` entries live in `src/lib/calc/citations.ts`. The mechanical test at `src/lib/calc/__tests__/citations.test.ts` walks the same manifest and fails CI if any numeric line lacks a registered citation or if a `rule` string fails the paragraph-format regex.
+
 
 ## Conventions
 
