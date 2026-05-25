@@ -51,9 +51,9 @@ const FACTOR_HELP: Record<MSFactorLetter, string> = {
   d: "Describe the seasonal pattern. What months are high-earning vs. low-earning? Annual vs. monthly pattern?",
   e: "What ages are the children? What specific age-related expenses justify deviation?",
   f: "Describe the special need. How has the family historically met it? What is the monthly cost?",
-  g: "Describe the asset picture for both parties and the child. Real estate, investments, retirement, business interests.",
-  h: "What is the monthly childcare cost? Is the obligee employed, seeking employment, or disabled?",
-  i: "Describe the parenting arrangement. Number of overnights, direct expenses each parent covers, any duplicated expenses.",
+  g: "Describe the parenting arrangement. Number of overnights, direct expenses each parent covers, any duplicated expenses.",
+  h: "Describe the asset picture for both parties and the child. Real estate, investments, retirement, business interests.",
+  i: "What is the monthly childcare cost? Is the obligee employed, seeking employment, or disabled?",
   j: "Describe the circumstance and explain why it justifies a deviation. Equitable adjustments require specific findings.",
 };
 
