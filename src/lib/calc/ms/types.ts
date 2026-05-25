@@ -1,7 +1,8 @@
 /**
  * Mississippi child support inputs and outputs.
- * Authority: Miss. Code Ann. § 43-19-101 (presumptive guideline) and
- * § 43-19-103 (criteria for overcoming the presumption).
+ * Authority: Miss. Code Ann. § 43-19-101 (presumptive guideline),
+ * § 43-19-103 (criteria for overcoming the presumption), and
+ * § 43-19-36 (administrative suspension during incarceration > 180 days).
  *
  * Mississippi uses a single-obligor flat-percentage model. Only the
  * non-custodial (obligor) parent's adjusted gross income is computed;
@@ -16,13 +17,203 @@ export type MSHealthProvider = "obligor" | "obligee" | "neither";
 export type MSFactorLetter =
   | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j";
 
+// =================================================================
+// Structured per-factor sub-forms (MS_Deviation_Worksheet_v2 §3)
+// Each variant captures the kinds of evidence a chancellor weighs
+// when applying that specific factor. All fields optional — the
+// free-text `description` and `proposedMonthly` on MSDeviation are
+// always the source of truth for the worksheet total.
+// =================================================================
+
+export type MSExpenseDuration =
+  | "3-6 months"
+  | "6-12 months"
+  | "1-2 years"
+  | "through age 21"
+  | "other";
+
+export interface MSStructuredA {
+  letter: "a";
+  types: { medical: boolean; psychological: boolean; educational: boolean; dental: boolean };
+  description: string;
+  currentMonthlyCost: number;
+  anticipatedDuration: MSExpenseDuration | "";
+  documentation: { bills: boolean; eobs: boolean; treatmentPlan: boolean; other: boolean; otherNote: string };
+  insuranceCovered: number;
+  outOfPocket: number;
+  currentlyPaidBy: "obligor" | "obligee" | "both" | "";
+  allocationObligorPct: number; // 0..100
+}
+
+export interface MSStructuredB {
+  letter: "b";
+  earnedMonthly: number;
+  ssBenefitsMonthly: number;
+  trustMonthly: number;
+  investmentMonthly: number;
+  otherMonthly: number;
+  otherNote: string;
+  reliableRecurring: "yes" | "no" | "";
+  description: string;
+}
+
+export interface MSStructuredC {
+  letter: "c";
+  status: "paying" | "pending" | "no" | "";
+  currentMonthly: number;
+  basis: { courtOrder: boolean; propertySettlement: boolean; pendingDissolution: boolean; caseNumber: string };
+  description: string;
+}
+
+export interface MSStructuredD {
+  letter: "d";
+  incomeVaries: boolean;
+  expensesVary: boolean;
+  whichParent: "obligor" | "obligee" | "both" | "";
+  peakMonths: string; // free-text list (Jan, Feb, …)
+  lowMonths: string;
+  highMonthGross: number;
+  lowMonthGross: number;
+  source: string;
+  approach: "annualized" | "adjusted_monthly" | "build_in" | "";
+  adjustedMonthlyAmount: number;
+  buildInNote: string;
+}
+
+export interface MSStructuredE {
+  letter: "e";
+  ages: string; // comma-separated child ages
+  greaterPerChildCosts: boolean;
+  greaterEducational: boolean;
+  needsJustifyUpward: boolean;
+  itemsNotCovered: string;
+}
+
+export interface MSStructuredF {
+  letter: "f";
+  categories: { activities: boolean; religious: boolean; educationalEnrichment: boolean; travel: boolean; other: boolean };
+  description: string;
+  establishedPattern: string;
+  monthlyCost: number;
+  evidence: { receipts: boolean; photos: boolean; testimony: boolean; other: boolean; otherNote: string };
+}
+
+export interface MSStructuredG {
+  letter: "g";
+  arrangement: "standard" | "substantially_shared" | "equal" | "other" | "";
+  arrangementOther: string;
+  obligorOvernights: number;
+  obligeeOvernights: number;
+  directExpenses: {
+    foodMonthly: number;
+    activitiesMonthly: number;
+    clothingMonthly: number;
+    transportationMonthly: number;
+    otherMonthly: number;
+    otherNote: string;
+  };
+  duplicatedExpenses: "yes" | "no" | "";
+  duplicatedExpensesNote: string;
+  approach: "none" | "downward_direct" | "other" | "";
+  downwardAmount: number;
+  approachOther: string;
+}
+
+export interface MSStructuredH {
+  letter: "h";
+  obligor: { realEstate: number; equity: number; investments: number; retirement: number; business: number; other: number; otherNote: string };
+  obligee: { realEstate: number; equity: number; investments: number; retirement: number; business: number; other: number; otherNote: string };
+  child: { value: number; note: string };
+  incomeFromAssets: "yes_in_agi" | "no_additional" | "partial" | "";
+  partialNote: string;
+  description: string;
+}
+
+export interface MSStructuredI {
+  letter: "i";
+  reason: "employment" | "disability" | "no" | "";
+  provider: string;
+  monthlyCost: number;
+  hoursPerWeek: number;
+  childrenCoveredNote: string;
+  taxCredit: "yes" | "no" | "partial" | "";
+  netOutOfPocket: number;
+  allocation: "full" | "pro_rata" | "other" | "";
+  allocationOther: string;
+}
+
+export interface MSStructuredJ {
+  letter: "j";
+  basisIsExistingDebt: boolean;
+  basisIsOtherEquity: boolean;
+  otherEquityNote: string;
+  debtType: { obligorMarital: boolean; obligeeMarital: boolean; childRelated: boolean; other: boolean; otherNote: string };
+  currentMonthlyPayment: number;
+  remainingMonths: number;
+  originalPayee: string;
+  whyDeviationWorthy: string;
+}
+
+export type MSDeviationStructured =
+  | MSStructuredA
+  | MSStructuredB
+  | MSStructuredC
+  | MSStructuredD
+  | MSStructuredE
+  | MSStructuredF
+  | MSStructuredG
+  | MSStructuredH
+  | MSStructuredI
+  | MSStructuredJ;
+
 export interface MSDeviation {
   letter: MSFactorLetter;
   applicable: boolean;
+  /** Free-text "additional context" — preserved on every factor. */
   description: string;
   /** Signed monthly amount. Positive = increases support; negative = decreases. */
   proposedMonthly: number;
+  /** Structured sub-form fields for this factor (optional). */
+  structured?: MSDeviationStructured;
 }
+
+// =================================================================
+// Imputation basis per § 43-19-101(5) (HB 1067, effective 2022-07-01)
+// =================================================================
+
+export type MSAgiBasis = "actual" | "imputed";
+
+export interface MSImputationBasis {
+  pastEarnings: boolean;
+  jobSkills: boolean;
+  localMarket: boolean;
+  availableEmployers: boolean;
+  other: boolean;
+  note: string;
+}
+
+// =================================================================
+// Incarceration suspension per § 43-19-36 (SB 2082, effective 2023-07-01)
+// =================================================================
+
+export type MSIncarcerationStatus = "none" | "under_180" | "over_180";
+
+export interface MSIncarceration {
+  status: MSIncarcerationStatus;
+  reasons: {
+    domesticViolence: boolean;
+    childAbuse: boolean;
+    criminalNonpayment: boolean;
+  };
+  hasMeansToPay: boolean;
+}
+
+// =================================================================
+// Comparison mode
+// =================================================================
+
+export type MSComparisonMode = "single" | "side_by_side";
+export type MSDeviationEntryMode = "walkthrough" | "pick";
 
 export interface MSInputs {
   /** Display labels (not legally significant). */
@@ -32,73 +223,65 @@ export interface MSInputs {
   /** Number of children supported in this case. Statute caps the rate at 5; 6+ uses the same 26%. */
   numChildren: number;
 
+  // --- Incarceration gate (checked FIRST, may short-circuit) ---
+  incarceration: MSIncarceration;
+
   // --- AGI computation (all annual) ---
-  /** Obligor's annual gross income from all sources (§ 43-19-101(3)(a)). */
   obligorAnnualGross: number;
-  /** Obligor's actual annual tax liability (federal + state + local). NOT over-withholding. */
   obligorAnnualTaxes: number;
-  /** Obligor's annual Social Security & Medicare contributions (W-2 Box 4 + Box 6). */
   obligorAnnualSocialSecurity: number;
-  /**
-   * Obligor's annual MANDATORY retirement / disability contributions.
-   * Government pension contributions only — 401(k) and other voluntary
-   * contributions are NOT deductible. § 43-19-101(3)(b)(iii).
-   */
   obligorAnnualMandatoryRetirement: number;
-  /** Pre-existing court-ordered support for OTHER children, other cases. Annual. */
   preexistingSupportAnnual: number;
-  /**
-   * Discretionary deduction for obligor's other in-home children (monthly).
-   * No statutory formula — purely a chancellor's discretion adjustment.
-   */
   inHomeChildrenDeductionMonthly: number;
 
+  /** Is the gross figure actual earnings or imputed earning capacity? */
+  agiBasis: MSAgiBasis;
+  imputationBasis: MSImputationBasis;
+
   // --- Health insurance per § 43-19-101(6) ---
-  /** Children's share of the monthly health insurance premium. */
   healthInsuranceMonthly: number;
   healthInsuranceProvidedBy: MSHealthProvider;
 
-  /**
-   * Triggers the Factor (g) callout in the UI ("particular shared parental arrangement").
-   * MS has NO statutory 50/50 formula; this flag only surfaces the deviation factor.
-   */
+  /** Triggers Factor (g) callout — informational only. */
   sharedCustodyFlag: boolean;
 
-  /** Optional § 43-19-103 deviation factors. */
-  deviations: MSDeviation[];
+  // --- Deviations ---
+  comparisonMode: MSComparisonMode;
+  deviationEntryMode: MSDeviationEntryMode;
+  positionALabel: string;
+  positionBLabel: string;
+  /** Position A's § 43-19-103 deviation slate (10 items, a–j). */
+  deviationsA: MSDeviation[];
+  /** Position B's slate — only populated when comparisonMode === 'side_by_side'. */
+  deviationsB?: MSDeviation[];
+}
+
+export interface MSDeviationComputation {
+  totalMonthly: number;
+  proposedFinalMonthly: number;
 }
 
 export interface MSOutputs {
-  /** Annual AGI after statutory deductions and pre-existing support (before monthly in-home deduction). */
+  // Suspension short-circuit (§ 43-19-36). When true, the worksheet
+  // renders a suspension finding instead of a monthly amount.
+  suspensionApplies: boolean;
+  suspensionReason: string | null;
+
   annualAGI: number;
-  /** Monthly AGI = annualAGI / 12 - inHomeChildrenDeductionMonthly. */
   monthlyAGI: number;
-
-  /** Statutory percentage applied (0..1). */
   statutoryPercentage: number;
-  /** Monthly AGI × statutory percentage. */
   presumptiveMonthly: number;
-
-  /** Health insurance add-on actually added to the presumptive amount (0 if obligor provides). */
   healthInsuranceAddOnMonthly: number;
 
-  /** Sum of applicable signed deviations (positive = increases support). */
+  /** Position A: applicable deviation total + final monthly. */
   totalDeviationsMonthly: number;
-
-  /**
-   * Proposed final monthly award:
-   *   presumptiveMonthly + healthInsuranceAddOnMonthly + totalDeviationsMonthly
-   * Floored at zero — the obligor cannot owe a negative amount.
-   */
   proposedFinalMonthly: number;
 
-  /** § 43-19-101(4) threshold flags — written findings required. */
-  requiresFindingHighIncome: boolean; // annual AGI > $100,000
-  requiresFindingLowIncome: boolean; // annual AGI < $10,000
+  /** Position B mirror — only present when comparisonMode === 'side_by_side'. */
+  positionB?: MSDeviationComputation;
 
-  /** Informational warnings / notes for the UI and PDF. */
+  requiresFindingHighIncome: boolean;
+  requiresFindingLowIncome: boolean;
   warnings: string[];
-
-  /** Statutory effective date stamped on the worksheet. */
   guidelinesEffectiveDate: string;
 }
