@@ -241,11 +241,11 @@ function renderForLetter(
     case "f":
       return <FormF s={s} set={set} />;
     case "g":
-      return <FormG s={s} set={set} />;
+      return <FormAssets s={s} set={set} />;
     case "h":
-      return <FormH s={s} set={set} />;
+      return <FormChildcare s={s} set={set} />;
     case "i":
-      return <FormI s={s} set={set} />;
+      return <FormParental s={s} set={set} />;
     case "j":
       return <FormJ s={s} set={set} />;
   }
