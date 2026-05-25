@@ -158,3 +158,45 @@
 .print-only {
   display: none;
 }
+
+/* ----------------------------------------------------------------------
+ * Dual-PDF print toggle.
+ *
+ * Screen: only the annotated worksheet is visible. The AOC-format
+ * worksheet is hidden (display:none) and only flipped on at print time
+ * via a class set by src/lib/print-mode.ts.
+ *
+ * Print: which worksheet renders depends on which class is on <html>:
+ *   .print-mode-aoc        → show .pdf-aoc, hide .pdf-annotated
+ *   .print-mode-annotated  → show .pdf-annotated, hide .pdf-aoc
+ *   (neither)              → default to annotated (screen behavior)
+ * ---------------------------------------------------------------------- */
+.pdf-aoc {
+  display: none;
+}
+
+@media print {
+  /* Default to annotated when no class is set (e.g., direct Cmd-P). */
+  html:not(.print-mode-aoc) .pdf-aoc {
+    display: none !important;
+  }
+  html:not(.print-mode-aoc):not(.print-mode-annotated) .pdf-annotated {
+    display: block !important;
+  }
+
+  html.print-mode-aoc .pdf-aoc {
+    display: block !important;
+  }
+  html.print-mode-aoc .pdf-annotated,
+  html.print-mode-aoc .pdf-annotated-only {
+    display: none !important;
+  }
+
+  html.print-mode-annotated .pdf-annotated {
+    display: block !important;
+  }
+  html.print-mode-annotated .pdf-aoc {
+    display: none !important;
+  }
+}
+
