@@ -36,9 +36,20 @@ function About() {
         deviations the user has elected to apply.
       </p>
 
+      <h2 className="mt-8 font-serif text-2xl">Recent statutory changes</h2>
+      <p className="mt-3">
+        The calculator reflects two relatively recent amendments to Mississippi's
+        child support framework: (1) the 2022 imputation amendment at §
+        43-19-101(5) (HB 1067), which requires imputed-income findings to rest
+        on specific fact-gathering rather than a default amount; and (2) §
+        43-19-36 (SB 2082, 2023), which suspends the support obligation by
+        operation of law during incarceration exceeding 180 days, subject to
+        three statutory carve-outs and a means-to-pay exception. Both are
+        wired into the inputs form and the worksheet.
+      </p>
+
       <h2 className="mt-8 font-serif text-2xl">What this does NOT do</h2>
       <ul className="mt-3 list-disc space-y-1 pl-6">
-        <li>Imputation of income for an underemployed or unemployed parent</li>
         <li>Alimony or spousal support</li>
         <li>Retroactive support computations</li>
         <li>Split parenting (children with different primary custodial parents)</li>
