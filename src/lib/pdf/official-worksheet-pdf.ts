@@ -790,7 +790,60 @@ export async function renderOfficialWorksheetPdf(args: {
   // Comments + Preparer's Use Only
   // -----------------------------------------------------------------
   ctx.y -= 8;
-  blankBox(ctx, "Comments, Calculations, or Rebuttals to Schedule:", 56, caption.comments);
+
+  // Auto-generated deviation breakdown — appended ahead of the user's
+  // free-text comments so the 7% threshold math is visible on the face
+  // of the worksheet.
+  const devBreakdownLines: string[] = [];
+  if (inputs.includePrivateSchool && outputs.privateSchoolMonthlyTotal > 0) {
+    const payerLabel =
+      inputs.privateSchoolPaidBy === "parent_a"
+        ? motherName || "Parent A"
+        : inputs.privateSchoolPaidBy === "parent_b"
+          ? fatherName || "Parent B"
+          : "both parents pro rata";
+    devBreakdownLines.push(
+      `Private school deviation: $${fmt(outputs.privateSchoolMonthlyTotal)}/mo, allocated pro rata, paid directly by ${
+        inputs.privateSchoolPaidBy === "parent_a"
+          ? (aIsMother ? motherName : fatherName)
+          : inputs.privateSchoolPaidBy === "parent_b"
+            ? (aIsMother ? fatherName : motherName)
+            : payerLabel
+      }.`,
+    );
+  }
+  if (inputs.includeSpecialExpenses && (inputs.specialExpensesAnnual || 0) > 0) {
+    const seMonthly = (inputs.specialExpensesAnnual || 0) / 12;
+    const threshold = outputs.specialExpensesThresholdAmount;
+    const basis = outputs.specialExpensesIncludedAsDeviation;
+    if (basis > 0) {
+      devBreakdownLines.push(
+        `Extracurriculars deviation basis: $${fmt(seMonthly)}/mo \u2212 $${fmt(threshold)}/mo (7% of BCSO per Rule .07(2)(d)) = $${fmt(basis)}/mo, allocated pro rata.`,
+      );
+    } else {
+      devBreakdownLines.push(
+        `Extracurriculars: $${fmt(seMonthly)}/mo is at or below the 7% of BCSO threshold ($${fmt(threshold)}/mo, Rule .07(2)(d)) and is presumed already in BCSO; no deviation applied.`,
+      );
+    }
+  }
+  const devFromAForNote =
+    outputs.privateSchoolDeviationFromA + outputs.specialExpensesDeviationFromA;
+  if (Math.abs(devFromAForNote) >= 1) {
+    const devFromMotherNote = aIsMother ? devFromAForNote : -devFromAForNote;
+    const direction =
+      devFromMotherNote > 0
+        ? `${motherName || "Mother"} \u2192 ${fatherName || "Father"}`
+        : `${fatherName || "Father"} \u2192 ${motherName || "Mother"}`;
+    devBreakdownLines.push(
+      `Net deviation transfer on Line 14: $${fmt(Math.abs(devFromMotherNote))}/mo ${direction}.`,
+    );
+  }
+
+  const combinedComments = [devBreakdownLines.join(" "), (caption.comments || "").trim()]
+    .filter((s) => s.length > 0)
+    .join("\n\n");
+  const commentsHeight = devBreakdownLines.length > 0 ? 80 : 56;
+  blankBox(ctx, "Comments, Calculations, or Rebuttals to Schedule:", commentsHeight, combinedComments);
 
 
   ensure(ctx, 50);
@@ -807,6 +860,21 @@ export async function renderOfficialWorksheetPdf(args: {
   draw(ctx, "Title:", MARGIN, ctx.y - 8, { size: 9, bold: true });
   ctx.pdf.line(MARGIN + 40, ctx.y - 10, MARGIN + 280, ctx.y - 10, RULE, 0.6);
   ctx.y -= 14;
+
+  // Methodology footnote — clarifies how Rule .07(2)(d) deviations are
+  // computed vs. Rule .04(8) mandatory add-ons.
+  ctx.y -= 4;
+  const methodNote = wrapText(
+    "Discretionary deviations under Rule 1240-02-04-.07(2)(d) are calculated as net-transfer line items: the parent paying the third-party expense directly is reimbursed for the other parent's pro-rata share. This is distinct from Rule .04(8) mandatory add-ons, which are not subject to the 7% threshold.",
+    7,
+    ROW_W,
+  );
+  for (const line of methodNote) {
+    ensure(ctx, 9);
+    draw(ctx, line, MARGIN, ctx.y - 7, { size: 7, color: MUTED });
+    ctx.y -= 9;
+  }
+  ctx.y -= 4;
 
   // Disclaimer
   const disc = wrapText(
