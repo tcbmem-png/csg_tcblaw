@@ -508,7 +508,7 @@ export function OfficialWorksheet({
               window.print();
             } else {
               document
-                .getElementById("unlock-pdf-panel")
+                .getElementById("pdf-info-panel")
                 ?.scrollIntoView({ behavior: "smooth", block: "center" });
             }
           }}
