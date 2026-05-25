@@ -3,6 +3,7 @@ import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
 import { computeScenarioPair, hasImputation } from "@/lib/calc/scenarios";
 import { citationForBcso } from "@/lib/calc/citation-resolvers";
 import { RuleInfo } from "./rule-info";
+import { printPdf } from "@/lib/print-mode";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -173,11 +174,12 @@ export function ResultSidebar({
           type="button"
           onClick={() => {
             onViewWorksheet();
-            setTimeout(() => window.print(), 100);
+            setTimeout(() => printPdf("annotated"), 150);
           }}
           className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40"
+          title="Opens the annotated worksheet. The worksheet view also offers an AOC-format (filing-ready) download."
         >
-          Print / Save PDF
+          Print annotated PDF
         </button>
         <CopyLinkButton />
       </div>
