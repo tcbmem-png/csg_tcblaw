@@ -633,7 +633,7 @@ export function defaultInputs(): CalcInputs {
     privateSchoolAnnual: 0,
     privateSchoolPaidBy: "split_pro_rata",
     includeSpecialExpenses: false,
-    specialExpensesMonthly: 0,
+    specialExpensesAnnual: 0,
     specialExpensesWaiveThreshold: false,
     specialExpensesPaidBy: "split_pro_rata",
   };
