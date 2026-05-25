@@ -78,21 +78,17 @@ function defaultParty(): MSPartyEntry {
 
 interface BlockProps {
   letter: MSFactorLetter;
-  /** Position A (obligor side) deviation entry. */
   obligor: MSDeviation;
   setObligor: (next: MSDeviation) => void;
-  /** Position B (obligee side) — optional when sideBySide is false. */
   obligee?: MSDeviation;
   setObligee?: (next: MSDeviation) => void;
   obligorLabel: string;
   obligeeLabel: string;
   sideBySide: boolean;
-  /**
-   * Used by summarizeRow to compute the real-time row. When sideBySide is
-   * false we still synthesize a single-party slate so the live summary
-   * still renders.
-   */
   buildContextInputs: () => Parameters<typeof buildReconciliation>[0];
+  /** Two-attorney handoff lock — read-only slate for the originating side. */
+  obligorLocked?: boolean;
+  obligeeLocked?: boolean;
 }
 
 export function MSPartyFactorBlock({
@@ -105,6 +101,8 @@ export function MSPartyFactorBlock({
   obligeeLabel,
   sideBySide,
   buildContextInputs,
+  obligorLocked = false,
+  obligeeLocked = false,
 }: BlockProps) {
   const inPlay = inPlayFrom(obligor, obligee);
 
