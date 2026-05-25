@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { MSInputs, MSOutputs } from "@/lib/calc/ms/types";
+import type { CaseCaption } from "@/lib/calc/share";
 import { useIsUnlocked } from "@/lib/calc/unlock";
+import { downloadMSDeviationPdf } from "@/lib/pdf/ms-deviation-pdf";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -13,15 +15,18 @@ function fmt2(n: number) {
 export function MSResultSidebar({
   inputs,
   outputs,
+  caption,
   onViewWorksheet,
 }: {
   inputs: MSInputs;
   outputs: MSOutputs;
+  caption: CaseCaption;
   onViewWorksheet: () => void;
 }) {
   const unlocked = useIsUnlocked();
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && outputs.positionB;
+  const anyDeviations = inputs.deviationsA.some((d) => d.applicable);
 
   return (
     <div className="rounded-lg border border-rule bg-card p-5 shadow-sm">
@@ -142,6 +147,15 @@ export function MSResultSidebar({
         >
           {unlocked ? "Print / Save PDF" : "🔒 Print / Save PDF — Unlock"}
         </button>
+        {anyDeviations && (
+          <button
+            type="button"
+            onClick={() => downloadMSDeviationPdf({ inputs, outputs, caption })}
+            className="w-full rounded-md border border-primary/40 bg-primary/5 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+          >
+            Download deviation worksheet (PDF)
+          </button>
+        )}
         <CopyLinkButton />
       </div>
 

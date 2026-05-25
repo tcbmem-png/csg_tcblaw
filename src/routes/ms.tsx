@@ -124,6 +124,7 @@ function MSCalculatorPage() {
           <MSResultSidebar
             inputs={inputs}
             outputs={outputs}
+            caption={caption}
             onViewWorksheet={() => setTab("worksheet")}
           />
         </aside>
