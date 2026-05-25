@@ -818,7 +818,7 @@ export async function renderOfficialWorksheetPdf(args: {
     const basis = outputs.specialExpensesIncludedAsDeviation;
     if (basis > 0) {
       devBreakdownLines.push(
-        `Extracurriculars deviation basis: $${fmt(seMonthly)}/mo \u2212 $${fmt(threshold)}/mo (7% of BCSO per Rule .07(2)(d)) = $${fmt(basis)}/mo, allocated pro rata.`,
+        `Extracurriculars deviation basis: $${fmt(seMonthly)}/mo - $${fmt(threshold)}/mo (7% of BCSO per Rule .07(2)(d)) = $${fmt(basis)}/mo, allocated pro rata.`,
       );
     } else {
       devBreakdownLines.push(
