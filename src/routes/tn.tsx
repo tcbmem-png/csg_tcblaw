@@ -144,13 +144,26 @@ function TNCalculatorPage() {
           {tab === "comparison" && <ComparisonView inputs={inputs} />}
           {tab === "worksheet" && (
             <>
-              <OfficialWorksheet
+              <PdfDownloadButtons className="mb-4" />
+              {/* Annotated TCB Law worksheet — visible on screen and
+                  printed when print-mode-annotated is set. */}
+              <div className="pdf-annotated">
+                <OfficialWorksheet
+                  inputs={inputs}
+                  outputs={outputs}
+                  caption={caption}
+                />
+                <IncomeMethodologyAppendix inputs={inputs} />
+                <ComparisonAppendix inputs={inputs} caption={caption} />
+              </div>
+              {/* AOC-format filing worksheet — hidden on screen, printed
+                  when print-mode-aoc is set. Reconciles line-by-line with
+                  the annotated version (same calculation state). */}
+              <AocWorksheet
                 inputs={inputs}
                 outputs={outputs}
                 caption={caption}
               />
-              <IncomeMethodologyAppendix inputs={inputs} />
-              <ComparisonAppendix inputs={inputs} caption={caption} />
             </>
           )}
         </div>
