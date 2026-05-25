@@ -15,15 +15,18 @@ function fmt2(n: number) {
 export function MSResultSidebar({
   inputs,
   outputs,
+  caption,
   onViewWorksheet,
 }: {
   inputs: MSInputs;
   outputs: MSOutputs;
+  caption: CaseCaption;
   onViewWorksheet: () => void;
 }) {
   const unlocked = useIsUnlocked();
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && outputs.positionB;
+  const anyDeviations = inputs.deviationsA.some((d) => d.applicable);
 
   return (
     <div className="rounded-lg border border-rule bg-card p-5 shadow-sm">
