@@ -264,13 +264,38 @@ export function OfficialWorksheet({
             />
           </>
         )}
-        <Line
-          n="7"
-          label="Pro-rata share of BCSO"
-          cite="Rule .04"
-          a={`$${fmt(outputs.parentABcsoShare)}`}
-          b={`$${fmt(outputs.parentBBcsoShare)}`}
-        />
+        {(() => {
+          // Mirror PDF Line 7: under equal parenting the variable
+          // multiplier collapses pro-rata shares into a single net
+          // cross-credit. Render the post-multiplier "Adjusted BCSO"
+          // so the line 7 → line 12 path is mechanical on the form.
+          let adjA = outputs.parentABcsoShare;
+          let adjB = outputs.parentBBcsoShare;
+          let label = "Pro-rata share of BCSO";
+          if (outputs.parentingTimeBand === "equal") {
+            label = "Adjusted BCSO (post-multiplier, Rule .04(7)(b)(2)(i))";
+            const netAbs = Math.abs(outputs.netPresumptiveSupport);
+            if (outputs.presumptiveDirection === "parent_a_to_b") {
+              adjA = netAbs;
+              adjB = 0;
+            } else if (outputs.presumptiveDirection === "parent_b_to_a") {
+              adjA = 0;
+              adjB = netAbs;
+            } else {
+              adjA = 0;
+              adjB = 0;
+            }
+          }
+          return (
+            <Line
+              n="7"
+              label={label}
+              cite="Rule .04"
+              a={`$${fmt(adjA)}`}
+              b={`$${fmt(adjB)}`}
+            />
+          );
+        })()}
 
         {/* Parenting time */}
         <SectionHeader title="IV · Parenting Time Adjustment" />
