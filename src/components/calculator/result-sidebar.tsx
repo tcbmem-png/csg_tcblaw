@@ -195,11 +195,11 @@ function ImputationMiniSummary({
   onViewComparison: () => void;
 }) {
   const pair = computeScenarioPair(inputs);
-  const imputedNet = pair.imputed.outputs.netPresumptiveSupport;
   const actualNet = pair.actual.outputs.netPresumptiveSupport;
-  const delta = imputedNet - actualNet;
-  // Sanity: use current outputs as the active "imputed" row to match what's on screen.
+  // Use current outputs as the active "imputed" row so this matches what's
+  // displayed in the main result number above.
   const activeImputed = outputs.netPresumptiveSupport;
+  const delta = activeImputed - actualNet;
   return (
     <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
       <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
