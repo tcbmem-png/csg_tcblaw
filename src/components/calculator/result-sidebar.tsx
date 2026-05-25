@@ -125,21 +125,30 @@ export function ResultSidebar({
 
       {outputs.equalParentingLowSupportNote && (
         <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
-          <div className="mb-1 font-semibold">Why is this support amount so low?</div>
+          <div className="mb-1 flex items-center gap-1.5 font-semibold">
+            Why is this support amount so low?
+            <RuleInfo citation="equal_parenting" />
+          </div>
           {outputs.equalParentingLowSupportNote}
         </div>
       )}
 
       {outputs.nonEarnerArpNote && (
         <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
-          <div className="mb-1 font-semibold">Why is presumptive support $0?</div>
+          <div className="mb-1 flex items-center gap-1.5 font-semibold">
+            Why is presumptive support $0?
+            <RuleInfo citation="non_earner_arp" />
+          </div>
           {outputs.nonEarnerArpNote}
         </div>
       )}
 
       {outputs.zeroPresumptiveNote && (
         <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
-          <div className="mb-1 font-semibold">Why doesn't the $100 minimum apply?</div>
+          <div className="mb-1 flex items-center gap-1.5 font-semibold">
+            Why doesn't the $100 minimum apply?
+            <RuleInfo citation="min_floor" />
+          </div>
           {outputs.zeroPresumptiveNote}
         </div>
       )}
