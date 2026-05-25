@@ -58,38 +58,6 @@ export function encodeMSShare(
   return b64urlEncode(JSON.stringify(payload));
 }
 
-/** Canonical position-to-letter mapping (a..j). */
-const CANONICAL_LETTERS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"] as const;
-
-/**
- * True when the incoming deviation entry is structurally consistent with
- * the canonical letter for its position. Pre-fix MS share URLs encoded
- * (g)/(h)/(i) with the wrong structured shapes; we detect the mismatch
- * and reset just those slots.
- */
-function deviationMatchesLetter(d: unknown, expectedLetter: string): boolean {
-  if (!d || typeof d !== "object") return false;
-  const dev = d as { letter?: string; structured?: { letter?: string } };
-  if (dev.letter !== expectedLetter) return false;
-  if (!dev.structured) return true;
-  return dev.structured.letter === expectedLetter;
-}
-
-function migrateSlate(
-  incoming: unknown[],
-  base: MSInputs["deviationsA"],
-): MSInputs["deviationsA"] {
-  if (incoming.length !== 10) return base;
-  return base.map((defaultEntry, idx) => {
-    const expected = CANONICAL_LETTERS[idx];
-    const candidate = incoming[idx];
-    if (deviationMatchesLetter(candidate, expected)) {
-      return candidate as MSInputs["deviationsA"][number];
-    }
-    return defaultEntry;
-  });
-}
-
 export interface MSDecoded {
   inputs: MSInputs;
   caption: CaseCaption;
@@ -117,25 +85,23 @@ export function decodeMSShare(s: string): MSDecoded | null {
       }
     }
 
+    // v2 URLs are pass-through: the statute-correct letter mapping has been
+    // in force since v5, and v2 payloads already encode (g)/(h)/(i) in that
+    // canonical order. No per-slot reset is performed — doing so would
+    // destroy valid practitioner data on every re-opened pre-handoff URL.
     const incomingDevA = Array.isArray(parsed.i.deviationsA)
-      ? parsed.i.deviationsA
+      ? (parsed.i.deviationsA as MSInputs["deviationsA"])
       : null;
     const incomingDevB = Array.isArray(parsed.i.deviationsB)
-      ? parsed.i.deviationsB
+      ? (parsed.i.deviationsB as MSInputs["deviationsA"])
       : null;
 
-    const migratedA = incomingDevA
-      ? migrateSlate(incomingDevA, base.deviationsA)
-      : base.deviationsA;
-    const migratedB = incomingDevB
-      ? migrateSlate(incomingDevB, base.deviationsA)
-      : undefined;
 
     const inputs: MSInputs = {
       ...base,
       ...parsed.i,
-      deviationsA: migratedA,
-      deviationsB: migratedB,
+      deviationsA: incomingDevA ?? base.deviationsA,
+      deviationsB: incomingDevB ?? undefined,
       incarceration: { ...base.incarceration, ...(parsed.i.incarceration ?? {}) },
       imputationBasis: {
         ...base.imputationBasis,

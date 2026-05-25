@@ -102,34 +102,9 @@ export function defaultStructured(letter: MSFactorLetter): MSDeviationStructured
         evidence: { receipts: false, photos: false, testimony: false, other: false, otherNote: "" },
       };
     case "g":
-      // § 43-19-103(g) — Total available assets of obligee, obligor, and child.
+      // § 43-19-103(g) — The particular shared parental arrangement.
       return {
         letter: "g",
-        obligor: { realEstate: 0, equity: 0, investments: 0, retirement: 0, business: 0, other: 0, otherNote: "" },
-        obligee: { realEstate: 0, equity: 0, investments: 0, retirement: 0, business: 0, other: 0, otherNote: "" },
-        child: { value: 0, note: "" },
-        incomeFromAssets: "",
-        partialNote: "",
-        description: "",
-      };
-    case "h":
-      // § 43-19-103(h) — Payment by obligee of child care expenses.
-      return {
-        letter: "h",
-        reason: "",
-        provider: "",
-        monthlyCost: 0,
-        hoursPerWeek: 0,
-        childrenCoveredNote: "",
-        taxCredit: "",
-        netOutOfPocket: 0,
-        allocation: "",
-        allocationOther: "",
-      };
-    case "i":
-      // § 43-19-103(i) — The particular shared parental arrangement.
-      return {
-        letter: "i",
         arrangement: "",
         arrangementOther: "",
         obligorOvernights: 0,
@@ -147,6 +122,31 @@ export function defaultStructured(letter: MSFactorLetter): MSDeviationStructured
         approach: "",
         downwardAmount: 0,
         approachOther: "",
+      };
+    case "h":
+      // § 43-19-103(h) — Total available assets of obligee, obligor, and child.
+      return {
+        letter: "h",
+        obligor: { realEstate: 0, equity: 0, investments: 0, retirement: 0, business: 0, other: 0, otherNote: "" },
+        obligee: { realEstate: 0, equity: 0, investments: 0, retirement: 0, business: 0, other: 0, otherNote: "" },
+        child: { value: 0, note: "" },
+        incomeFromAssets: "",
+        partialNote: "",
+        description: "",
+      };
+    case "i":
+      // § 43-19-103(i) — Payment by obligee of child care expenses.
+      return {
+        letter: "i",
+        reason: "",
+        provider: "",
+        monthlyCost: 0,
+        hoursPerWeek: 0,
+        childrenCoveredNote: "",
+        taxCredit: "",
+        netOutOfPocket: 0,
+        allocation: "",
+        allocationOther: "",
       };
     case "j":
       return {
@@ -241,11 +241,11 @@ function renderForLetter(
     case "f":
       return <FormF s={s} set={set} />;
     case "g":
-      return <FormAssets s={s} set={set} />;
-    case "h":
-      return <FormChildcare s={s} set={set} />;
-    case "i":
       return <FormParental s={s} set={set} />;
+    case "h":
+      return <FormAssets s={s} set={set} />;
+    case "i":
+      return <FormChildcare s={s} set={set} />;
     case "j":
       return <FormJ s={s} set={set} />;
   }
@@ -489,13 +489,13 @@ function FormF({ s, set }: { s: MSStructuredF; set: (n: MSStructuredF) => void }
   );
 }
 
-// ===== Factor (i) — shared parental arrangement =====
+// ===== Factor (g) — shared parental arrangement =====
 function FormParental({ s, set }: { s: MSStructuredParental; set: (n: MSStructuredParental) => void }) {
   const u = (p: Partial<MSStructuredParental>) => set({ ...s, ...p });
   return (
     <>
       <div className="rounded-md border-l-4 border-accent bg-accent/10 p-3 text-xs text-ink">
-        Mississippi has no statutory shared-parenting formula. Factor (i) is
+        Mississippi has no statutory shared-parenting formula. Factor (g) is
         the vehicle for any custody-based adjustment. Expect this factor to
         be the most contested in shared-parenting cases.
       </div>
@@ -561,7 +561,7 @@ function FormParental({ s, set }: { s: MSStructuredParental; set: (n: MSStructur
   );
 }
 
-// ===== Factor (g) — available assets =====
+// ===== Factor (h) — available assets =====
 function FormAssets({ s, set }: { s: MSStructuredAssets; set: (n: MSStructuredAssets) => void }) {
   const u = (p: Partial<MSStructuredAssets>) => set({ ...s, ...p });
   const Block = ({ who, val, on }: { who: "obligor" | "obligee"; val: MSStructuredAssets["obligor"]; on: (p: Partial<MSStructuredAssets["obligor"]>) => void }) => (
@@ -611,7 +611,7 @@ function FormAssets({ s, set }: { s: MSStructuredAssets; set: (n: MSStructuredAs
   );
 }
 
-// ===== Factor (h) — obligee child-care costs =====
+// ===== Factor (i) — obligee child-care costs =====
 function FormChildcare({ s, set }: { s: MSStructuredChildcare; set: (n: MSStructuredChildcare) => void }) {
   const u = (p: Partial<MSStructuredChildcare>) => set({ ...s, ...p });
   return (
