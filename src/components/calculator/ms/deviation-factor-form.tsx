@@ -16,9 +16,9 @@ import type {
   MSStructuredD,
   MSStructuredE,
   MSStructuredF,
-  MSStructuredG,
-  MSStructuredH,
-  MSStructuredI,
+  MSStructuredAssets,
+  MSStructuredChildcare,
+  MSStructuredParental,
   MSStructuredJ,
   MSExpenseDuration,
 } from "@/lib/calc/ms/types";
