@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { MSInputs, MSOutputs } from "@/lib/calc/ms/types";
+import type { CaseCaption } from "@/lib/calc/share";
 import { useIsUnlocked } from "@/lib/calc/unlock";
+import { downloadMSDeviationPdf } from "@/lib/pdf/ms-deviation-pdf";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
