@@ -1,4 +1,4 @@
-import type { MSInputs, MSDeviation } from "@/lib/calc/ms/types";
+import type { MSInputs, MSDeviation, HandoffSide } from "@/lib/calc/ms/types";
 import { calculateMS, defaultDeviation } from "@/lib/calc/ms/calc";
 import {
   NumInput,
@@ -33,9 +33,12 @@ const ALL_LETTERS: MSInputs["deviationsA"][number]["letter"][] = [
 export function MSCalculatorInputs({
   inputs,
   setInputs,
+  lockedSide = null,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
+  /** When non-null, the named slate is read-only (two-attorney handoff). */
+  lockedSide?: HandoffSide | null;
 }) {
   const u = (patch: Partial<MSInputs>) => setInputs({ ...inputs, ...patch });
   const suspensionApplies = calculateMS(inputs).suspensionApplies;
