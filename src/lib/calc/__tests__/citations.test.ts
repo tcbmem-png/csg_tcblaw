@@ -9,7 +9,7 @@
  * letter regression.
  */
 import { describe, it, expect } from "vitest";
-import { calc } from "@/lib/calc/calc";
+import { calculate as calc } from "@/lib/calc/calc";
 import { CITATIONS, TN_CHAPTER_URL } from "@/lib/calc/citations";
 import { manifestFor } from "@/lib/calc/citation-resolvers";
 import type { CalcInputs } from "@/lib/calc/types";
@@ -87,11 +87,11 @@ const FIXTURES: Record<string, CalcInputs> = {
 
 describe("citation framework — mechanical verification", () => {
   it("every CITATIONS entry uses a recognized rule or statute prefix", () => {
+    // Accept TN rule paragraphs ("1240-02-04-.04(3)(a)2.(iv)" or "...-.04(7)(a), (h), (i)")
+    // and statutory cites starting "Tenn. Code Ann. §".
+    const ruleShape = /^1240-02-04-\.\d+(\([0-9a-zA-Z]+\)|\d+\.|,\s|\s)*$|^Tenn\. Code Ann\. §/;
     for (const [key, c] of Object.entries(CITATIONS)) {
-      expect(
-        /^1240-02-04-\.\d+|^Tenn\. Code Ann\./.test(c.rule),
-        `${key} → ${c.rule}`,
-      ).toBe(true);
+      expect(ruleShape.test(c.rule), `${key} → ${c.rule}`).toBe(true);
     }
   });
 
@@ -154,9 +154,13 @@ describe("citation framework — mechanical verification", () => {
   });
 
   it("imputation sub-paragraphs are distinct paragraph-level citations", () => {
-    expect(CITATIONS.income_imputed_prior_earnings.rule).toContain("(i)");
-    expect(CITATIONS.income_imputed_vocational.rule).toContain("(ii)");
-    expect(CITATIONS.income_carveout_incarceration.rule).toContain("(iii)");
-    expect(CITATIONS.income_carveout_means_tested.rule).toContain("(iv)");
+    // Post-P1.5 audit: rule uses arabic+period for the 3rd level (2.) and
+    // lowercase roman in parens for the 4th level. Each entry must reach
+    // at least one fourth-level subpart.
+    expect(CITATIONS.income_imputed_prior_earnings.rule).toContain("2.(ii)");
+    expect(CITATIONS.income_imputed_vocational.rule).toContain("2.(iii)");
+    expect(CITATIONS.income_imputed_assets.rule).toContain("2.(i)(III)");
+    expect(CITATIONS.income_carveout_incarceration.rule).toContain("2.(ii)(I)II.");
+    expect(CITATIONS.income_carveout_means_tested.rule).toContain("(3)(c)2.");
   });
 });
