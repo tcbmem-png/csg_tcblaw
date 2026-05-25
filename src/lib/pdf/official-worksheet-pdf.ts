@@ -525,8 +525,29 @@ export async function renderOfficialWorksheetPdf(args: {
     b: fatherIsArp ? dollar(arpAdj) : undefined,
     c: undefined,
   });
-  const adjA = outputs.parentABcsoShare - (outputs.arpIdentity === "parent_a" ? arpAdj : 0);
-  const adjB = outputs.parentBBcsoShare - (outputs.arpIdentity === "parent_b" ? arpAdj : 0);
+  // Line 7 — Adjusted BCSO after parenting-time multiplier collapses to net.
+  // For equal parenting (Rule .04(7)(b)(2)(i)) the variable multiplier
+  // produces a single net presumptive cross-credit; render that as the
+  // obligor parent's Adjusted BCSO with 0 in the other column so the
+  // line 7 → line 12 path is mechanical on the face of the form.
+  let adjA: number;
+  let adjB: number;
+  if (outputs.parentingTimeBand === "equal") {
+    const netAbs = Math.abs(outputs.netPresumptiveSupport);
+    if (outputs.presumptiveDirection === "parent_a_to_b") {
+      adjA = netAbs;
+      adjB = 0;
+    } else if (outputs.presumptiveDirection === "parent_b_to_a") {
+      adjA = 0;
+      adjB = netAbs;
+    } else {
+      adjA = 0;
+      adjB = 0;
+    }
+  } else {
+    adjA = outputs.parentABcsoShare - (outputs.arpIdentity === "parent_a" ? arpAdj : 0);
+    adjB = outputs.parentBBcsoShare - (outputs.arpIdentity === "parent_b" ? arpAdj : 0);
+  }
   valueRow(ctx, {
     n: "7",
     label: "Adjusted BCSO",
