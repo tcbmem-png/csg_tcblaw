@@ -1,82 +1,27 @@
-import { useState } from "react";
-import { StripeMSWorksheetCheckout } from "@/components/StripeMSWorksheetCheckout";
 import type { MSInputs, MSOutputs } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
-import { useIsUnlocked } from "@/lib/calc/unlock";
 
 interface Props {
-  inputs: MSInputs;
-  outputs: MSOutputs;
-  caption: CaseCaption;
+  inputs?: MSInputs;
+  outputs?: MSOutputs;
+  caption?: CaseCaption;
 }
 
-export function MSUnlockPdfPanel({ inputs, outputs, caption }: Props) {
-  const [email, setEmail] = useState("");
-  const [open, setOpen] = useState(false);
-  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const unlocked = useIsUnlocked();
-
-  if (unlocked) {
-    return (
-      <div
-        id="unlock-pdf-panel"
-        className="mt-8 rounded-lg border border-rule bg-cream p-5 no-print"
-      >
-        <h2 className="font-serif text-lg text-ink">✓ Worksheet unlocked</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          You can now print or save this MS worksheet as a PDF using the buttons
-          above. A copy was also emailed to you.
-        </p>
-      </div>
-    );
-  }
-
+// Free beta: paywall removed. See unlock-pdf-panel.tsx for the TN equivalent.
+export function MSUnlockPdfPanel(_props: Props) {
   return (
     <div
       id="unlock-pdf-panel"
       className="mt-8 rounded-lg border border-rule bg-cream p-5 no-print"
     >
-      <h2 className="font-serif text-lg text-ink">Get the filing-ready PDF — $99</h2>
+      <h2 className="font-serif text-lg text-ink">
+        Free during beta — download your PDF
+      </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        We'll email a clean, citation-ready Mississippi worksheet PDF and give
-        you an in-app download link. One case, one payment.
+        Use the <strong>Print / Save PDF</strong> button on the Mississippi
+        worksheet above to save a filing-ready copy. No account or payment
+        needed while we're in testing.
       </p>
-
-      {!open ? (
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-          <input
-            type="email"
-            required
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="flex-1 rounded-md border border-rule bg-background px-3 py-2 text-sm"
-          />
-          <button
-            disabled={!valid}
-            onClick={() => setOpen(true)}
-            className="rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-          >
-            Unlock for $99
-          </button>
-        </div>
-      ) : (
-        <div className="mt-4">
-          <StripeMSWorksheetCheckout
-            email={email}
-            inputs={inputs}
-            outputs={outputs}
-            caption={caption}
-            returnUrl={`${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`}
-          />
-          <button
-            onClick={() => setOpen(false)}
-            className="mt-3 text-xs text-muted-foreground underline"
-          >
-            Cancel
-          </button>
-        </div>
-      )}
     </div>
   );
 }
