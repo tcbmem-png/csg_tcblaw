@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { MSInputs, MSOutputs } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
-import { useIsUnlocked } from "@/lib/calc/unlock";
 import { downloadMSDeviationPdf } from "@/lib/pdf/ms-deviation-pdf";
 
 function fmt(n: number) {
@@ -23,7 +22,6 @@ export function MSResultSidebar({
   caption: CaseCaption;
   onViewWorksheet: () => void;
 }) {
-  const unlocked = useIsUnlocked();
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && outputs.positionB;
   const anyDeviations = inputs.deviationsA.some((d) => d.applicable);
@@ -140,12 +138,11 @@ export function MSResultSidebar({
           type="button"
           onClick={() => {
             onViewWorksheet();
-            if (unlocked) setTimeout(() => window.print(), 100);
+            setTimeout(() => window.print(), 100);
           }}
-          title={unlocked ? undefined : "Unlock the PDF to print or export"}
           className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40"
         >
-          {unlocked ? "Print / Save PDF" : "🔒 Print / Save PDF — Unlock"}
+          Print / Save PDF
         </button>
         {anyDeviations && (
           <button

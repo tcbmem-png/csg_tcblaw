@@ -12,30 +12,23 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TnRouteImport } from './routes/tn'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as ResendRouteImport } from './routes/resend'
 import { Route as MsRouteImport } from './routes/ms'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as UnlockTokenRouteImport } from './routes/unlock/$token'
 import { Route as TnWhyWeBuiltThisRouteImport } from './routes/tn_.why-we-built-this'
 import { Route as TnHowItWorksRouteImport } from './routes/tn_.how-it-works'
 import { Route as TnAboutRouteImport } from './routes/tn_.about'
 import { Route as MsHowItWorksRouteImport } from './routes/ms_.how-it-works'
 import { Route as MsAboutRouteImport } from './routes/ms_.about'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
-import { Route as CheckoutReturnRouteImport } from './routes/checkout/return'
 import { Route as TnHowItWorksIncomeRouteImport } from './routes/tn_.how-it-works.income'
 import { Route as MsHowItWorksIncomeRouteImport } from './routes/ms_.how-it-works.income'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
-import { Route as ApiPublicUnlockTokenRouteImport } from './routes/api/public/unlock/$token'
-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
-import { Route as ApiPublicPaymentsRetryStuckRouteImport } from './routes/api/public/payments/retry-stuck'
-import { Route as ApiPublicAdminFulfillRouteImport } from './routes/api/public/admin/fulfill'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
@@ -50,11 +43,6 @@ const TnRoute = TnRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResendRoute = ResendRouteImport.update({
-  id: '/resend',
-  path: '/resend',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MsRoute = MsRouteImport.update({
@@ -80,11 +68,6 @@ const AboutRoute = AboutRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UnlockTokenRoute = UnlockTokenRouteImport.update({
-  id: '/unlock/$token',
-  path: '/unlock/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TnWhyWeBuiltThisRoute = TnWhyWeBuiltThisRouteImport.update({
@@ -115,11 +98,6 @@ const MsAboutRoute = MsAboutRouteImport.update({
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
-  id: '/checkout/return',
-  path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TnHowItWorksIncomeRoute = TnHowItWorksIncomeRouteImport.update({
@@ -155,28 +133,6 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicUnlockTokenRoute = ApiPublicUnlockTokenRouteImport.update({
-  id: '/api/public/unlock/$token',
-  path: '/api/public/unlock/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPaymentsWebhookRoute =
-  ApiPublicPaymentsWebhookRouteImport.update({
-    id: '/api/public/payments/webhook',
-    path: '/api/public/payments/webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPaymentsRetryStuckRoute =
-  ApiPublicPaymentsRetryStuckRouteImport.update({
-    id: '/api/public/payments/retry-stuck',
-    path: '/api/public/payments/retry-stuck',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicAdminFulfillRoute = ApiPublicAdminFulfillRouteImport.update({
-  id: '/api/public/admin/fulfill',
-  path: '/api/public/admin/fulfill',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -184,25 +140,18 @@ export interface FileRoutesByFullPath {
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
   '/ms': typeof MsRoute
-  '/resend': typeof ResendRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tn': typeof TnRoute
   '/unsubscribe': typeof UnsubscribeRoute
-  '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/ms/about': typeof MsAboutRoute
   '/ms/how-it-works': typeof MsHowItWorksRouteWithChildren
   '/tn/about': typeof TnAboutRoute
   '/tn/how-it-works': typeof TnHowItWorksRouteWithChildren
   '/tn/why-we-built-this': typeof TnWhyWeBuiltThisRoute
-  '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/ms/how-it-works/income': typeof MsHowItWorksIncomeRoute
   '/tn/how-it-works/income': typeof TnHowItWorksIncomeRoute
-  '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
-  '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
-  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
-  '/api/public/unlock/$token': typeof ApiPublicUnlockTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -213,25 +162,18 @@ export interface FileRoutesByTo {
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
   '/ms': typeof MsRoute
-  '/resend': typeof ResendRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tn': typeof TnRoute
   '/unsubscribe': typeof UnsubscribeRoute
-  '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/ms/about': typeof MsAboutRoute
   '/ms/how-it-works': typeof MsHowItWorksRouteWithChildren
   '/tn/about': typeof TnAboutRoute
   '/tn/how-it-works': typeof TnHowItWorksRouteWithChildren
   '/tn/why-we-built-this': typeof TnWhyWeBuiltThisRoute
-  '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/ms/how-it-works/income': typeof MsHowItWorksIncomeRoute
   '/tn/how-it-works/income': typeof TnHowItWorksIncomeRoute
-  '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
-  '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
-  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
-  '/api/public/unlock/$token': typeof ApiPublicUnlockTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -243,25 +185,18 @@ export interface FileRoutesById {
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
   '/ms': typeof MsRoute
-  '/resend': typeof ResendRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tn': typeof TnRoute
   '/unsubscribe': typeof UnsubscribeRoute
-  '/checkout/return': typeof CheckoutReturnRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/ms_/about': typeof MsAboutRoute
   '/ms_/how-it-works': typeof MsHowItWorksRouteWithChildren
   '/tn_/about': typeof TnAboutRoute
   '/tn_/how-it-works': typeof TnHowItWorksRouteWithChildren
   '/tn_/why-we-built-this': typeof TnWhyWeBuiltThisRoute
-  '/unlock/$token': typeof UnlockTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/ms_/how-it-works/income': typeof MsHowItWorksIncomeRoute
   '/tn_/how-it-works/income': typeof TnHowItWorksIncomeRoute
-  '/api/public/admin/fulfill': typeof ApiPublicAdminFulfillRoute
-  '/api/public/payments/retry-stuck': typeof ApiPublicPaymentsRetryStuckRoute
-  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
-  '/api/public/unlock/$token': typeof ApiPublicUnlockTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -274,25 +209,18 @@ export interface FileRouteTypes {
     | '/calculator'
     | '/how-it-works'
     | '/ms'
-    | '/resend'
     | '/sitemap.xml'
     | '/tn'
     | '/unsubscribe'
-    | '/checkout/return'
     | '/email/unsubscribe'
     | '/ms/about'
     | '/ms/how-it-works'
     | '/tn/about'
     | '/tn/how-it-works'
     | '/tn/why-we-built-this'
-    | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/ms/how-it-works/income'
     | '/tn/how-it-works/income'
-    | '/api/public/admin/fulfill'
-    | '/api/public/payments/retry-stuck'
-    | '/api/public/payments/webhook'
-    | '/api/public/unlock/$token'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -303,25 +231,18 @@ export interface FileRouteTypes {
     | '/calculator'
     | '/how-it-works'
     | '/ms'
-    | '/resend'
     | '/sitemap.xml'
     | '/tn'
     | '/unsubscribe'
-    | '/checkout/return'
     | '/email/unsubscribe'
     | '/ms/about'
     | '/ms/how-it-works'
     | '/tn/about'
     | '/tn/how-it-works'
     | '/tn/why-we-built-this'
-    | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/ms/how-it-works/income'
     | '/tn/how-it-works/income'
-    | '/api/public/admin/fulfill'
-    | '/api/public/payments/retry-stuck'
-    | '/api/public/payments/webhook'
-    | '/api/public/unlock/$token'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -332,25 +253,18 @@ export interface FileRouteTypes {
     | '/calculator'
     | '/how-it-works'
     | '/ms'
-    | '/resend'
     | '/sitemap.xml'
     | '/tn'
     | '/unsubscribe'
-    | '/checkout/return'
     | '/email/unsubscribe'
     | '/ms_/about'
     | '/ms_/how-it-works'
     | '/tn_/about'
     | '/tn_/how-it-works'
     | '/tn_/why-we-built-this'
-    | '/unlock/$token'
     | '/lovable/email/suppression'
     | '/ms_/how-it-works/income'
     | '/tn_/how-it-works/income'
-    | '/api/public/admin/fulfill'
-    | '/api/public/payments/retry-stuck'
-    | '/api/public/payments/webhook'
-    | '/api/public/unlock/$token'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -362,23 +276,16 @@ export interface RootRouteChildren {
   CalculatorRoute: typeof CalculatorRoute
   HowItWorksRoute: typeof HowItWorksRoute
   MsRoute: typeof MsRoute
-  ResendRoute: typeof ResendRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TnRoute: typeof TnRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
-  CheckoutReturnRoute: typeof CheckoutReturnRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   MsAboutRoute: typeof MsAboutRoute
   MsHowItWorksRoute: typeof MsHowItWorksRouteWithChildren
   TnAboutRoute: typeof TnAboutRoute
   TnHowItWorksRoute: typeof TnHowItWorksRouteWithChildren
   TnWhyWeBuiltThisRoute: typeof TnWhyWeBuiltThisRoute
-  UnlockTokenRoute: typeof UnlockTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
-  ApiPublicAdminFulfillRoute: typeof ApiPublicAdminFulfillRoute
-  ApiPublicPaymentsRetryStuckRoute: typeof ApiPublicPaymentsRetryStuckRoute
-  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
-  ApiPublicUnlockTokenRoute: typeof ApiPublicUnlockTokenRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
@@ -405,13 +312,6 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/resend': {
-      id: '/resend'
-      path: '/resend'
-      fullPath: '/resend'
-      preLoaderRoute: typeof ResendRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ms': {
@@ -447,13 +347,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/unlock/$token': {
-      id: '/unlock/$token'
-      path: '/unlock/$token'
-      fullPath: '/unlock/$token'
-      preLoaderRoute: typeof UnlockTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tn_/why-we-built-this': {
@@ -498,13 +391,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/checkout/return': {
-      id: '/checkout/return'
-      path: '/checkout/return'
-      fullPath: '/checkout/return'
-      preLoaderRoute: typeof CheckoutReturnRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/tn_/how-it-works/income': {
       id: '/tn_/how-it-works/income'
       path: '/income'
@@ -547,34 +433,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/unlock/$token': {
-      id: '/api/public/unlock/$token'
-      path: '/api/public/unlock/$token'
-      fullPath: '/api/public/unlock/$token'
-      preLoaderRoute: typeof ApiPublicUnlockTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/payments/webhook': {
-      id: '/api/public/payments/webhook'
-      path: '/api/public/payments/webhook'
-      fullPath: '/api/public/payments/webhook'
-      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/payments/retry-stuck': {
-      id: '/api/public/payments/retry-stuck'
-      path: '/api/public/payments/retry-stuck'
-      fullPath: '/api/public/payments/retry-stuck'
-      preLoaderRoute: typeof ApiPublicPaymentsRetryStuckRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/admin/fulfill': {
-      id: '/api/public/admin/fulfill'
-      path: '/api/public/admin/fulfill'
-      fullPath: '/api/public/admin/fulfill'
-      preLoaderRoute: typeof ApiPublicAdminFulfillRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -608,23 +466,16 @@ const rootRouteChildren: RootRouteChildren = {
   CalculatorRoute: CalculatorRoute,
   HowItWorksRoute: HowItWorksRoute,
   MsRoute: MsRoute,
-  ResendRoute: ResendRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TnRoute: TnRoute,
   UnsubscribeRoute: UnsubscribeRoute,
-  CheckoutReturnRoute: CheckoutReturnRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   MsAboutRoute: MsAboutRoute,
   MsHowItWorksRoute: MsHowItWorksRouteWithChildren,
   TnAboutRoute: TnAboutRoute,
   TnHowItWorksRoute: TnHowItWorksRouteWithChildren,
   TnWhyWeBuiltThisRoute: TnWhyWeBuiltThisRoute,
-  UnlockTokenRoute: UnlockTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
-  ApiPublicAdminFulfillRoute: ApiPublicAdminFulfillRoute,
-  ApiPublicPaymentsRetryStuckRoute: ApiPublicPaymentsRetryStuckRoute,
-  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
-  ApiPublicUnlockTokenRoute: ApiPublicUnlockTokenRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,

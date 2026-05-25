@@ -5,7 +5,7 @@ An open-source, web-based presumptive child-support calculator implementing the
 and a companion **Mississippi** statutory-percentage worksheet
 (Miss. Code Ann. § 43-19-101).
 
-**Live calculator:** https://tncsg.tcblaw.org
+**Live calculator:** https://csg.tcblaw.org
 
 Built and maintained by [The Carter Bowman Firm, PLLC](https://tcblaw.org).
 Free to use, including downloadable PDF worksheets. No login, no gate.

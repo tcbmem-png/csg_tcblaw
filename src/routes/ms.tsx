@@ -5,8 +5,6 @@ import type { MSInputs } from "@/lib/calc/ms/types";
 import { MSCalculatorInputs } from "@/components/calculator/ms/inputs";
 import { MSResultSidebar } from "@/components/calculator/ms/result-sidebar";
 import { MSWorksheetPreview } from "@/components/calculator/ms/worksheet-preview";
-import { MSUnlockPdfPanel } from "@/components/calculator/ms/unlock-pdf-panel";
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { CaseCaptionForm } from "@/components/calculator/case-caption";
 import { defaultCaption, type CaseCaption } from "@/lib/calc/share";
 import { decodeMSShare, encodeMSShare } from "@/lib/calc/ms/share";
@@ -70,7 +68,6 @@ function MSCalculatorPage() {
 
   return (
     <div>
-      <PaymentTestModeBanner />
       <div className="border-b border-rule bg-cream no-print">
         <div className="mx-auto max-w-6xl px-6 py-6">
           <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
@@ -105,18 +102,11 @@ function MSCalculatorPage() {
             </>
           )}
           {tab === "worksheet" && (
-            <>
-              <MSWorksheetPreview
-                inputs={inputs}
-                outputs={outputs}
-                caption={caption}
-              />
-              <MSUnlockPdfPanel
-                inputs={inputs}
-                outputs={outputs}
-                caption={caption}
-              />
-            </>
+            <MSWorksheetPreview
+              inputs={inputs}
+              outputs={outputs}
+              caption={caption}
+            />
           )}
         </div>
 

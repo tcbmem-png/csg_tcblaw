@@ -52,8 +52,8 @@ export function MSDeviationReconciliation({ inputs }: { inputs: MSInputs }) {
       </header>
       <p className="mb-4 text-xs text-muted-foreground">
         Both positions are proposals; the chancellor retains discretion under
-        § 43-19-103. Cumulative figures assume support continues through the
-        average remaining minority of the listed children.
+        § 43-19-103. Cumulative figures assume support continues through age 21
+        (Miss. Code Ann. § 93-11-65) averaged across the listed children.
       </p>
 
       {activeRows.length === 0 ? (
@@ -148,7 +148,7 @@ export function MSDeviationReconciliation({ inputs }: { inputs: MSInputs }) {
               </div>
               <div className="flex items-baseline justify-between">
                 <span className="text-muted-foreground">
-                  Avg. remaining support window
+                  Avg. months remaining through age 21
                 </span>
                 <span className="font-mono text-ink">
                   {totals.avgMonthsRemaining} mo (
