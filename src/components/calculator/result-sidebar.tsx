@@ -127,7 +127,7 @@ export function ResultSidebar({
         <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
           <div className="mb-1 flex items-center gap-1.5 font-semibold">
             Why is this support amount so low?
-            <RuleInfo citation="equal_parenting" />
+            <RuleInfo citation="parenting_time_5050" />
           </div>
           {outputs.equalParentingLowSupportNote}
         </div>
@@ -137,7 +137,7 @@ export function ResultSidebar({
         <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
           <div className="mb-1 flex items-center gap-1.5 font-semibold">
             Why is presumptive support $0?
-            <RuleInfo citation="non_earner_arp" />
+            <RuleInfo citation="parenting_time_arp_reduction" />
           </div>
           {outputs.nonEarnerArpNote}
         </div>
@@ -147,7 +147,7 @@ export function ResultSidebar({
         <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
           <div className="mb-1 flex items-center gap-1.5 font-semibold">
             Why doesn't the $100 minimum apply?
-            <RuleInfo citation="min_floor" />
+            <RuleInfo citation="minimum" />
           </div>
           {outputs.zeroPresumptiveNote}
         </div>
