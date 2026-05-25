@@ -1,15 +1,23 @@
 /**
- * Regression guard for the § 43-19-103 factor letter remapping (g/h/i).
+ * Regression guard for the § 43-19-103 factor letter mapping (g/h/i).
  *
- * Pre-fix the calculator had the letters scrambled: (g) showed the parental
- * arrangement text, (h) showed assets, (i) showed childcare. After the fix
- * the mapping matches the statute:
- *   (g) Total available assets of obligee, obligor, and child
- *   (h) Payment by obligee of child care expenses
- *   (i) The particular shared parental arrangement
+ * Authoritative source: Miss. Code Ann. § 43-19-103 (2024 codification),
+ * cross-checked against the MDHS-published statute, Justia 2024 / 2016 /
+ * 2013, FindLaw, and the Mississippi legislature's bill history. The
+ * statute reads:
  *
- * Every surface that renders factor titles to the user (worksheet PDF,
- * deviation PDF, on-screen worksheet preview) must agree.
+ *   (g) The particular shared parental arrangement...
+ *   (h) Total available assets of the obligee, obligor and the child.
+ *   (i) Payment by the obligee of child care expenses in order that the
+ *       obligee may seek or retain employment, or because of the
+ *       disability of the obligee.
+ *
+ * A brief v6 release inverted this ordering (assets at g, childcare at h,
+ * parental at i) based on a manual review that was not cross-checked
+ * against the statute itself. This test guards against that exact
+ * inversion ever shipping again. Every surface that renders factor
+ * titles to the user (worksheet PDF, deviation PDF, on-screen worksheet
+ * preview) must agree with the statute.
  */
 import { describe, it, expect } from "vitest";
 import {
@@ -18,36 +26,48 @@ import {
 } from "../reconciliation";
 
 describe("§ 43-19-103 factor letter mapping (g/h/i)", () => {
-  it("FACTOR_TITLES (g) describes available assets", () => {
-    expect(FACTOR_TITLES.g.toLowerCase()).toContain("assets");
-    expect(FACTOR_TITLES.g.toLowerCase()).not.toContain("shared parental");
+  it("FACTOR_TITLES (g) describes the shared parental arrangement", () => {
+    expect(FACTOR_TITLES.g.toLowerCase()).toContain("parental arrangement");
+    expect(FACTOR_TITLES.g.toLowerCase()).not.toContain("assets");
     expect(FACTOR_TITLES.g.toLowerCase()).not.toContain("child care");
   });
 
-  it("FACTOR_TITLES (h) describes child care", () => {
-    expect(FACTOR_TITLES.h.toLowerCase()).toContain("child care");
-    expect(FACTOR_TITLES.h.toLowerCase()).not.toContain("assets");
+  it("FACTOR_TITLES (h) describes total available assets", () => {
+    expect(FACTOR_TITLES.h.toLowerCase()).toContain("assets");
+    expect(FACTOR_TITLES.h.toLowerCase()).not.toContain("parental");
+    expect(FACTOR_TITLES.h.toLowerCase()).not.toContain("child care");
   });
 
-  it("FACTOR_TITLES (i) describes the shared parental arrangement", () => {
-    expect(FACTOR_TITLES.i.toLowerCase()).toContain("parental arrangement");
+  it("FACTOR_TITLES (i) describes obligee child-care expenses", () => {
+    expect(FACTOR_TITLES.i.toLowerCase()).toContain("child care");
     expect(FACTOR_TITLES.i.toLowerCase()).not.toContain("assets");
+    expect(FACTOR_TITLES.i.toLowerCase()).not.toContain("parental");
   });
 
-  it("FACTOR_STATUTORY_TEXT (g) describes assets", () => {
-    expect(FACTOR_STATUTORY_TEXT.g.toLowerCase()).toContain("assets");
+  it("FACTOR_STATUTORY_TEXT (g) describes the shared parental arrangement", () => {
+    expect(FACTOR_STATUTORY_TEXT.g.toLowerCase()).toContain("shared");
+    expect(FACTOR_STATUTORY_TEXT.g.toLowerCase()).toContain("parental");
   });
 
-  it("FACTOR_STATUTORY_TEXT (h) describes child care", () => {
-    expect(FACTOR_STATUTORY_TEXT.h.toLowerCase()).toContain("child care");
+  it("FACTOR_STATUTORY_TEXT (h) describes assets", () => {
+    expect(FACTOR_STATUTORY_TEXT.h.toLowerCase()).toContain("assets");
   });
 
-  it("FACTOR_STATUTORY_TEXT (i) describes shared parental arrangement", () => {
-    expect(FACTOR_STATUTORY_TEXT.i.toLowerCase()).toContain("shared");
-    expect(FACTOR_STATUTORY_TEXT.i.toLowerCase()).toContain("parental");
+  it("FACTOR_STATUTORY_TEXT (i) describes obligee child-care expenses", () => {
+    expect(FACTOR_STATUTORY_TEXT.i.toLowerCase()).toContain("child care");
+    expect(FACTOR_STATUTORY_TEXT.i.toLowerCase()).toContain("obligee");
   });
 
-  it("(a)-(f) and (j) are unchanged by the remap", () => {
+  it("rejects the v6 inversion: (g) is NOT assets, (h) is NOT child care, (i) is NOT parental", () => {
+    // These three assertions exist solely to catch a regression to the
+    // briefly-shipped v6 ordering. If any of them fail, the statute
+    // mapping has been inverted again — revert before merging.
+    expect(FACTOR_TITLES.g.toLowerCase()).not.toContain("assets");
+    expect(FACTOR_TITLES.h.toLowerCase()).not.toContain("child care");
+    expect(FACTOR_TITLES.i.toLowerCase()).not.toContain("parental arrangement");
+  });
+
+  it("(a)-(f) and (j) are unaffected by the (g)/(h)/(i) ordering", () => {
     expect(FACTOR_TITLES.a.toLowerCase()).toContain("medical");
     expect(FACTOR_TITLES.b.toLowerCase()).toContain("independent income");
     expect(FACTOR_TITLES.c.toLowerCase()).toContain("spousal");
