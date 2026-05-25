@@ -7,9 +7,17 @@ import type {
 import type { CaseCaption } from "@/lib/calc/share";
 import { defaultCaption } from "@/lib/calc/share";
 import {
+  CITATIONS,
   DEVIATION_METHODOLOGY_NOTE,
   specialExpensesThresholdLine,
+  type CitationKey,
 } from "@/lib/calc/citations";
+import {
+  citationForBcso,
+  citationForIncomePath,
+  citationForParentingMode,
+} from "@/lib/calc/citation-resolvers";
+import { RuleInfo } from "./rule-info";
 
 
 function incomeSourceLabel(m: IncomeMethodology | undefined): string {
