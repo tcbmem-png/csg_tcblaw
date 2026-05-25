@@ -166,6 +166,28 @@ export type MSDeviationStructured =
   | MSStructuredI
   | MSStructuredJ;
 
+/**
+ * Per-party position on a single § 43-19-103 factor. This is the brief's
+ * factor-agnostic "two-party frame" — one entry exists per side (obligor /
+ * obligee) and drives the per-factor side-by-side display and the
+ * reconciliation totals.
+ */
+export type MSPartyPosition =
+  | ""
+  | "downward"
+  | "upward"
+  | "apply_no_amount"
+  | "oppose";
+
+export interface MSPartyEntry {
+  position: MSPartyPosition;
+  factsAsserted: string;
+  documentationReferenced: string;
+  /** Signed monthly amount. Same sign convention as MSDeviation.proposedMonthly. */
+  proposedMonthly: number;
+  legalAuthority: string;
+}
+
 export interface MSDeviation {
   letter: MSFactorLetter;
   applicable: boolean;
@@ -173,8 +195,10 @@ export interface MSDeviation {
   description: string;
   /** Signed monthly amount. Positive = increases support; negative = decreases. */
   proposedMonthly: number;
-  /** Structured sub-form fields for this factor (optional). */
+  /** Structured sub-form fields for this factor (optional, Position A only). */
   structured?: MSDeviationStructured;
+  /** Brief's per-party block. Mirrors proposedMonthly above for this side. */
+  party?: MSPartyEntry;
 }
 
 // =================================================================
@@ -254,6 +278,14 @@ export interface MSInputs {
   deviationsA: MSDeviation[];
   /** Position B's slate — only populated when comparisonMode === 'side_by_side'. */
   deviationsB?: MSDeviation[];
+
+  /**
+   * Ages (in years) of the children before the court. Optional; powers the
+   * reconciliation view's cumulative-impact estimate using
+   *   avgMonthsRemaining = mean(max(0, 21 − age)) × 12  (capped at 21 yrs).
+   * Empty array → cumulative display is suppressed.
+   */
+  childAges: number[];
 }
 
 export interface MSDeviationComputation {

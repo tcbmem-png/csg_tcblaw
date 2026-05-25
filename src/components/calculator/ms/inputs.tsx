@@ -16,8 +16,9 @@ import {
   MSDeviationWalkthrough,
   FACTOR_TITLES,
 } from "./deviation-walkthrough";
-import { MSStructuredFactorForm, defaultStructured } from "./deviation-factor-form";
-import { MSDeviationComparison } from "./deviation-comparison";
+import { defaultStructured } from "./deviation-factor-form";
+import { MSPartyFactorBlock } from "./party-factor-block";
+import { MSDeviationReconciliation } from "./deviation-reconciliation";
 
 type Setter = (next: MSInputs) => void;
 
@@ -302,9 +303,41 @@ function MSDeviationsSection({
         )}
 
       {inputs.comparisonMode === "side_by_side" && (
-        <MSDeviationComparison inputs={inputs} />
+        <MSDeviationReconciliation inputs={inputs} />
       )}
+
+      <ChildAgesInput inputs={inputs} setInputs={setInputs} />
     </Section>
+  );
+}
+
+function ChildAgesInput({
+  inputs,
+  setInputs,
+}: {
+  inputs: MSInputs;
+  setInputs: Setter;
+}) {
+  const value = (inputs.childAges ?? []).join(", ");
+  return (
+    <div className="rounded-md border border-rule bg-background p-4">
+      <Field
+        label="Children's ages (optional)"
+        help="Comma-separated, e.g. 8, 11. Powers the reconciliation view's cumulative-impact estimate. Leave blank to skip."
+      >
+        <TextInput
+          value={value}
+          onChange={(s) => {
+            const parsed = s
+              .split(/[,\s]+/)
+              .map((t) => parseInt(t, 10))
+              .filter((n) => Number.isFinite(n) && n >= 0 && n <= 21);
+            setInputs({ ...inputs, childAges: parsed });
+          }}
+          placeholder="8, 11"
+        />
+      </Field>
+    </div>
   );
 }
 
