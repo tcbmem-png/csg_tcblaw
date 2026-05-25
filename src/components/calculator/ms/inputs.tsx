@@ -281,26 +281,8 @@ function MSDeviationsSection({
           }}
         />
       ) : (
-        <DeviationPickList
-          slate={inputs.deviationsA}
-          onChange={(next) => setInputs({ ...inputs, deviationsA: next })}
-          label={
-            inputs.comparisonMode === "side_by_side"
-              ? inputs.positionALabel
-              : null
-          }
-        />
+        <DeviationPickList inputs={inputs} setInputs={setInputs} />
       )}
-
-      {inputs.comparisonMode === "side_by_side" &&
-        inputs.deviationEntryMode === "pick" &&
-        inputs.deviationsB && (
-          <DeviationPickList
-            slate={inputs.deviationsB}
-            onChange={(next) => setInputs({ ...inputs, deviationsB: next })}
-            label={inputs.positionBLabel}
-          />
-        )}
 
       {inputs.comparisonMode === "side_by_side" && (
         <MSDeviationReconciliation inputs={inputs} />
