@@ -120,7 +120,7 @@ export function SiteHeader() {
 
 
 const APP_VERSION = "v1.0.0";
-const GITHUB_URL = "https://github.com/tcbmem-png/tn-child-support-helper";
+const GITHUB_URL = "https://github.com/tcbmem-png/csg_tcblaw";
 
 export function SiteFooter() {
   return (

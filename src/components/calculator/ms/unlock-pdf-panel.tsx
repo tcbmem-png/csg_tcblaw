@@ -11,7 +11,7 @@ interface Props {
 export function MSUnlockPdfPanel(_props: Props) {
   return (
     <div
-      id="unlock-pdf-panel"
+      id="pdf-info-panel"
       className="mt-8 rounded-lg border border-rule bg-cream p-5 no-print"
     >
       <h2 className="font-serif text-lg text-ink">Free to use — including PDF</h2>
