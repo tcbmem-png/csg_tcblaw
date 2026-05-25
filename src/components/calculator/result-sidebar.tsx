@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
 import { useIsUnlocked } from "@/lib/calc/unlock";
+import { computeScenarioPair, hasImputation } from "@/lib/calc/scenarios";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -16,10 +17,12 @@ export function ResultSidebar({
   inputs,
   outputs,
   onViewWorksheet,
+  onViewComparison,
 }: {
   inputs: CalcInputs;
   outputs: CalcOutputs;
   onViewWorksheet: () => void;
+  onViewComparison?: () => void;
 }) {
   const unlocked = useIsUnlocked();
   return (
@@ -68,6 +71,14 @@ export function ResultSidebar({
           ${fmt(outputs.allInAnnual)}/yr
         </div>
       </div>
+
+      {hasImputation(inputs) && onViewComparison && (
+        <ImputationMiniSummary
+          inputs={inputs}
+          outputs={outputs}
+          onViewComparison={onViewComparison}
+        />
+      )}
 
       {outputs.pcsoExceedsStatutoryMax && (
         <div className="mt-4 rounded-md border border-accent/60 bg-accent/10 p-3 text-xs leading-relaxed text-ink">
@@ -170,6 +181,61 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex items-baseline justify-between">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-mono text-ink">{value}</span>
+    </div>
+  );
+}
+
+function ImputationMiniSummary({
+  inputs,
+  outputs,
+  onViewComparison,
+}: {
+  inputs: CalcInputs;
+  outputs: CalcOutputs;
+  onViewComparison: () => void;
+}) {
+  const pair = computeScenarioPair(inputs);
+  const actualNet = pair.actual.outputs.netPresumptiveSupport;
+  // Use current outputs as the active "imputed" row so this matches what's
+  // displayed in the main result number above.
+  const activeImputed = outputs.netPresumptiveSupport;
+  const delta = activeImputed - actualNet;
+  return (
+    <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
+      <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        Imputed vs actual · Rule .04(3)(a)(2)
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Imputed
+          </div>
+          <div className="font-mono text-sm text-ink">
+            ${fmt(activeImputed)}/mo
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Actual
+          </div>
+          <div className="font-mono text-sm text-ink">
+            ${fmt(actualNet)}/mo
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 flex items-baseline justify-between border-t border-rule pt-2">
+        <span className="text-[11px] text-muted-foreground">Difference</span>
+        <span className="font-mono text-[11px] text-ink">
+          {delta >= 0 ? "+" : "−"}${fmt(Math.abs(delta))}/mo
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={onViewComparison}
+        className="mt-2 text-[11px] text-primary underline-offset-2 hover:underline"
+      >
+        See full comparison →
+      </button>
     </div>
   );
 }

@@ -1,4 +1,9 @@
-import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
+import type {
+  CalcInputs,
+  CalcOutputs,
+  Direction,
+  IncomeMethodology,
+} from "@/lib/calc/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import { defaultCaption } from "@/lib/calc/share";
 import {
@@ -6,6 +11,26 @@ import {
   specialExpensesThresholdLine,
 } from "@/lib/calc/citations";
 import { useIsUnlocked } from "@/lib/calc/unlock";
+
+function incomeSourceLabel(m: IncomeMethodology | undefined): string {
+  if (!m) return "Source: entered directly";
+  if (m.source === "w2_box5_annual") return "Source: W-2 Box 5 (annual ÷ 12)";
+  if (m.source === "monthly_gross") return "Source: monthly gross (Income Helper)";
+  return "Source: entered directly";
+}
+
+function SourceLine({ a, b }: { a: string; b: string }) {
+  return (
+    <div className="grid grid-cols-[2.5rem_1fr_8rem_8rem_8rem] gap-2 border-b border-rule px-3 py-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+      <div></div>
+      <div></div>
+      <div className="text-right normal-case">{a}</div>
+      <div className="text-right normal-case">{b}</div>
+      <div></div>
+    </div>
+  );
+}
+
 
 function fmt(n: number) {
   const abs = Math.abs(n);
@@ -187,6 +212,10 @@ export function OfficialWorksheet({
           cite="Rule .04(3)"
           a={`$${fmt(inputs.parentAGrossMonthly)}`}
           b={`$${fmt(inputs.parentBGrossMonthly)}`}
+        />
+        <SourceLine
+          a={incomeSourceLabel(inputs.parentAIncomeMethodology)}
+          b={incomeSourceLabel(inputs.parentBIncomeMethodology)}
         />
         <Line
           n="3a"
