@@ -816,15 +816,12 @@ export async function renderOfficialWorksheetPdf(args: {
     const seMonthly = (inputs.specialExpensesAnnual || 0) / 12;
     const threshold = outputs.specialExpensesThresholdAmount;
     const basis = outputs.specialExpensesIncludedAsDeviation;
-    if (basis > 0) {
-      devBreakdownLines.push(
-        `Extracurriculars deviation basis: $${fmt(seMonthly)}/mo - $${fmt(threshold)}/mo (7% of BCSO per Rule .07(2)(d)) = $${fmt(basis)}/mo, allocated pro rata.`,
-      );
-    } else {
-      devBreakdownLines.push(
-        `Extracurriculars: $${fmt(seMonthly)}/mo is at or below the 7% of BCSO threshold ($${fmt(threshold)}/mo, Rule .07(2)(d)) and is presumed already in BCSO; no deviation applied.`,
-      );
-    }
+    devBreakdownLines.push(
+      specialExpensesThresholdLine({ monthly: seMonthly, threshold, basis })
+        // The PDF renderer's font subset lacks the U+2212 minus glyph,
+        // so normalize to ASCII hyphen for safe drawing.
+        .replace(/\u2212/g, "-"),
+    );
   }
   const devFromAForNote =
     outputs.privateSchoolDeviationFromA + outputs.specialExpensesDeviationFromA;
