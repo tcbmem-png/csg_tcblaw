@@ -88,8 +88,9 @@ export function ResultSidebar({
 
       {outputs.pcsoExceedsStatutoryMax && (
         <div className="mt-4 rounded-md border border-accent/60 bg-accent/10 p-3 text-xs leading-relaxed text-ink">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             Statutory cap check · §36-5-101(e)(1)(B)
+            <RuleInfo citation="pcso_max" />
           </div>
           <div className="space-y-1">
             <div className="flex items-baseline justify-between">
