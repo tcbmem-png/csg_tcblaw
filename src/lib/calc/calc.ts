@@ -235,6 +235,8 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
   let ssrNote: string | null = null;
   let minimumOrderApplied = false;
   let presumptiveAfterSsr = presumptiveFromA;
+  let ssrCollapsedToZero = false;
+  let ssrObligorIsA = false;
   if (Math.abs(presumptiveFromA) > 0) {
     // Identify obligor (the parent with positive outflow).
     const obligorIsA = presumptiveFromA > 0;
@@ -252,6 +254,10 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
           presumptiveAfterSsr = obligorIsA ? final : -final;
           ssrApplied = true;
           ssrNote = `Self-Support Reserve applied (Rule .02(25)): obligor-only BCSO ($${alt}) used in place of pro-rata BCSO so the obligor retains the $${SSR_AMOUNT}/mo reserve.`;
+          if (final < 1) {
+            ssrCollapsedToZero = true;
+            ssrObligorIsA = obligorIsA;
+          }
         }
       }
     }
@@ -410,15 +416,18 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
   }
 
   // === Zero-presumptive / floor-does-not-apply explainer (Rule .04(12)) ===
-  // The $100 minimum-order floor applies to an obligor who already has a
-  // presumptive obligation. When presumptive support is $0, there is no
-  // obligor and no obligation for the floor to lift.
+  // Floor does not apply only when there is no identifiable obligor (ARP has
+  // no income). When SSR collapsed the obligor's pro-rata BCSO to $0, the
+  // floor DOES apply — none of the .04(12)(b) exceptions (SSI-only income,
+  // federal benefit, PTA-driven reduction) is triggered.
+  // See docs/TN_Floor_SSR_Resolution.md.
   let zeroPresumptiveNote: string | null = null;
   if (
     !meansTestedOnly &&
     combinedAGI > 0 &&
     Math.abs(presumptiveAfterSsr) < 1 &&
-    nonEarnerArpNote === null
+    nonEarnerArpNote === null &&
+    !ssrCollapsedToZero
   ) {
     zeroPresumptiveNote =
       `Presumptive support is $0, so the $100/month minimum-order floor under Rule 1240-02-04-.04(12) does not apply. ` +
@@ -471,6 +480,15 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
       minimumOrderApplied = true;
       warnings.push(
         `Minimum support floor of $${MIN_SUPPORT_MONTHLY}/month applied per Rule .04(12).`,
+      );
+    } else if (ssrCollapsedToZero) {
+      // SSR drove the obligor's pro-rata BCSO to $0. The .04(12) $100 floor
+      // still applies because none of the (b) exceptions is triggered. The
+      // floor flows ARP→PRP (i.e., from the original obligor).
+      allInMonthlyFromA += ssrObligorIsA ? MIN_SUPPORT_MONTHLY : -MIN_SUPPORT_MONTHLY;
+      minimumOrderApplied = true;
+      warnings.push(
+        `SSR collapsed the obligor's pro-rata BCSO to $0, but the $${MIN_SUPPORT_MONTHLY}/month minimum order under Rule .04(12) still applies — none of the (b) exceptions (SSI-only income, federal benefit, or parenting-time reduction) is triggered. See docs/TN_Floor_SSR_Resolution.md.`,
       );
     }
   }
