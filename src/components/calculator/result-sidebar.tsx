@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
 import { useIsUnlocked } from "@/lib/calc/unlock";
+import { computeScenarioPair, hasImputation } from "@/lib/calc/scenarios";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -16,10 +17,12 @@ export function ResultSidebar({
   inputs,
   outputs,
   onViewWorksheet,
+  onViewComparison,
 }: {
   inputs: CalcInputs;
   outputs: CalcOutputs;
   onViewWorksheet: () => void;
+  onViewComparison?: () => void;
 }) {
   const unlocked = useIsUnlocked();
   return (
