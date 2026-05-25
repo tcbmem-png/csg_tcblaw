@@ -77,6 +77,21 @@ function TNCalculatorPage() {
     return () => window.clearTimeout(handle);
   }, [inputs, caption]);
 
+  // C-4: When the statutory PCSO cap binds and the practitioner has not yet
+  // written a Part VI narrative, seed a placeholder framing the burden-shift
+  // under Tenn. Code Ann. § 36-5-101(e)(1)(B). Practitioners edit verbatim.
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    if (!outputs.pcsoExceedsStatutoryMax) return;
+    if (caption.deviationNarrative.trim().length > 0) return;
+    const n = inputs.numChildren;
+    const excess = Math.round(outputs.pcsoExcessOverCap);
+    const stub = `Presumptive PCSO exceeds the statutory maximum for ${n} ${n === 1 ? "child" : "children"} by $${excess.toLocaleString("en-US")}/mo (Tenn. Code Ann. § 36-5-101(e)(1)(B)). Deviation supported by: ____`;
+    setCaption({ ...caption, deviationNarrative: stub });
+  }, [outputs.pcsoExceedsStatutoryMax, outputs.pcsoExcessOverCap, inputs.numChildren, caption.deviationNarrative]);
+
+
+
   return (
     <div>
       <PaymentTestModeBanner />
