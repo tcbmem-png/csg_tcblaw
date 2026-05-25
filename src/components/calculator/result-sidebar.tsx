@@ -72,6 +72,14 @@ export function ResultSidebar({
         </div>
       </div>
 
+      {hasImputation(inputs) && onViewComparison && (
+        <ImputationMiniSummary
+          inputs={inputs}
+          outputs={outputs}
+          onViewComparison={onViewComparison}
+        />
+      )}
+
       {outputs.pcsoExceedsStatutoryMax && (
         <div className="mt-4 rounded-md border border-accent/60 bg-accent/10 p-3 text-xs leading-relaxed text-ink">
           <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
