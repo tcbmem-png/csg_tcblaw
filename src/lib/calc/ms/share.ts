@@ -72,6 +72,9 @@ export function decodeMSShare(
         ...base.imputationBasis,
         ...(parsed.i.imputationBasis ?? {}),
       },
+      childAges: Array.isArray(parsed.i.childAges)
+        ? (parsed.i.childAges as number[]).filter((n) => Number.isFinite(n))
+        : base.childAges,
     };
     // Strip stray v1 field if it ended up on the object via the spread above.
     delete (inputs as unknown as { deviations?: unknown }).deviations;
