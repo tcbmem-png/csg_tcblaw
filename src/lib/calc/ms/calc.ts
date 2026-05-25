@@ -66,6 +66,7 @@ export function defaultMSInputs(): MSInputs {
     positionBLabel: "Position B",
     deviationsA: ALL_FACTOR_LETTERS.map(defaultDeviation),
     deviationsB: undefined,
+    childAges: [],
   };
 }
 
