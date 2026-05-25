@@ -95,14 +95,41 @@ function TNCalculatorPage() {
   return (
     <div>
       <div className="border-b border-rule bg-cream no-print">
-        <div className="mx-auto max-w-6xl px-6 py-6">
+        <div className="mx-auto max-w-6xl px-6 pt-4">
+          <Link
+            to="/"
+            className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition-colors hover:text-primary"
+          >
+            ← All calculators
+          </Link>
+        </div>
+        <div className="mx-auto max-w-6xl px-6 pt-3 pb-6">
           <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
-            Tennessee
+            Tennessee Income Shares Model
           </p>
-          <h1 className="font-serif text-3xl text-ink">Calculator</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Implements Tenn. Comp. R. & Regs. 1240-02-04 (Income Shares Model).
-            Schedule effective {outputs.scheduleEffectiveDate}.
+          <p className="mt-1 font-mono text-xs text-muted-foreground">
+            Tenn. Comp. R. & Regs. 1240-02-04 · Tenn. Code Ann. § 36-5-101
+          </p>
+          <h1 className="mt-3 font-serif text-3xl text-ink">Calculator</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink/80">
+            Enter both parents' monthly gross incomes, the number of
+            children, and the parenting schedule. The calculator applies the
+            BCSO schedule, the above-cap formula where it engages, the
+            statutory presumptive cap analysis under § 36-5-101(e)(1)(B),
+            and any add-ons or deviations you specify. Every computed line
+            shows the rule that authorizes it. The worksheet downloads in
+            two formats: AOC-format for chancery filing and an annotated
+            version for mediation and analysis. Free, no signup.
+          </p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Schedule effective {outputs.scheduleEffectiveDate}.{" "}
+            <Link to="/tn/how-it-works" className="underline decoration-rule underline-offset-2 hover:text-primary">
+              How it works
+            </Link>
+            {" · "}
+            <Link to="/tn/about" className="underline decoration-rule underline-offset-2 hover:text-primary">
+              About this calculator
+            </Link>
           </p>
         </div>
       </div>
