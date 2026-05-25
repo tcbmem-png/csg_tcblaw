@@ -1,37 +1,18 @@
-import { useEffect, useState } from "react";
-
-const KEY = "tncsg.unlock";
+// Free during beta: no gate. PDF generation and worksheet access are
+// unconditionally unlocked. The lead-capture server function and beta_leads
+// table remain in place (dormant) so a separate, optional footer opt-in can
+// reuse them later without a re-migration. Do NOT call them from the
+// worksheet flow — the worksheet is free to use, including PDF, with no
+// input required.
 
 export function getStoredUnlock(): { token: string; email?: string } | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed.token === "string") return parsed;
-  } catch {
-    /* ignore */
-  }
-  return null;
+  return { token: "free-beta" };
 }
 
-export function setStoredUnlock(token: string, email?: string) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(KEY, JSON.stringify({ token, email }));
-  window.dispatchEvent(new Event("tncsg:unlock-changed"));
+export function setStoredUnlock(_token: string, _email?: string) {
+  // no-op; everything is unlocked
 }
 
 export function useIsUnlocked(): boolean {
-  const [unlocked, setUnlocked] = useState<boolean>(() => !!getStoredUnlock());
-  useEffect(() => {
-    const update = () => setUnlocked(!!getStoredUnlock());
-    update();
-    window.addEventListener("tncsg:unlock-changed", update);
-    window.addEventListener("storage", update);
-    return () => {
-      window.removeEventListener("tncsg:unlock-changed", update);
-      window.removeEventListener("storage", update);
-    };
-  }, []);
-  return unlocked;
+  return true;
 }
