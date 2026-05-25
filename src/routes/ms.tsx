@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { calculateMS, defaultMSInputs } from "@/lib/calc/ms/calc";
 import type {
@@ -123,14 +123,39 @@ function MSCalculatorPage() {
   return (
     <div>
       <div className="border-b border-rule bg-cream no-print">
-        <div className="mx-auto max-w-6xl px-6 py-6">
+        <div className="mx-auto max-w-6xl px-6 pt-4">
+          <Link
+            to="/"
+            className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition-colors hover:text-primary"
+          >
+            ← All calculators
+          </Link>
+        </div>
+        <div className="mx-auto max-w-6xl px-6 pt-3 pb-6">
           <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
-            Mississippi
+            Mississippi Statutory Percentage Guideline
           </p>
-          <h1 className="font-serif text-3xl text-ink">Calculator</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Implements Miss. Code Ann. § 43-19-101 (presumptive percentage) with
-            the § 43-19-103 deviation criteria.
+          <p className="mt-1 font-mono text-xs text-muted-foreground">
+            Miss. Code Ann. § 43-19-101 (with § 43-19-103 deviation analysis)
+          </p>
+          <h1 className="mt-3 font-serif text-3xl text-ink">Calculator</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink/80">
+            Enter the obligor's annual adjusted gross income, the number of
+            children, and the applicable statutory percentage. The calculator
+            surfaces the high-income finding under § 43-19-101(4), the 2022
+            imputation framework under § 43-19-101(5), the 2023 incarceration
+            suspension under § 43-19-36, and a structured deviation
+            worksheet covering all ten § 43-19-103 factors with optional
+            two-attorney handoff for joint chancery filings. Free, no signup.
+          </p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            <Link to="/ms/how-it-works" className="underline decoration-rule underline-offset-2 hover:text-primary">
+              How it works
+            </Link>
+            {" · "}
+            <Link to="/ms/about" className="underline decoration-rule underline-offset-2 hover:text-primary">
+              About this calculator
+            </Link>
           </p>
         </div>
       </div>

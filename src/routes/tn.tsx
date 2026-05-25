@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { calculate, defaultInputs } from "@/lib/calc/calc";
 import type { CalcInputs } from "@/lib/calc/types";
