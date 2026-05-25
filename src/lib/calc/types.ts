@@ -1,4 +1,23 @@
 /** Inputs to the TN child support calculation. All dollar amounts are monthly unless suffixed Annual. */
+
+/**
+ * Income methodology captured by the optional Income Helper.
+ * Stored on CalcInputs but NOT consumed by the calculation engine — only
+ * surfaced on the worksheet appendix to document how the monthly gross
+ * figure was derived. Adding new variants is backward-compatible because
+ * all fields are optional and `decodeShare` merges with defaults.
+ */
+export type IncomeMethodology = {
+  path: "simple";
+  source: "w2_box5_annual" | "monthly_gross";
+  /** Annual W-2 Box 5 figure when source = w2_box5_annual. */
+  w2Box5Annual?: number;
+  /** Monthly gross entered directly when source = monthly_gross. */
+  monthlyGrossEntered?: number;
+  /** Final monthly figure pushed into the calculator. */
+  monthlyGrossResult: number;
+};
+
 export interface CalcInputs {
   parentALabel: string;
   parentBLabel: string;
@@ -6,6 +25,10 @@ export interface CalcInputs {
   /** Monthly gross income (per Rule .04(3) — use W-2 Box 5, not Box 1). */
   parentAGrossMonthly: number;
   parentBGrossMonthly: number;
+
+  /** Optional methodology captured by the Income Helper (Phase 1: simple path only). */
+  parentAIncomeMethodology?: IncomeMethodology;
+  parentBIncomeMethodology?: IncomeMethodology;
 
   /** Optional imputation. When true, the gross field above is the IMPUTED figure
    *  and the *Actual* field is the parent's real income for comparison. */
