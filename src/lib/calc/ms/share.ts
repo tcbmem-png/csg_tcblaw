@@ -106,7 +106,8 @@ export function decodeMSShare(s: string): MSDecoded | null {
     if (parsed.s !== "MS" || !parsed.i) return null;
     const base = defaultMSInputs();
 
-    if (parsed.v !== 2 && parsed.v !== 3) {
+    const version = parsed.v;
+    if (version !== 2 && version !== 3) {
       if (typeof console !== "undefined") {
         console.warn(
           "MS share URL is from an older schema; deviation slate reset to defaults.",
