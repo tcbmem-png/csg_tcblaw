@@ -1,10 +1,12 @@
 /**
- * Share encoding/decoding tests for the v2 → v3 upgrade path and the
- * handoff payload.
+ * Share encoding/decoding tests for v2 ↔ v3 compatibility and the handoff
+ * payload.
  *
- * v2 URLs (pre-handoff) must round-trip cleanly through the v3 decoder
- * with handoff.status === "none". v3 URLs must preserve the full
- * HandoffState. The ?side= helper is just a parser/normalizer.
+ * v2 URLs (pre-handoff) round-trip through the v3 decoder with
+ * handoff.status === "none" and slates preserved verbatim — no per-slot
+ * migration runs because the on-disk letter mapping (g/h/i) now matches
+ * the 2024 § 43-19-103 statutory order. v3 URLs preserve the full
+ * HandoffState. ?side= is a parser/normalizer only.
  */
 import { describe, it, expect } from "vitest";
 import {
