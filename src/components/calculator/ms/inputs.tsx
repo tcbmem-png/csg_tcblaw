@@ -375,6 +375,8 @@ function DeviationPickList({
             obligeeLabel={inputs.obligeeLabel || "Obligee"}
             sideBySide={sideBySide}
             buildContextInputs={() => inputs}
+            obligorLocked={lockedSide === "A"}
+            obligeeLocked={lockedSide === "B"}
           />
         );
       })}
