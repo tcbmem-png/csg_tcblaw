@@ -1,94 +1,109 @@
-# TN Income Module — Phase 2 (Paths B–F)
+## P1 — TN Citation Framework Completion
 
-Build all five remaining income paths in a single cycle, on top of the existing simple-path helper. URL state stays canonical (no DB). Path E extends the already-shipped imputation infrastructure; Path F exposes already-shipped engine logic. No "Help me decide" triage — six labeled cards self-route.
+Implements Part One of `TN_Rule_Citation_Dual_PDF_Brief.md`. Annotation-only — no math changes, no state migration, no share-URL schema bump.
 
-## Scope
+### 1. Save the brief into the repo
 
-In scope:
-1. **Path B — Variable income** (bonuses/commissions/OT, year averaging)
-2. **Path C — Self-employed** (gross receipts − ordinary expenses + add-backs)
-3. **Path D — Multi-source** (sum of arbitrary annual income sources)
-4. **Path E — Imputed income** (basis-driven; writes through to existing `useImputationForA/B` + `parentA/BActualGrossMonthly`)
-5. **Path F — Special situations** (SSI-only, incarcerated, military, federal benefit to child — UI exposure of existing engine logic)
-6. **401(k) add-back input** on the existing Simple path
-7. **Worksheet methodology appendix** extended for all new paths
-8. **Share URL** extended to round-trip the per-parent path state with back-compat
+- Add `docs/TN_Rule_Citation_Dual_PDF_Brief.md` (verbatim from the upload) so the spec lives next to the inventory.
 
-Out of scope:
-- `income_components` DB migration (deferred indefinitely)
-- "Help me decide" triage flow
-- Citation framework / dual PDF output (separate future cycles)
-- Any change to BCSO / parenting-time / cap / SSR / federal-benefit-offset engine logic
-- Audit of already-verified math
+### 2. Citation inventory — `docs/TN_Citation_Inventory.md`
 
-## Architectural Constraints (non-negotiable)
+Walk the rendered worksheet (`OfficialWorksheet`, `official-worksheet-pdf.ts`, and `ResultSidebar`) line by line. Each entry:
 
-**(1) Path E extends, does not duplicate.** The existing `useImputationForA/B`, `parentA/BActualGrossMonthly`, `ImputationMiniSummary`, `ComparisonView`, `hasImputation`, `computeScenarioPair`, and the cumulative-through-majority chart all already work. Path E's only job is to provide a UI that *sets* these fields. After Path E writes, the existing Comparison tab and sidebar light up automatically. No parallel comparison view, no parallel sidebar, no parallel chart. This is the lesson learned from the MS `migrateSlate` revert.
+```
+Line N — <label>
+  Computation: <what the engine does>
+  Currently displayed: <e.g. "Rule .04(7)">
+  Correct: <e.g. "Rule .04(7)(b)(2)(i)">
+  Match: yes | no
+```
 
-**(2) Path F exposes, does not reimplement.** SSI-only $0-order, incarceration carve-outs, military BAH/BAS treatment, and federal-benefit-to-child line 16 offset already exist in the engine. Path F gives them a guided UI on TN that writes into existing inputs (`parentAMeansTestedOnly`, `parentAFederalBenefit`, etc.) — no new engine code.
+Lines that are practitioner input (parent labels, case caption, raw entered gross before path) are labeled "Practitioner input — no rule basis" rather than fabricated.
 
-**(3) No triage.** Six clearly labeled path cards. Practitioners self-route.
+### 3. Rewrite `src/lib/calc/citations.ts`
 
-## File Plan
+Restructure to the brief's Lines-1-12 spec. Each `Citation` gains:
 
-### New files
+- `rule` — paragraph-specific (`.04(7)(b)(2)(i)`, `.09(2)(d)`, `.04(3)(a)(2)(iii)`, etc.)
+- `name`, `plain` (kept)
+- `url` — set on every entry to the chapter-level Secretary of State PDF: `https://publications.tnsosfiles.com/rules/1240/1240-02/1240-02-04.20231215.pdf`. No paragraph anchors.
+- `caseNote?` — only on `pcso_max`, containing the *Nash / Richardson / Smallman* footnote text + one-sentence standard.
 
-- `src/components/calculator/income/path-router.tsx` — six labeled cards (Simple / Variable / Self-employed / Multi-source / Imputed / Special situations) replacing the current "Set up {label}'s income →" button inside each `ParentCard`.
-- `src/components/calculator/income/path-simple-form.tsx` — extracted from current `SimplePathForm` in `income-helper-panel.tsx` + new 401(k) add-back field.
-- `src/components/calculator/income/path-variable-form.tsx` — Path B: years table (1–5 rows), averaging method (3-yr / 5-yr / custom), rationale, computed monthly.
-- `src/components/calculator/income/path-self-employed-form.tsx` — Path C: business type, gross receipts, ordinary expenses, per-line add-backs (depreciation / §179 / vehicle / meals / home office), optional multi-year averaging, computed monthly.
-- `src/components/calculator/income/path-multi-source-form.tsx` — Path D: dynamic list of `{ label, annual, methodology }` rows summed to monthly.
-- `src/components/calculator/income/path-imputed-form.tsx` — Path E: basis radio (Voluntary underemployment / Failure to produce evidence / Substantial non-income-producing assets), basis-specific sub-flow:
-  - *Prior-year earnings* → embed Path B averaging
-  - *Vocational capacity* → occupation, area, hours/wk, rationale, proposed monthly
-  - *Asset-based* → assets, rate of return, computed annual ÷ 12
-  - On apply: writes `parentXActualGrossMonthly = current real income (collected separately)`, `parentXGrossMonthly = imputed`, `useImputationForX = true`.
-- `src/components/calculator/income/path-special-form.tsx` — Path F: four sub-flows (SSI-only / Incarcerated / Military / Federal benefit to child). Writes into existing flags + `parentXFederalBenefit`. Includes incarceration reason flags (DV / abuse / criminal nonpayment) + means-to-pay exception, consistent with the MS incarceration UX.
+Add entries the brief requires that don't exist yet: SE-tax credit `.04(5)(a)`, in-home/not-in-home credits `.04(5)(b)(1)/(2)`, pro-rata `.04(6)(b)`, schedule-within `.09(2)(a)`, schedule-table `.09(2)(c)`, ARP-reduction threshold `.04(7)(a)`, 92-day variable `.04(7)(b)`, day constants `.04(7)(h)/(i)`, add-on health `.04(8)(b)`, childcare `.04(8)(c)`, medical `.04(8)(d)`, special-expenses 7% `.07(2)(d)`, SSR `.04(12)`, FCSO-deviation `.07(2)(a-d)`, imputation sub-paragraphs (`.04(3)(a)(2)(i)` prior-year / `(ii)` vocational / `(iii)` incarceration carve-out / `(iv)` means-tested).
 
-### Modified files
+Imputation, income-path, parenting-mode resolvers (small pure helpers) live alongside `CITATIONS` so a methodology object → citation key is one call:
 
-- `src/components/calculator/income-helper-panel.tsx` — replace inline SimplePathForm with router → form dispatch; per-parent active form is one of six. Drop the "Phase 1 covers simple" footer note.
-- `src/lib/calc/types.ts` — extend `IncomeMethodology` to a discriminated union over `path: "simple" | "variable" | "self_employed" | "multi_source" | "imputed" | "special"`. All new variant fields optional. Preserve existing `"simple"` shape verbatim plus a new optional `voluntaryRetirementMonthly` field for the 401(k) add-back.
-- `src/lib/calc/share.ts` — bump payload to `v: 2`. `decodeShare` accepts both `v: 1` (legacy, methodology fields read straight through unchanged) and `v: 2`. Round-trip guarantee: any `v: 1` URL decodes to identical state and re-encodes as `v: 2` without data loss.
-- `src/components/calculator/income-methodology-appendix.tsx` — render path-specific blocks for variable / self-employed / multi-source / imputed / special. Imputed block cross-references the existing Comparison Appendix.
-- `src/lib/calc/__tests__/` — add `income-paths.test.ts` covering: each path's computed monthly arithmetic; Path E sets the imputation triple; Path F SSI sets means-tested flag; share v1→v2 round-trip; 401(k) add-back arithmetic.
+```
+citationForIncomePath(m: IncomeMethodology, parent): CitationKey
+citationForParentingMode(inputs): CitationKey
+citationForBcso(outputs): CitationKey   // .09(2)(a) within-table vs .09(2)(c) row vs .09(2)(d) above-cap
+citationForFcso(outputs): CitationKey | null
+```
 
-### Untouched
+### 4. Render citations next to every number
 
-- `src/lib/calc/calc.ts`, `bcso.ts`, `scenarios.ts` — engine unchanged.
-- `src/components/calculator/comparison.tsx`, `result-sidebar.tsx` — already render correctly when Path E flips the flags.
-- All MS files.
+- **`official-worksheet.tsx`** — every existing `<Line cite=…>` upgraded to the specific paragraph (using the new resolvers). The `.04(7)` placeholder on Line 2 (parenting time) resolves through `citationForParentingMode`. Source-line under Line 3 gets a per-parent paragraph cite via `citationForIncomePath`. Cap panel adds the case-note footnote when `pcsoExceedsStatutoryMax`.
+- **`official-worksheet-pdf.ts`** — mirror the same resolver calls so each PDF line prints the format the brief requires: *"Line 4 BCSO: $6,043 — Tenn. Comp. R. & Regs. 1240-02-04-.09(2)(d) (above-cap formula)."* Citations in smaller font (existing 8-9pt style) immediately right-of-number or directly under the label.
+- Categorical determinations the brief calls out (SSR engaged, cap exceeded, means-tested zero, incarceration/military carve-out, each add-on present) each emit their cite via the same `CITATIONS` table.
 
-## Methodology Appendix Structure (per path)
+### 5. Interactive citation indicator — `<RuleInfo citation="key" />`
 
-| Path | Appendix content |
-|---|---|
-| Simple | (existing) + 401(k) add-back amount if > 0 |
-| Variable | Years table, averaging method, rationale, arithmetic |
-| Self-employed | Business type, gross receipts, expenses, itemized add-backs, arithmetic, "subject to verification against business return" footnote |
-| Multi-source | Each source: label + annual + methodology note |
-| Imputed | Rule .04(3)(a)(2) sub-paragraph cite, basis, inputs, rationale, final imputed figure. Cross-ref to Comparison Appendix. |
-| Special | Situation, rule cite, carve-out applied |
+New small component in `src/components/calculator/rule-info.tsx`:
 
-Each parent renders independently — Parent A may be Path B while Parent B is Path F.
+- Renders a 12px `ⓘ` glyph in `text-muted-foreground` (testing-agent nit D-2: small, doesn't compete with the dollar number).
+- Wraps the existing shadcn `Tooltip` for desktop hover and `Popover` for mobile tap (one component, both behaviors).
+- Tooltip body: `name` (bold) · `rule` · `plain` · "Open chapter PDF →" link (`target="_blank" rel="noopener"`) to the SoS URL.
 
-## Acceptance Criteria
+Wire into `ResultSidebar` next to every dollar figure (BCSO, presumptive, add-ons, all-in monthly, cap excess, SSR note) and into `OfficialWorksheet` on every emphasized line. No layout reflow — indicator floats inline after the figure.
 
-- All six labeled path cards render and route to the correct form.
-- Each path's computed monthly updates live as the user fills inputs and applies to `parentA/BGrossMonthly`.
-- Path E correctly sets `useImputationForA/B`, `parentA/BGrossMonthly` (imputed), and `parentA/BActualGrossMonthly` (real). The existing Comparison tab, sidebar `ImputationMiniSummary`, and cumulative chart light up automatically — no parallel components created.
-- Path F SSI-only writes `parentXMeansTestedOnly = true`. Federal-benefit sub-flow writes `parentXFederalBenefit`. Incarcerated/military sub-flows write nothing to calc inputs that wasn't already wired; they capture rationale for the appendix.
-- 401(k) add-back input on Simple path adds to entered monthly gross before write; appendix documents both entered gross and add-back.
-- Worksheet methodology appendix renders per-parent path-specific blocks.
-- Share URLs round-trip: `v: 1` URLs from production decode identically; new `v: 2` URLs decode losslessly.
-- All existing TN tests still pass; new `income-paths.test.ts` passes.
-- No edits to `calc.ts`, `bcso.ts`, `scenarios.ts`, `comparison.tsx`, `result-sidebar.tsx`.
+### 6. Mechanical test — `src/lib/calc/__tests__/citations.test.ts`
 
-## Verification
+(Repo convention is `src/lib/calc/__tests__/`, not `src/lib/calc/tn/__tests__/` — there's no `tn/` subfolder. Same intent.)
 
-After implementation, run the full TN+MS test suite. Confirm:
-- Existing comparison view continues to work for Path E users.
-- A `v: 1` share URL captured from current production round-trips through `v: 2`.
-- Each path's appendix renders with the correct math shown to the user.
+- Run the engine over a curated fixture set (the five Stories + a synthetic above-cap + SSR + means-tested + imputation case).
+- For each fixture, build a `WorksheetManifest` = the set of `{lineLabel, citationKey}` the renderers would emit. Both `OfficialWorksheet` and `official-worksheet-pdf.ts` import a single `manifestFor(inputs, outputs): ManifestEntry[]` helper so the test exercises the same source of truth the UI/PDF do — no parallel list.
+- Assertions:
+  1. Every entry's `citationKey` exists in `CITATIONS`.
+  2. Every entry resolves to a rule string matching `/^(1240-02-04-\.\d+|Tenn\. Code Ann\.)/`.
+  3. Every numeric line that is *not* practitioner-input has a non-null citation.
+  4. The `url` on every citation equals the canonical SoS chapter URL (or is `undefined` for case-only citations).
 
-Ready to implement on approval.
+CI fails if a new line is added to the manifest without a matching `CITATIONS` entry, mechanically enforcing the article's "every formula annotated" claim.
+
+### 7. Share-URL stability
+
+No `share.ts` changes. No `v: 3` bump. No `migrateCitations`. Citations are computed from `inputs`/`outputs` at render — old URLs decode unchanged and render with the upgraded paragraph-specific citations automatically. Add one regression test in the existing share suite that decodes a captured `v: 1` URL and asserts the manifest still passes the citation test.
+
+### Files
+
+**Created**
+- `docs/TN_Rule_Citation_Dual_PDF_Brief.md`
+- `docs/TN_Citation_Inventory.md`
+- `src/lib/calc/citation-resolvers.ts` (small pure resolvers + `manifestFor`)
+- `src/components/calculator/rule-info.tsx`
+- `src/lib/calc/__tests__/citations.test.ts`
+
+**Modified**
+- `src/lib/calc/citations.ts` — paragraph-specific rules + `url` + `caseNote` + new entries
+- `src/components/calculator/official-worksheet.tsx` — resolver-driven cites + `<RuleInfo>` on emphasized lines + cap-panel case footnote
+- `src/lib/pdf/official-worksheet-pdf.ts` — mirror cites in the brief's format
+- `src/components/calculator/result-sidebar.tsx` — `<RuleInfo>` next to each computed dollar
+
+**Untouched**
+- `calc.ts`, `bcso.ts`, `scenarios.ts`, `share.ts` (no schema bump), all MS files, P2 dual-PDF work.
+
+### Out of scope
+
+- Part Two (dual AOC + annotated PDF) — that's P2 after this lands.
+- Any engine math change.
+- 0-day minimum-floor issue.
+- MS calculator.
+
+### Acceptance
+
+- Every computed cell in the worksheet PDF prints a paragraph-specific citation in the brief's format.
+- `citations.test.ts` passes; removing a citation entry or adding an uncited manifest line fails CI.
+- `docs/TN_Citation_Inventory.md` lists every line, current vs. correct, with non-rule lines explicitly labeled.
+- Hover or tap on any sidebar/worksheet figure surfaces name + rule + plain-English + chapter-PDF link.
+- A captured production `v: 1` share URL still renders, with upgraded citations and no state mutation.
+- Cap panel displays *Nash / Richardson / Smallman* footnote when `pcsoExceedsStatutoryMax`.

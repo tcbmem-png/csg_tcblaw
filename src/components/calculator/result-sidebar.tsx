@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
 import { computeScenarioPair, hasImputation } from "@/lib/calc/scenarios";
+import { citationForBcso } from "@/lib/calc/citation-resolvers";
+import { RuleInfo } from "./rule-info";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -42,22 +44,25 @@ export function ResultSidebar({
       </div>
 
       <div className="mt-6 space-y-2 border-t border-rule pt-4 text-sm">
-        <Row label="Combined AGI" value={`$${fmt(outputs.combinedAGI)}/mo`} />
-        <Row label="BCSO" value={`$${fmt(outputs.bcso)}`} />
+        <Row label="Combined AGI" value={`$${fmt(outputs.combinedAGI)}/mo`} citation="agi" />
+        <Row label="BCSO" value={`$${fmt(outputs.bcso)}`} citation={citationForBcso(outputs)} />
         <Row
           label={`${inputs.parentALabel} PI`}
           value={`${(outputs.piA * 100).toFixed(2)}%`}
+          citation="pro_rata"
         />
         <Row
           label={`${inputs.parentBLabel} PI`}
           value={`${(outputs.piB * 100).toFixed(2)}%`}
+          citation="pro_rata"
         />
       </div>
 
       <div className="mt-4 rounded-md bg-cream p-3">
         <div className="text-xs text-muted-foreground">All-in monthly</div>
-        <div className="font-serif text-2xl text-ink">
+        <div className="flex items-center gap-1.5 font-serif text-2xl text-ink">
           ${fmt(outputs.allInMonthly)}
+          <RuleInfo citation="fcso" />
         </div>
         <div className="text-xs text-muted-foreground">
           {directionLabel(
@@ -171,11 +176,14 @@ export function ResultSidebar({
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, citation }: { label: string; value: string; citation?: import("@/lib/calc/citations").CitationKey }) {
   return (
     <div className="flex items-baseline justify-between">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-mono text-ink">{value}</span>
+      <span className="inline-flex items-center gap-1.5 font-mono text-ink">
+        {value}
+        {citation && <RuleInfo citation={citation} />}
+      </span>
     </div>
   );
 }
