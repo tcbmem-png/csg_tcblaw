@@ -100,8 +100,8 @@ export function decodeMSShare(s: string): MSDecoded | null {
     const inputs: MSInputs = {
       ...base,
       ...parsed.i,
-      deviationsA: migratedA,
-      deviationsB: migratedB,
+      deviationsA: incomingDevA ?? base.deviationsA,
+      deviationsB: incomingDevB ?? undefined,
       incarceration: { ...base.incarceration, ...(parsed.i.incarceration ?? {}) },
       imputationBasis: {
         ...base.imputationBasis,
