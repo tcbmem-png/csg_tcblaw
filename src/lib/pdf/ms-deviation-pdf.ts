@@ -590,12 +590,26 @@ function proposedFinalOrder(ctx: Ctx, inputs: MSInputs, outputs: MSOutputs) {
   ctx.y -= 20;
 }
 
+function fmtDate(iso: string | null): string {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
 export function renderMSDeviationPdf(args: {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
+  handoff?: HandoffState;
 }): Uint8Array {
-  const { inputs, outputs, caption } = args;
+  const { inputs, outputs, caption, handoff } = args;
   const report = buildReconciliation(inputs);
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && !!inputs.deviationsB;
@@ -613,11 +627,9 @@ export function renderMSDeviationPdf(args: {
     `Miss. Code Ann. § 43-19-103 (criteria for overcoming the presumption). Guidelines effective ${outputs.guidelinesEffectiveDate}.`,
   );
 
-  // I. Case Information
   h2(ctx, "I. Case Information");
   captionBlock(ctx, inputs, caption);
 
-  // II. Deviation Analysis by Factor
   h2(ctx, "II. Deviation Analysis by Factor");
   paragraph(
     ctx,
@@ -633,18 +645,30 @@ export function renderMSDeviationPdf(args: {
     factorBlock(ctx, row, inputs, sideBySide);
   }
 
-  // III. Reconciliation Summary
   newPage(ctx);
   h2(ctx, "III. Reconciliation Summary");
   reconciliationTable(ctx, report, inputs, sideBySide);
 
-  // IV. Proposed Final Order
   ctx.y -= 8;
   proposedFinalOrder(ctx, inputs, outputs);
 
-  // Footer
   ctx.y -= 4;
   rule(ctx);
+
+  // Handoff completion footer (addition #3 — labeled to avoid being
+  // misread as filing or signature date).
+  if (handoff && handoff.status === "completed") {
+    const origName = handoff.originatingAttorney?.name || "originating counsel";
+    const recvName =
+      handoff.receivingAttorney?.name ||
+      "opposing counsel (name not provided)";
+    paragraph(
+      ctx,
+      `Two-attorney handoff. Originating counsel: ${origName}${handoff.originatingAttorney?.firm ? ` (${handoff.originatingAttorney.firm})` : ""}. Receiving counsel: ${recvName}${handoff.receivingAttorney?.firm ? ` (${handoff.receivingAttorney.firm})` : ""}. Worksheet completed in calculator: ${fmtDate(handoff.completedAt)}.`,
+      { size: 8, color: MUTED },
+    );
+  }
+
   paragraph(
     ctx,
     "This deviation worksheet is a calculation and presentation aid produced by TCB Law's Mississippi child support calculator. It is not legal advice and is not an official MDHS form. Authority: Miss. Code Ann. § 43-19-103. Source: https://csg.tcblaw.org/ms — repository: https://github.com/tcbmem-png/csg_tcblaw.",
