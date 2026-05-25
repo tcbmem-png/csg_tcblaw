@@ -866,7 +866,7 @@ export async function renderOfficialWorksheetPdf(args: {
   // computed vs. Rule .04(8) mandatory add-ons.
   ctx.y -= 4;
   const methodNote = wrapText(
-    "Discretionary deviations under Rule 1240-02-04-.07(2)(d) are calculated as net-transfer line items: the parent paying the third-party expense directly is reimbursed for the other parent's pro-rata share. This is distinct from Rule .04(8) mandatory add-ons, which are not subject to the 7% threshold.",
+    DEVIATION_METHODOLOGY_NOTE,
     7,
     ROW_W,
   );
