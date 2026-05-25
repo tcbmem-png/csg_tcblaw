@@ -1,13 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { calculateMS, defaultMSInputs } from "@/lib/calc/ms/calc";
-import type { MSInputs } from "@/lib/calc/ms/types";
+import type {
+  MSInputs,
+  HandoffSide,
+  HandoffState,
+} from "@/lib/calc/ms/types";
+import { defaultHandoffState } from "@/lib/calc/ms/types";
 import { MSCalculatorInputs } from "@/components/calculator/ms/inputs";
 import { MSResultSidebar } from "@/components/calculator/ms/result-sidebar";
 import { MSWorksheetPreview } from "@/components/calculator/ms/worksheet-preview";
+import { MSHandoffLandingBanner } from "@/components/calculator/ms/handoff-landing-banner";
 import { CaseCaptionForm } from "@/components/calculator/case-caption";
 import { defaultCaption, type CaseCaption } from "@/lib/calc/share";
-import { decodeMSShare, encodeMSShare } from "@/lib/calc/ms/share";
+import {
+  decodeMSShare,
+  encodeMSShare,
+  parseSideParam,
+} from "@/lib/calc/ms/share";
 
 export const Route = createFileRoute("/ms")({
   head: () => ({
@@ -36,10 +46,13 @@ type Tab = "inputs" | "worksheet";
 function MSCalculatorPage() {
   const [inputs, setInputs] = useState<MSInputs>(() => defaultMSInputs());
   const [caption, setCaption] = useState<CaseCaption>(() => defaultCaption());
+  const [handoff, setHandoff] = useState<HandoffState>(() => defaultHandoffState());
+  const [activeSide, setActiveSide] = useState<HandoffSide | null>(null);
   const [tab, setTab] = useState<Tab>("inputs");
   const hydratedRef = useRef(false);
   const outputs = useMemo(() => calculateMS(inputs), [inputs]);
 
+  // ---- Hydrate from URL ----
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -49,22 +62,67 @@ function MSCalculatorPage() {
       if (decoded) {
         setInputs(decoded.inputs);
         setCaption(decoded.caption);
+        setHandoff(decoded.handoff);
+        if (decoded.handoff.status !== "none") {
+          setActiveSide(parseSideParam(params.get("side")));
+        }
       }
     }
     hydratedRef.current = true;
   }, []);
 
+  // Receiving-side edit detector: when this session is the receiving
+  // side and the inputs change, bump lastReceivingEditAt and flip
+  // status: originated → in_progress.
+  const isReceivingSession =
+    activeSide !== null &&
+    handoff.status !== "none" &&
+    activeSide !== handoff.originatingSide;
+
+  const setInputsWithReceivingEdit = useCallback(
+    (next: MSInputs | ((prev: MSInputs) => MSInputs)) => {
+      const value =
+        typeof next === "function"
+          ? (next as (p: MSInputs) => MSInputs)(inputs)
+          : next;
+      setInputs(value);
+      if (isReceivingSession && handoff.status !== "completed") {
+        setHandoff((h) => ({
+          ...h,
+          status: h.status === "originated" ? "in_progress" : h.status,
+          lastReceivingEditAt: new Date().toISOString(),
+        }));
+      }
+    },
+    [inputs, isReceivingSession, handoff.status],
+  );
+
+  // ---- URL auto-sync ----
   useEffect(() => {
     if (typeof window === "undefined" || !hydratedRef.current) return;
     const handle = window.setTimeout(() => {
-      const encoded = encodeMSShare(inputs, caption);
+      const encoded = encodeMSShare(inputs, caption, handoff);
       const url = new URL(window.location.href);
-      if (url.searchParams.get("s") === encoded) return;
+      const prev = url.searchParams.get("s");
+      const prevSide = url.searchParams.get("side");
+
+      // ?side= preservation rules:
+      //   - completed → always keep ?side= (locks downstream openers)
+      //   - receiving session mid-edit → keep ?side=
+      //   - originator session → drop ?side= (their URL shouldn't lock)
+      let nextSide: string | null = null;
+      if (handoff.status === "completed" || isReceivingSession) {
+        nextSide = activeSide;
+      }
+
+      if (prev === encoded && prevSide === nextSide) return;
       url.searchParams.set("s", encoded);
+      if (nextSide) url.searchParams.set("side", nextSide);
+      else url.searchParams.delete("side");
       window.history.replaceState(window.history.state, "", url.toString());
     }, 600);
     return () => window.clearTimeout(handle);
-  }, [inputs, caption]);
+  }, [inputs, caption, handoff, activeSide, isReceivingSession]);
 
   return (
     <div>
@@ -97,8 +155,23 @@ function MSCalculatorPage() {
 
           {tab === "inputs" && (
             <>
+              <MSHandoffLandingBanner
+                handoff={handoff}
+                setHandoff={setHandoff}
+                inputs={inputs}
+                caption={caption}
+                activeSide={activeSide}
+              />
               <CaseCaptionForm caption={caption} setCaption={setCaption} />
-              <MSCalculatorInputs inputs={inputs} setInputs={setInputs} />
+              <MSCalculatorInputs
+                inputs={inputs}
+                setInputs={setInputsWithReceivingEdit}
+                lockedSide={
+                  handoff.status !== "none" && activeSide
+                    ? handoff.originatingSide
+                    : null
+                }
+              />
             </>
           )}
           {tab === "worksheet" && (
@@ -115,6 +188,10 @@ function MSCalculatorPage() {
             inputs={inputs}
             outputs={outputs}
             caption={caption}
+            handoff={handoff}
+            setHandoff={setHandoff}
+            activeSide={activeSide}
+            isReceivingSession={isReceivingSession}
             onViewWorksheet={() => setTab("worksheet")}
           />
         </aside>
