@@ -325,3 +325,45 @@ export interface MSOutputs {
   warnings: string[];
   guidelinesEffectiveDate: string;
 }
+
+// =================================================================
+// Two-attorney handoff (frontend + URL only — no auth, no server
+// storage). Lives on the share payload, not on MSInputs, so calc /
+// reconciliation stay untouched. Slate A/B carry NO obligor/obligee
+// semantics: caption.obligorLabel/obligeeLabel plus
+// HandoffState.originatingSide drive every label and PDF attribution.
+// =================================================================
+
+export type HandoffStatus = "none" | "originated" | "in_progress" | "completed";
+export type HandoffSide = "A" | "B";
+
+export interface HandoffAttorney {
+  name: string;
+  firm: string;
+}
+
+export interface HandoffState {
+  status: HandoffStatus;
+  /** Which slate (A or B) the originating attorney filled in. */
+  originatingSide: HandoffSide;
+  originatingAttorney: HandoffAttorney | null;
+  receivingAttorney: HandoffAttorney | null;
+  /** ISO timestamp set when the originator generates the handoff URL. */
+  createdAt: string | null;
+  /** ISO timestamp bumped on each receiving-side edit. */
+  lastReceivingEditAt: string | null;
+  /** ISO timestamp set when status flips to completed (incl. PDF auto-flip). */
+  completedAt: string | null;
+}
+
+export function defaultHandoffState(): HandoffState {
+  return {
+    status: "none",
+    originatingSide: "A",
+    originatingAttorney: null,
+    receivingAttorney: null,
+    createdAt: null,
+    lastReceivingEditAt: null,
+    completedAt: null,
+  };
+}

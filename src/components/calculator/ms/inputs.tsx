@@ -1,4 +1,4 @@
-import type { MSInputs, MSDeviation } from "@/lib/calc/ms/types";
+import type { MSInputs, MSDeviation, HandoffSide } from "@/lib/calc/ms/types";
 import { calculateMS, defaultDeviation } from "@/lib/calc/ms/calc";
 import {
   NumInput,
@@ -33,9 +33,12 @@ const ALL_LETTERS: MSInputs["deviationsA"][number]["letter"][] = [
 export function MSCalculatorInputs({
   inputs,
   setInputs,
+  lockedSide = null,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
+  /** When non-null, the named slate is read-only (two-attorney handoff). */
+  lockedSide?: HandoffSide | null;
 }) {
   const u = (patch: Partial<MSInputs>) => setInputs({ ...inputs, ...patch });
   const suspensionApplies = calculateMS(inputs).suspensionApplies;
@@ -62,7 +65,7 @@ export function MSCalculatorInputs({
       <p className="mb-6 -mt-2 text-xs text-muted-foreground">
         Mississippi assumes the obligor is the non-custodial parent and
         applies the statutory percentage to their AGI; the number of custody
-        days is not an input. For 50/50 arrangements, use the Factor (g)
+        days is not an input. For 50/50 arrangements, use the Factor (i)
         deviation below.
       </p>
 
@@ -191,7 +194,7 @@ export function MSCalculatorInputs({
         )}
       </Section>
 
-      <Section title="Parenting arrangement" cite="§ 43-19-103(g)">
+      <Section title="Parenting arrangement" cite="§ 43-19-103(i)">
         <Toggle
           checked={inputs.sharedCustodyFlag}
           onChange={(b) => u({ sharedCustodyFlag: b })}
@@ -201,12 +204,16 @@ export function MSCalculatorInputs({
           <div className="rounded-md border-l-4 border-accent bg-accent/10 p-3 text-sm text-ink">
             Mississippi has <strong>no statutory 50/50 formula</strong>. Any
             adjustment for shared parenting must be made as a discretionary
-            deviation under Factor (g) below.
+            deviation under Factor (i) below.
           </div>
         )}
       </Section>
 
-      <MSDeviationsSection inputs={inputs} setInputs={setInputs} />
+      <MSDeviationsSection
+        inputs={inputs}
+        setInputs={setInputs}
+        lockedSide={lockedSide}
+      />
     </div>
   );
 }
@@ -214,9 +221,11 @@ export function MSCalculatorInputs({
 function MSDeviationsSection({
   inputs,
   setInputs,
+  lockedSide,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
+  lockedSide: HandoffSide | null;
 }) {
   const updateMode = (m: typeof inputs.comparisonMode) => {
     if (m === "side_by_side" && !inputs.deviationsB) {
@@ -269,7 +278,11 @@ function MSDeviationsSection({
           }}
         />
       ) : (
-        <DeviationPickList inputs={inputs} setInputs={setInputs} />
+        <DeviationPickList
+          inputs={inputs}
+          setInputs={setInputs}
+          lockedSide={lockedSide}
+        />
       )}
 
       {inputs.comparisonMode === "side_by_side" && (
@@ -314,9 +327,11 @@ function ChildAgesInput({
 function DeviationPickList({
   inputs,
   setInputs,
+  lockedSide,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
+  lockedSide: HandoffSide | null;
 }) {
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && !!inputs.deviationsB;
@@ -360,6 +375,8 @@ function DeviationPickList({
             obligeeLabel={inputs.obligeeLabel || "Obligee"}
             sideBySide={sideBySide}
             buildContextInputs={() => inputs}
+            obligorLocked={lockedSide === "A"}
+            obligeeLocked={lockedSide === "B"}
           />
         );
       })}
