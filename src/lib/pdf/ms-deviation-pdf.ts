@@ -683,6 +683,7 @@ export function downloadMSDeviationPdf(args: {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
+  handoff?: HandoffState;
   filename?: string;
 }) {
   const bytes = renderMSDeviationPdf(args);
