@@ -97,3 +97,25 @@ export const CITATIONS: Record<string, Citation> = {
       "Income may be imputed to a willfully under-employed parent based on prior earnings, education, training, and local job market. Default values when no reliable evidence: $43,761/yr (male) or $35,936/yr (female). Incarceration and military service are NOT grounds for imputation.",
   },
 };
+
+/**
+ * Rule .07(2)(d) deviation methodology — shared verbatim across the
+ * official AOC PDF, the on-screen worksheet, and the summary PDF so that
+ * a future wording change propagates to every surface at once.
+ */
+export const DEVIATION_METHODOLOGY_NOTE =
+  "Discretionary deviations under Rule 1240-02-04-.07(2)(d) are calculated as net-transfer line items: the parent paying the third-party expense directly is reimbursed for the other parent's pro-rata share. This is distinct from Rule .04(8) mandatory add-ons, which are not subject to the 7% threshold.";
+
+/** Reusable phrasing for the Special Expenses 7% threshold math. */
+export function specialExpensesThresholdLine(args: {
+  monthly: number;
+  threshold: number;
+  basis: number;
+}): string {
+  const fmt = (n: number) =>
+    n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  if (args.basis > 0) {
+    return `Extracurriculars deviation basis: $${fmt(args.monthly)}/mo − $${fmt(args.threshold)}/mo (7% of BCSO per Rule .07(2)(d)) = $${fmt(args.basis)}/mo, allocated pro rata.`;
+  }
+  return `Extracurriculars: $${fmt(args.monthly)}/mo is at or below the 7% of BCSO threshold ($${fmt(args.threshold)}/mo, Rule .07(2)(d)) and is presumed already in BCSO; no deviation applied.`;
+}
