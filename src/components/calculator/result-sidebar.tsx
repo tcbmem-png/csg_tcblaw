@@ -176,11 +176,14 @@ export function ResultSidebar({
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, citation }: { label: string; value: string; citation?: import("@/lib/calc/citations").CitationKey }) {
   return (
     <div className="flex items-baseline justify-between">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-mono text-ink">{value}</span>
+      <span className="inline-flex items-center gap-1.5 font-mono text-ink">
+        {value}
+        {citation && <RuleInfo citation={citation} />}
+      </span>
     </div>
   );
 }
