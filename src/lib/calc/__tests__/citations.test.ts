@@ -154,9 +154,13 @@ describe("citation framework — mechanical verification", () => {
   });
 
   it("imputation sub-paragraphs are distinct paragraph-level citations", () => {
-    expect(CITATIONS.income_imputed_prior_earnings.rule).toContain("(i)");
-    expect(CITATIONS.income_imputed_vocational.rule).toContain("(ii)");
-    expect(CITATIONS.income_carveout_incarceration.rule).toContain("(iii)");
-    expect(CITATIONS.income_carveout_means_tested.rule).toContain("(iv)");
+    // Post-P1.5 audit: rule uses arabic+period for the 3rd level (2.) and
+    // lowercase roman in parens for the 4th level. Each entry must reach
+    // at least one fourth-level subpart.
+    expect(CITATIONS.income_imputed_prior_earnings.rule).toContain("2.(ii)");
+    expect(CITATIONS.income_imputed_vocational.rule).toContain("2.(iii)");
+    expect(CITATIONS.income_imputed_assets.rule).toContain("2.(i)(III)");
+    expect(CITATIONS.income_carveout_incarceration.rule).toContain("2.(ii)(I)II.");
+    expect(CITATIONS.income_carveout_means_tested.rule).toContain("(3)(c)2.");
   });
 });
