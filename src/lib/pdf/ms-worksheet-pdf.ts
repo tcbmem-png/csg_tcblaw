@@ -364,7 +364,7 @@ function renderSideBySide(ctx: Ctx, inputs: MSInputs, outputs: MSOutputs) {
   h2(ctx, "IV. Side-by-Side Deviation Comparison (§ 43-19-103)");
   small(
     ctx,
-    `${inputs.positionALabel} vs ${inputs.positionBLabel}. Both columns are proposals; the chancellor retains discretion.`,
+    `${inputs.obligorLabel} vs ${inputs.obligeeLabel}. Both columns are proposals; the chancellor retains discretion.`,
   );
 
   let totalA = 0;
@@ -384,31 +384,31 @@ function renderSideBySide(ctx: Ctx, inputs: MSInputs, outputs: MSOutputs) {
       label: `(${dA.letter}) ${FACTOR_TITLES[dA.letter]}`,
       header: true,
     });
-    row(ctx, { label: `  ${inputs.positionALabel}`, total: fmt2(a) });
+    row(ctx, { label: `  ${inputs.obligorLabel}`, total: fmt2(a) });
     if (dA.applicable && dA.description) {
       paragraph(ctx, `    ${dA.description}`, { size: 8, color: MUTED });
     }
-    row(ctx, { label: `  ${inputs.positionBLabel}`, total: fmt2(b) });
+    row(ctx, { label: `  ${inputs.obligeeLabel}`, total: fmt2(b) });
     if (dB?.applicable && dB.description) {
       paragraph(ctx, `    ${dB.description}`, { size: 8, color: MUTED });
     }
-    row(ctx, { label: "  Gap (A − B)", total: fmt2(a - b) });
+    row(ctx, { label: "  Gap (obligor − obligee)", total: fmt2(a - b) });
   }
 
   ctx.y -= 4;
-  row(ctx, { label: `${inputs.positionALabel} — total deviations`, total: fmt2(totalA), emphasis: true });
-  row(ctx, { label: `${inputs.positionBLabel} — total deviations`, total: fmt2(totalB), emphasis: true });
+  row(ctx, { label: `${inputs.obligorLabel} — total deviations`, total: fmt2(totalA), emphasis: true });
+  row(ctx, { label: `${inputs.obligeeLabel} — total deviations`, total: fmt2(totalB), emphasis: true });
   row(ctx, { label: "Aggregate gap / mo", total: fmt2(totalA - totalB), emphasis: true });
 
   // Final monthly comparison
   h2(ctx, "V. Proposed Final Monthly Award — Side by Side");
   row(ctx, {
-    label: `${inputs.positionALabel} — proposed final / mo`,
+    label: `${inputs.obligorLabel} — proposed final / mo`,
     total: fmt2(outputs.proposedFinalMonthly),
     emphasis: true,
   });
   row(ctx, {
-    label: `${inputs.positionBLabel} — proposed final / mo`,
+    label: `${inputs.obligeeLabel} — proposed final / mo`,
     total: fmt2(outputs.positionB.proposedFinalMonthly),
     emphasis: true,
   });
