@@ -365,8 +365,8 @@ function factorBlock(
     return;
   }
 
-  const obligorAttribution = attributionFor(handoff, "A");
-  const obligeeAttribution = attributionFor(handoff, "B");
+  const obligorAttribution = attributionFor(handoff, "A", inputs.obligorLabel || "Obligor");
+  const obligeeAttribution = attributionFor(handoff, "B", inputs.obligeeLabel || "Obligee");
 
   // Per-party columns
   if (sideBySide) {
