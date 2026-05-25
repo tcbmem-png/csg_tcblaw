@@ -278,7 +278,11 @@ function MSDeviationsSection({
           }}
         />
       ) : (
-        <DeviationPickList inputs={inputs} setInputs={setInputs} />
+        <DeviationPickList
+          inputs={inputs}
+          setInputs={setInputs}
+          lockedSide={lockedSide}
+        />
       )}
 
       {inputs.comparisonMode === "side_by_side" && (
