@@ -579,8 +579,16 @@ function HowItWorksIncome() {
         <li>
           § 43-19-101(4) — High-income and low-income threshold findings
         </li>
+        <li>
+          § 43-19-101(5) — Imputation framework (added by HB 1067, eff.
+          July 1, 2022)
+        </li>
         <li>§ 43-19-101(6) — Health insurance treatment</li>
         <li>§ 43-19-103 — The ten deviation criteria (a)–(j)</li>
+        <li>
+          § 43-19-36 — Suspension of support during incarceration of 180+
+          days (added by HB 1349, eff. July 1, 2023)
+        </li>
         <li>§ 93-11-65(8) — Emancipation age and conditions</li>
       </ul>
       <P>
