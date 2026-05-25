@@ -31,7 +31,7 @@ function fmt(n: number, dec = 0): string {
 
 /**
  * On-screen preview of what the MS worksheet PDF will contain. Mirrors the
- * structure of ms-worksheet-pdf.ts so users can review before unlocking.
+ * structure of ms-worksheet-pdf.ts.
  */
 export function MSWorksheetPreview({
   inputs,
