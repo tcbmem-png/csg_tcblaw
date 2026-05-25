@@ -327,9 +327,11 @@ function ChildAgesInput({
 function DeviationPickList({
   inputs,
   setInputs,
+  lockedSide,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
+  lockedSide: HandoffSide | null;
 }) {
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && !!inputs.deviationsB;
