@@ -87,11 +87,11 @@ const FIXTURES: Record<string, CalcInputs> = {
 
 describe("citation framework — mechanical verification", () => {
   it("every CITATIONS entry uses a recognized rule or statute prefix", () => {
+    // Accept TN rule paragraphs ("1240-02-04-.04(3)(a)2.(iv)" or "...-.04(7)(a), (h), (i)")
+    // and statutory cites starting "Tenn. Code Ann. §".
+    const ruleShape = /^1240-02-04-\.\d+(\([0-9a-zA-Z]+\)|\d+\.|,\s|\s)*$|^Tenn\. Code Ann\. §/;
     for (const [key, c] of Object.entries(CITATIONS)) {
-      expect(
-        /^1240-02-04-\.\d+|^Tenn\. Code Ann\./.test(c.rule),
-        `${key} → ${c.rule}`,
-      ).toBe(true);
+      expect(ruleShape.test(c.rule), `${key} → ${c.rule}`).toBe(true);
     }
   });
 
