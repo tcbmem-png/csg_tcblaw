@@ -489,9 +489,9 @@ function FormF({ s, set }: { s: MSStructuredF; set: (n: MSStructuredF) => void }
   );
 }
 
-// ===== Factor (g) — shared parental arrangement =====
-function FormG({ s, set }: { s: MSStructuredG; set: (n: MSStructuredG) => void }) {
-  const u = (p: Partial<MSStructuredG>) => set({ ...s, ...p });
+// ===== Factor (i) — shared parental arrangement =====
+function FormParental({ s, set }: { s: MSStructuredParental; set: (n: MSStructuredParental) => void }) {
+  const u = (p: Partial<MSStructuredParental>) => set({ ...s, ...p });
   return (
     <>
       <div className="rounded-md border-l-4 border-accent bg-accent/10 p-3 text-xs text-ink">
