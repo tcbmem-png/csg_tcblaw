@@ -102,8 +102,34 @@ export function defaultStructured(letter: MSFactorLetter): MSDeviationStructured
         evidence: { receipts: false, photos: false, testimony: false, other: false, otherNote: "" },
       };
     case "g":
+      // § 43-19-103(g) — Total available assets of obligee, obligor, and child.
       return {
         letter: "g",
+        obligor: { realEstate: 0, equity: 0, investments: 0, retirement: 0, business: 0, other: 0, otherNote: "" },
+        obligee: { realEstate: 0, equity: 0, investments: 0, retirement: 0, business: 0, other: 0, otherNote: "" },
+        child: { value: 0, note: "" },
+        incomeFromAssets: "",
+        partialNote: "",
+        description: "",
+      };
+    case "h":
+      // § 43-19-103(h) — Payment by obligee of child care expenses.
+      return {
+        letter: "h",
+        reason: "",
+        provider: "",
+        monthlyCost: 0,
+        hoursPerWeek: 0,
+        childrenCoveredNote: "",
+        taxCredit: "",
+        netOutOfPocket: 0,
+        allocation: "",
+        allocationOther: "",
+      };
+    case "i":
+      // § 43-19-103(i) — The particular shared parental arrangement.
+      return {
+        letter: "i",
         arrangement: "",
         arrangementOther: "",
         obligorOvernights: 0,
@@ -121,29 +147,6 @@ export function defaultStructured(letter: MSFactorLetter): MSDeviationStructured
         approach: "",
         downwardAmount: 0,
         approachOther: "",
-      };
-    case "h":
-      return {
-        letter: "h",
-        obligor: { realEstate: 0, equity: 0, investments: 0, retirement: 0, business: 0, other: 0, otherNote: "" },
-        obligee: { realEstate: 0, equity: 0, investments: 0, retirement: 0, business: 0, other: 0, otherNote: "" },
-        child: { value: 0, note: "" },
-        incomeFromAssets: "",
-        partialNote: "",
-        description: "",
-      };
-    case "i":
-      return {
-        letter: "i",
-        reason: "",
-        provider: "",
-        monthlyCost: 0,
-        hoursPerWeek: 0,
-        childrenCoveredNote: "",
-        taxCredit: "",
-        netOutOfPocket: 0,
-        allocation: "",
-        allocationOther: "",
       };
     case "j":
       return {
