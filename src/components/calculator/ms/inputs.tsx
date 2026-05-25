@@ -340,9 +340,6 @@ function ChildAgesInput({
     </div>
   );
 }
-    </Section>
-  );
-}
 
 function DeviationPickList({
   slate,
