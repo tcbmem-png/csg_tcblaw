@@ -561,10 +561,10 @@ function FormParental({ s, set }: { s: MSStructuredParental; set: (n: MSStructur
   );
 }
 
-// ===== Factor (h) — available assets =====
-function FormH({ s, set }: { s: MSStructuredH; set: (n: MSStructuredH) => void }) {
-  const u = (p: Partial<MSStructuredH>) => set({ ...s, ...p });
-  const Block = ({ who, val, on }: { who: "obligor" | "obligee"; val: MSStructuredH["obligor"]; on: (p: Partial<MSStructuredH["obligor"]>) => void }) => (
+// ===== Factor (g) — available assets =====
+function FormAssets({ s, set }: { s: MSStructuredAssets; set: (n: MSStructuredAssets) => void }) {
+  const u = (p: Partial<MSStructuredAssets>) => set({ ...s, ...p });
+  const Block = ({ who, val, on }: { who: "obligor" | "obligee"; val: MSStructuredAssets["obligor"]; on: (p: Partial<MSStructuredAssets["obligor"]>) => void }) => (
     <div className="rounded-md border border-rule p-3">
       <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{who}</div>
       <Grid>
