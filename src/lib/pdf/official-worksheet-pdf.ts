@@ -1,6 +1,10 @@
 import type { CalcInputs, CalcOutputs } from "@/lib/calc/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import {
+  DEVIATION_METHODOLOGY_NOTE,
+  specialExpensesThresholdLine,
+} from "@/lib/calc/citations";
+import {
   SimplePdf,
   MARGIN,
   PAGE_W,
