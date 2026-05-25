@@ -13,7 +13,7 @@
  *   4. Proposed Final Order (blank findings + signature line)
  *   5. Footer (disclaimer, authority, repo)
  */
-import type { MSInputs, MSOutputs, MSFactorLetter } from "@/lib/calc/ms/types";
+import type { MSInputs, MSOutputs, MSFactorLetter, HandoffState } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import {
   buildReconciliation,
