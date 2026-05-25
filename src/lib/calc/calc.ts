@@ -297,12 +297,13 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
   const specialExpensesThresholdAmount = bcso * SPECIAL_EXPENSES_THRESHOLD_RATIO;
   let specialExpensesIncludedAsDeviation = 0;
   let specialExpensesDeviationFromA = 0;
-  if (inputs.includeSpecialExpenses && inputs.specialExpensesMonthly > 0) {
+  const specialExpensesMonthlyInput = (inputs.specialExpensesAnnual || 0) / 12;
+  if (inputs.includeSpecialExpenses && specialExpensesMonthlyInput > 0) {
     if (inputs.specialExpensesWaiveThreshold) {
-      specialExpensesIncludedAsDeviation = inputs.specialExpensesMonthly;
-    } else if (inputs.specialExpensesMonthly > specialExpensesThresholdAmount) {
+      specialExpensesIncludedAsDeviation = specialExpensesMonthlyInput;
+    } else if (specialExpensesMonthlyInput > specialExpensesThresholdAmount) {
       specialExpensesIncludedAsDeviation =
-        inputs.specialExpensesMonthly - specialExpensesThresholdAmount;
+        specialExpensesMonthlyInput - specialExpensesThresholdAmount;
     }
     if (specialExpensesIncludedAsDeviation > 0) {
       specialExpensesDeviationFromA = splitProRataNetFromA(
