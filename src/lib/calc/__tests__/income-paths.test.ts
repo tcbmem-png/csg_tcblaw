@@ -55,8 +55,8 @@ describe("Income paths — arithmetic", () => {
       ],
       "5yr",
     );
-    // Uses last 5: (12+12+12+12+60)k / 5 / 12 = 1933.33...
-    expect(monthly).toBeCloseTo(1933.33, 1);
+    // Uses last 5: (12+12+12+12+60)k / 5 / 12 = 1800
+    expect(monthly).toBe(1800);
   });
 
   it("Path C self-employed — receipts − expenses + add-backs / 12", () => {
