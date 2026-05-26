@@ -180,6 +180,15 @@ function MSCalculatorPage() {
 
           {tab === "inputs" && (
             <>
+              <HandoffWiring
+                handoff={handoff}
+                setHandoff={setHandoff}
+                inputs={inputs}
+                outputs={outputs}
+                caption={caption}
+                activeSide={activeSide}
+                isReceivingSession={isReceivingSession}
+              />
               <MSHandoffLandingBanner
                 handoff={handoff}
                 setHandoff={setHandoff}
@@ -196,6 +205,15 @@ function MSCalculatorPage() {
                     ? handoff.originatingSide
                     : null
                 }
+              />
+              <HandoffActionWiring
+                handoff={handoff}
+                setHandoff={setHandoff}
+                inputs={inputs}
+                outputs={outputs}
+                caption={caption}
+                activeSide={activeSide}
+                isReceivingSession={isReceivingSession}
               />
             </>
           )}
