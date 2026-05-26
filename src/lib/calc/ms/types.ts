@@ -354,6 +354,13 @@ export interface HandoffState {
   lastReceivingEditAt: string | null;
   /** ISO timestamp set when status flips to completed (incl. PDF auto-flip). */
   completedAt: string | null;
+  /**
+   * Stable case identity for round-trip origin detection. 16-byte / 128-bit
+   * hex token generated once at first Send and preserved verbatim on every
+   * subsequent re-generate. Null on legacy URLs predating this field; in
+   * that case origin detection falls back to fingerprint(inputs+caption).
+   */
+  caseId: string | null;
 }
 
 export function defaultHandoffState(): HandoffState {
@@ -365,5 +372,6 @@ export function defaultHandoffState(): HandoffState {
     createdAt: null,
     lastReceivingEditAt: null,
     completedAt: null,
+    caseId: null,
   };
 }
