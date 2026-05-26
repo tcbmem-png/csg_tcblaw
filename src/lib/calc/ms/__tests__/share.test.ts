@@ -63,6 +63,7 @@ describe("MS share — v3 round-trip", () => {
       createdAt: "2026-05-20T12:00:00.000Z",
       lastReceivingEditAt: "2026-05-22T15:30:00.000Z",
       completedAt: null,
+      caseId: null,
     };
 
     const encoded = encodeMSShare(inputs, caption, handoff);
