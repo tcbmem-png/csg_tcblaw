@@ -163,51 +163,12 @@ export function MSResultSidebar({
         >
           Print / Save PDF
         </button>
-        {anyDeviations && (
-          <button
-            type="button"
-            onClick={() => {
-              const handoffForPdf = maybeCompleteForPdf();
-              downloadMSDeviationPdf({
-                inputs,
-                outputs,
-                caption,
-                handoff: handoffForPdf,
-              });
-            }}
-            className="w-full rounded-md border border-primary/40 bg-primary/5 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
-          >
-            Download deviation worksheet (PDF)
-          </button>
-        )}
-        {!isReceivingSession && (
-          <button
-            type="button"
-            onClick={() => setShareOpen(true)}
-            className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40"
-          >
-            {handoff.status === "none"
-              ? "Hand off to opposing counsel"
-              : "Re-generate handoff URL"}
-          </button>
-        )}
         <CopyLinkButton />
       </div>
 
       <p className="mt-3 text-[10px] text-muted-foreground">
         Guidelines effective {outputs.guidelinesEffectiveDate}. Not legal advice.
       </p>
-
-      <MSHandoffShareDialog
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-        inputs={inputs}
-        caption={caption}
-        handoff={handoff}
-        onApply={({ handoff: nextHandoff }) => {
-          setHandoff(nextHandoff);
-        }}
-      />
     </div>
   );
 }
