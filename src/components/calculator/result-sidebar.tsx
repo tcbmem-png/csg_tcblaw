@@ -198,14 +198,12 @@ export function ResultSidebar({
         </button>
         <button
           type="button"
-          onClick={() => {
-            onViewWorksheet();
-            setTimeout(() => printPdf("annotated"), 150);
-          }}
-          className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40"
-          title="Opens the annotated worksheet. The worksheet view also offers an AOC-format (filing-ready) download."
+          onClick={downloadAnnotated}
+          disabled={printing}
+          className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40 disabled:opacity-60"
+          title="Downloads the annotated PDF. The worksheet view also offers the AOC-format (filing-ready) replica."
         >
-          Print annotated PDF
+          {printing ? "Generating…" : "Download annotated PDF"}
         </button>
         <CopyLinkButton />
       </div>
