@@ -6,8 +6,6 @@ import type {
   MSOutputs,
 } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
-import { downloadMSDeviationPdf } from "@/lib/pdf/ms-deviation-pdf";
-import { MSHandoffShareDialog } from "./handoff-share-dialog";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -31,7 +29,6 @@ interface Props {
 export function MSResultSidebar({
   inputs,
   outputs,
-  caption,
   handoff,
   setHandoff,
   isReceivingSession,
@@ -39,8 +36,6 @@ export function MSResultSidebar({
 }: Props) {
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && outputs.positionB;
-  const anyDeviations = inputs.deviationsA.some((d) => d.applicable);
-  const [shareOpen, setShareOpen] = useState(false);
 
   /**
    * PDF auto-completion (addition #1): if this is the receiving session
