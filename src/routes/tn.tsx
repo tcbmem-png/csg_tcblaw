@@ -7,7 +7,6 @@ import { IncomeHelperPanel } from "@/components/calculator/income-helper-panel";
 import { IncomeMethodologyAppendix } from "@/components/calculator/income-methodology-appendix";
 import { ResultSidebar } from "@/components/calculator/result-sidebar";
 import { OfficialWorksheet } from "@/components/calculator/official-worksheet";
-import { AocWorksheet } from "@/components/calculator/aoc-worksheet";
 import { PdfDownloadButtons } from "@/components/calculator/pdf-download-buttons";
 import { ComparisonView } from "@/components/calculator/comparison";
 import { CaseCaptionForm } from "@/components/calculator/case-caption";
@@ -171,26 +170,23 @@ function TNCalculatorPage() {
           {tab === "comparison" && <ComparisonView inputs={inputs} />}
           {tab === "worksheet" && (
             <>
-              <PdfDownloadButtons className="mb-4" />
-              {/* Annotated TCB Law worksheet — visible on screen and
-                  printed when print-mode-annotated is set. */}
-              <div className="pdf-annotated">
-                <OfficialWorksheet
-                  inputs={inputs}
-                  outputs={outputs}
-                  caption={caption}
-                />
-                <IncomeMethodologyAppendix inputs={inputs} />
-                <ComparisonAppendix inputs={inputs} caption={caption} />
-              </div>
-              {/* AOC-format filing worksheet — hidden on screen, printed
-                  when print-mode-aoc is set. Reconciles line-by-line with
-                  the annotated version (same calculation state). */}
-              <AocWorksheet
+              <PdfDownloadButtons
+                inputs={inputs}
+                outputs={outputs}
+                caption={caption}
+                className="mb-4"
+              />
+              {/* On-screen annotated worksheet. Both PDFs are generated
+                  directly by the renderers in src/lib/pdf/ — the AOC PDF
+                  is a true replica of the State of Tennessee form, while
+                  the annotated PDF mirrors what's shown here. */}
+              <OfficialWorksheet
                 inputs={inputs}
                 outputs={outputs}
                 caption={caption}
               />
+              <IncomeMethodologyAppendix inputs={inputs} />
+              <ComparisonAppendix inputs={inputs} caption={caption} />
             </>
           )}
         </div>
@@ -199,6 +195,7 @@ function TNCalculatorPage() {
           <ResultSidebar
             inputs={inputs}
             outputs={outputs}
+            caption={caption}
             onViewWorksheet={() => setTab("worksheet")}
             onViewComparison={() => setTab("comparison")}
           />
