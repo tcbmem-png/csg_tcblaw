@@ -243,6 +243,77 @@ function MSCalculatorPage() {
   );
 }
 
+interface HandoffWiringProps {
+  handoff: HandoffState;
+  setHandoff: (next: HandoffState) => void;
+  inputs: MSInputs;
+  outputs: ReturnType<typeof calculateMS>;
+  caption: CaseCaption;
+  activeSide: HandoffSide | null;
+  isReceivingSession: boolean;
+}
+
+function useIsOriginator(handoff: HandoffState, inputs: MSInputs, caption: CaseCaption) {
+  const [isOriginator, setIsOriginator] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    isOriginatorBrowser(handoff.caseId, inputs, caption).then((v) => {
+      if (!cancelled) setIsOriginator(v);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [handoff.caseId, inputs, caption]);
+  return isOriginator;
+}
+
+function HandoffWiring(props: HandoffWiringProps) {
+  const isOriginator = useIsOriginator(props.handoff, props.inputs, props.caption);
+  const context = deriveMoment(props.handoff, props.activeSide, isOriginator);
+  return (
+    <MSHandoffStatusBanner
+      context={context}
+      onCancel={
+        context.moment === "sent_awaiting"
+          ? () => {
+              if (typeof window !== "undefined" && window.confirm("Cancel this handoff and start over? The link you sent will still work for opposing counsel.")) {
+                props.setHandoff({ ...props.handoff, status: "none", createdAt: null });
+              }
+            }
+          : undefined
+      }
+      onResend={
+        context.moment === "sent_awaiting"
+          ? async () => {
+              try {
+                await navigator.clipboard.writeText(window.location.href);
+              } catch {
+                /* ignore */
+              }
+            }
+          : undefined
+      }
+    />
+  );
+}
+
+function HandoffActionWiring(props: HandoffWiringProps) {
+  const isOriginator = useIsOriginator(props.handoff, props.inputs, props.caption);
+  const context = deriveMoment(props.handoff, props.activeSide, isOriginator);
+  return (
+    <MSHandoffActionPanel
+      context={context}
+      inputs={props.inputs}
+      outputs={props.outputs}
+      caption={props.caption}
+      handoff={props.handoff}
+      setHandoff={props.setHandoff}
+      activeSide={props.activeSide}
+      isReceivingSession={props.isReceivingSession}
+    />
+  );
+}
+
 function TabBtn({
   active,
   onClick,
