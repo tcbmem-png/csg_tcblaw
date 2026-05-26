@@ -1,9 +1,10 @@
 import { useState } from "react";
 import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
+import type { CaseCaption } from "@/lib/calc/share";
+import { defaultCaption } from "@/lib/calc/share";
 import { computeScenarioPair, hasImputation } from "@/lib/calc/scenarios";
 import { citationForBcso } from "@/lib/calc/citation-resolvers";
 import { RuleInfo } from "./rule-info";
-import { printPdf } from "@/lib/print-mode";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -18,14 +19,39 @@ function directionLabel(d: Direction, a: string, b: string) {
 export function ResultSidebar({
   inputs,
   outputs,
+  caption = defaultCaption(),
   onViewWorksheet,
   onViewComparison,
 }: {
   inputs: CalcInputs;
   outputs: CalcOutputs;
+  caption?: CaseCaption;
   onViewWorksheet: () => void;
   onViewComparison?: () => void;
 }) {
+  const [printing, setPrinting] = useState(false);
+  async function downloadAnnotated() {
+    if (printing) return;
+    setPrinting(true);
+    try {
+      const { renderWorksheetPdf } = await import("@/lib/pdf/worksheet-pdf");
+      const bytes = await renderWorksheetPdf({ inputs, outputs, caption });
+      const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const base = (caption.matterName || caption.docketNumber || "tn-child-support-worksheet")
+        .replace(/[^A-Za-z0-9_-]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "tn-child-support-worksheet";
+      a.download = `${base}-annotated.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } finally {
+      setPrinting(false);
+    }
+  }
   return (
     <div className="rounded-lg border border-rule bg-card p-5 shadow-sm">
       <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -172,14 +198,12 @@ export function ResultSidebar({
         </button>
         <button
           type="button"
-          onClick={() => {
-            onViewWorksheet();
-            setTimeout(() => printPdf("annotated"), 150);
-          }}
-          className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40"
-          title="Opens the annotated worksheet. The worksheet view also offers an AOC-format (filing-ready) download."
+          onClick={downloadAnnotated}
+          disabled={printing}
+          className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40 disabled:opacity-60"
+          title="Downloads the annotated PDF. The worksheet view also offers the AOC-format (filing-ready) replica."
         >
-          Print annotated PDF
+          {printing ? "Generating…" : "Download annotated PDF"}
         </button>
         <CopyLinkButton />
       </div>
