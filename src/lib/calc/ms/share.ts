@@ -220,21 +220,20 @@ export function scrubOppositeSlate(
 // =================================================================
 // C2 — originator-opens-their-own-handoff detection
 //
-// At URL-generation time the originator writes a random 16-byte hex
-// token into localStorage keyed by the share payload hash (sans handoff
-// + sans side). On landing, if the local token matches we know this
-// browser generated the URL. Cross-browser → silent.
+// PRIMARY KEY: HandoffState.caseId (16-byte / 128-bit hex token minted
+//   once at first Send and preserved across re-generates and round-trips).
+//   localStorage shape: { [caseId]: token16hex }.
 //
-// Token GC: deferred (tokens are ~40 bytes each, accumulation is slow).
-// A future maintainer can prune entries older than N days if quota
-// pressure ever materializes.
+// LEGACY FALLBACK: pre-caseId URLs hash fingerprint(inputs+caption) into
+//   the same map. This was the original mechanism; it fails on round-trip
+//   because receiving-side edits change the fingerprint. Kept for back-
+//   compat only; new shares always carry a caseId.
 // =================================================================
 
 const ORIGIN_STORAGE_KEY = "ms.handoff.origins";
 
 async function sha256Hex(s: string): Promise<string> {
   if (typeof crypto === "undefined" || !crypto.subtle) {
-    // Fallback for older runtimes / unit tests without WebCrypto.
     let h = 0;
     for (let i = 0; i < s.length; i++) {
       h = ((h << 5) - h + s.charCodeAt(i)) | 0;
@@ -252,8 +251,6 @@ function payloadFingerprintInput(
   inputs: MSInputs,
   caption: CaseCaption,
 ): string {
-  // Hash inputs+caption only — handoff state is volatile and would
-  // change the fingerprint as the receiving side edits.
   return JSON.stringify({ i: inputs, c: caption });
 }
 
@@ -262,6 +259,18 @@ export async function fingerprintShare(
   caption: CaseCaption,
 ): Promise<string> {
   return sha256Hex(payloadFingerprintInput(inputs, caption));
+}
+
+/**
+ * Cheap synchronous hash for share-state divergence checks. Not crypto-
+ * grade; sufficient to compare two encoded `?s=` payloads for equality.
+ */
+export function shareStateHash(encoded: string): string {
+  let h = 5381;
+  for (let i = 0; i < encoded.length; i++) {
+    h = ((h << 5) + h + encoded.charCodeAt(i)) | 0;
+  }
+  return (h >>> 0).toString(16);
 }
 
 function readOriginStore(): Record<string, string> {
@@ -285,34 +294,53 @@ function writeOriginStore(store: Record<string, string>): void {
   }
 }
 
-function randomToken(): string {
+/**
+ * 16-byte / 128-bit hex token. Same entropy budget as the existing C2
+ * origin token. Used for both caseId and per-origin tokens — do NOT
+ * downsize without auditing every call site.
+ */
+export function randomToken(bytes = 16): string {
   if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-    const arr = new Uint8Array(16);
+    const arr = new Uint8Array(bytes);
     crypto.getRandomValues(arr);
     return Array.from(arr)
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
   }
-  return Math.random().toString(16).slice(2).padEnd(32, "0").slice(0, 32);
+  return Math.random().toString(16).slice(2).padEnd(bytes * 2, "0").slice(0, bytes * 2);
+}
+
+async function resolveOriginKey(
+  caseId: string | null,
+  inputs: MSInputs,
+  caption: CaseCaption,
+): Promise<string> {
+  if (caseId) return `case:${caseId}`;
+  // Legacy fingerprint fallback for pre-caseId URLs.
+  return `fp:${await fingerprintShare(inputs, caption)}`;
 }
 
 export async function recordOriginatedHandoff(
+  caseId: string | null,
   inputs: MSInputs,
   caption: CaseCaption,
 ): Promise<void> {
-  const key = await fingerprintShare(inputs, caption);
+  const key = await resolveOriginKey(caseId, inputs, caption);
   const store = readOriginStore();
   if (!store[key]) {
-    store[key] = randomToken();
+    store[key] = randomToken(16);
     writeOriginStore(store);
   }
 }
 
 export async function isOriginatorBrowser(
+  caseId: string | null,
   inputs: MSInputs,
   caption: CaseCaption,
 ): Promise<boolean> {
-  const key = await fingerprintShare(inputs, caption);
   const store = readOriginStore();
-  return Boolean(store[key]);
+  if (caseId && store[`case:${caseId}`]) return true;
+  // Fallback: legacy fingerprint key (for URLs minted before caseId).
+  const fpKey = `fp:${await fingerprintShare(inputs, caption)}`;
+  return Boolean(store[fpKey]);
 }

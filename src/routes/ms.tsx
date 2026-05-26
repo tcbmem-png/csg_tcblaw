@@ -11,13 +11,17 @@ import { MSCalculatorInputs } from "@/components/calculator/ms/inputs";
 import { MSResultSidebar } from "@/components/calculator/ms/result-sidebar";
 import { MSWorksheetPreview } from "@/components/calculator/ms/worksheet-preview";
 import { MSHandoffLandingBanner } from "@/components/calculator/ms/handoff-landing-banner";
+import { MSHandoffStatusBanner } from "@/components/calculator/ms/handoff-status-banner";
+import { MSHandoffActionPanel } from "@/components/calculator/ms/handoff-action-panel";
 import { CaseCaptionForm } from "@/components/calculator/case-caption";
 import { defaultCaption, type CaseCaption } from "@/lib/calc/share";
 import {
   decodeMSShare,
   encodeMSShare,
+  isOriginatorBrowser,
   parseSideParam,
 } from "@/lib/calc/ms/share";
+import { deriveMoment } from "@/lib/calc/ms/moment";
 
 export const Route = createFileRoute("/ms")({
   head: () => ({
@@ -176,6 +180,15 @@ function MSCalculatorPage() {
 
           {tab === "inputs" && (
             <>
+              <HandoffWiring
+                handoff={handoff}
+                setHandoff={setHandoff}
+                inputs={inputs}
+                outputs={outputs}
+                caption={caption}
+                activeSide={activeSide}
+                isReceivingSession={isReceivingSession}
+              />
               <MSHandoffLandingBanner
                 handoff={handoff}
                 setHandoff={setHandoff}
@@ -192,6 +205,15 @@ function MSCalculatorPage() {
                     ? handoff.originatingSide
                     : null
                 }
+              />
+              <HandoffActionWiring
+                handoff={handoff}
+                setHandoff={setHandoff}
+                inputs={inputs}
+                outputs={outputs}
+                caption={caption}
+                activeSide={activeSide}
+                isReceivingSession={isReceivingSession}
               />
             </>
           )}
@@ -218,6 +240,77 @@ function MSCalculatorPage() {
         </aside>
       </div>
     </div>
+  );
+}
+
+interface HandoffWiringProps {
+  handoff: HandoffState;
+  setHandoff: (next: HandoffState) => void;
+  inputs: MSInputs;
+  outputs: ReturnType<typeof calculateMS>;
+  caption: CaseCaption;
+  activeSide: HandoffSide | null;
+  isReceivingSession: boolean;
+}
+
+function useIsOriginator(handoff: HandoffState, inputs: MSInputs, caption: CaseCaption) {
+  const [isOriginator, setIsOriginator] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    isOriginatorBrowser(handoff.caseId, inputs, caption).then((v) => {
+      if (!cancelled) setIsOriginator(v);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [handoff.caseId, inputs, caption]);
+  return isOriginator;
+}
+
+function HandoffWiring(props: HandoffWiringProps) {
+  const isOriginator = useIsOriginator(props.handoff, props.inputs, props.caption);
+  const context = deriveMoment(props.handoff, props.activeSide, isOriginator);
+  return (
+    <MSHandoffStatusBanner
+      context={context}
+      onCancel={
+        context.moment === "sent_awaiting"
+          ? () => {
+              if (typeof window !== "undefined" && window.confirm("Cancel this handoff and start over? The link you sent will still work for opposing counsel.")) {
+                props.setHandoff({ ...props.handoff, status: "none", createdAt: null });
+              }
+            }
+          : undefined
+      }
+      onResend={
+        context.moment === "sent_awaiting"
+          ? async () => {
+              try {
+                await navigator.clipboard.writeText(window.location.href);
+              } catch {
+                /* ignore */
+              }
+            }
+          : undefined
+      }
+    />
+  );
+}
+
+function HandoffActionWiring(props: HandoffWiringProps) {
+  const isOriginator = useIsOriginator(props.handoff, props.inputs, props.caption);
+  const context = deriveMoment(props.handoff, props.activeSide, isOriginator);
+  return (
+    <MSHandoffActionPanel
+      context={context}
+      inputs={props.inputs}
+      outputs={props.outputs}
+      caption={props.caption}
+      handoff={props.handoff}
+      setHandoff={props.setHandoff}
+      activeSide={props.activeSide}
+      isReceivingSession={props.isReceivingSession}
+    />
   );
 }
 
