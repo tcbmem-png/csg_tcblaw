@@ -32,7 +32,11 @@ function Index() {
       <section className="border-b border-rule bg-cream">
         <div className="mx-auto max-w-4xl px-6 py-20 text-center md:py-28">
           <p className="font-mono text-xs uppercase tracking-widest text-primary">
-            Open-source &middot; MIT licensed &middot; No signup, no paywall
+            <span className="whitespace-nowrap">Open-source</span>
+            <span aria-hidden="true"> &middot; </span>
+            <span className="whitespace-nowrap">MIT licensed</span>
+            <span aria-hidden="true"> &middot; </span>
+            <span className="whitespace-nowrap">No signup, no paywall</span>
           </p>
           <h1 className="mt-4 font-serif text-5xl leading-tight text-ink md:text-6xl">
             Child support,<br />
