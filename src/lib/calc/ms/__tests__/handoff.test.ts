@@ -163,20 +163,19 @@ describe("handoff — scrubbing transform", () => {
 // C2 token compare
 // =================================================================
 
-describe("handoff — C2 originator detection", () => {
+describe("handoff — C2 originator detection (legacy fingerprint fallback)", () => {
   it("isOriginatorBrowser returns true after recordOriginatedHandoff", async () => {
     const inputs = defaultMSInputs();
     const caption = defaultCaption();
-    expect(await isOriginatorBrowser(inputs, caption)).toBe(false);
-    await recordOriginatedHandoff(inputs, caption);
-    expect(await isOriginatorBrowser(inputs, caption)).toBe(true);
+    expect(await isOriginatorBrowser(null, inputs, caption)).toBe(false);
+    await recordOriginatedHandoff(null, inputs, caption);
+    expect(await isOriginatorBrowser(null, inputs, caption)).toBe(true);
   });
 
   it("returns false from a fresh browser (no token in localStorage)", async () => {
-    // localStorage was reset by beforeEach.
     const inputs = defaultMSInputs();
     const caption = defaultCaption();
-    expect(await isOriginatorBrowser(inputs, caption)).toBe(false);
+    expect(await isOriginatorBrowser(null, inputs, caption)).toBe(false);
   });
 
   it("fingerprint is stable for the same inputs + caption", async () => {
