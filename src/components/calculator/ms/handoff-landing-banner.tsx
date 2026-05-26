@@ -1,17 +1,17 @@
 /**
- * Receiving-side landing banner. Visible above the inputs when this
- * session is the receiving attorney (?side= matches the non-originating
- * slate). Surfaces:
+ * Two-attorney handoff landing banner.
  *
- *   - Case caption summary + status line (originated / in_progress /
- *     completed) so a stale-link opener sees whether the other side has
- *     finished.
- *   - Originating counsel's name + firm.
- *   - Inline optional capture: receiving counsel's own name + firm
- *     (writes into handoff.receivingAttorney on blur).
+ *   Receiving-side variant — shown when ?side= identifies this session
+ *     as the receiving attorney. Plain-English: who sent it, when,
+ *     what to do next.
  *
- * Also rendered (in a passive form) when the originator session opens
- * its own handoff URL from the same browser — see `isOriginatorBrowser`.
+ *   Originator-receives-back variant — shown when the originator opens
+ *     a URL that's been edited by the receiving attorney (isOriginator
+ *     true AND status >= in_progress). Explains that both sides are
+ *     filled in and offers review/amend/download as next steps.
+ *
+ *   Originator-mid-flight (sent, waiting) — handled by the status
+ *     banner; this component returns null in that case.
  */
 import { useEffect, useState } from "react";
 import type {
@@ -25,31 +25,15 @@ import { isOriginatorBrowser } from "@/lib/calc/ms/share";
 function fmtDateTime(iso: string | null): string {
   if (!iso) return "";
   try {
-    const d = new Date(iso);
-    return d.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
+    return new Date(iso).toLocaleString("en-US", {
+      weekday: "long",
+      month: "long",
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
     });
   } catch {
     return iso;
-  }
-}
-
-function statusLine(handoff: HandoffState): string {
-  switch (handoff.status) {
-    case "originated":
-      return "Awaiting receiving counsel's entries.";
-    case "in_progress":
-      return handoff.lastReceivingEditAt
-        ? `Worksheet in progress — last updated by receiving counsel on ${fmtDateTime(handoff.lastReceivingEditAt)}.`
-        : "Worksheet in progress.";
-    case "completed":
-      return `Worksheet completed in calculator on ${fmtDateTime(handoff.completedAt)}.`;
-    default:
-      return "";
   }
 }
 
@@ -75,28 +59,29 @@ export function MSHandoffLandingBanner({
 
   useEffect(() => {
     let cancelled = false;
-    isOriginatorBrowser(inputs, caption).then((v) => {
+    isOriginatorBrowser(handoff.caseId, inputs, caption).then((v) => {
       if (!cancelled) setIsOriginator(v);
     });
     return () => {
       cancelled = true;
     };
-  }, [inputs, caption]);
+  }, [handoff.caseId, inputs, caption]);
 
   if (handoff.status === "none") return null;
 
   const isReceivingSession =
     activeSide !== null && activeSide !== handoff.originatingSide;
+  const isOriginatorReceivingBack =
+    isOriginator && !isReceivingSession && handoff.status !== "originated";
 
-  const obligor = inputs.obligorLabel || "Obligor";
-  const obligee = inputs.obligeeLabel || "Obligee";
-  const originatingPartyLabel =
-    handoff.originatingSide === "A" ? obligor : obligee;
+  // Show only when we actually have something explanatory to say —
+  // moments 3 (receiver) and 4 (originator-receives-back). Moments 2
+  // and 5 are owned by the status banner.
+  if (!isReceivingSession && !isOriginatorReceivingBack) return null;
 
   const orig = handoff.originatingAttorney;
-  const originatingLine = orig
-    ? `${orig.name || "(name not provided)"}${orig.firm ? ` — ${orig.firm}` : ""}`
-    : "(name not provided)";
+  const origName = orig?.name || "opposing counsel";
+  const origFirm = orig?.firm ? ` (${orig.firm})` : "";
 
   const commitReceiving = () => {
     const next = name || firm ? { name, firm } : null;
@@ -108,40 +93,63 @@ export function MSHandoffLandingBanner({
     }
   };
 
+  if (isOriginatorReceivingBack) {
+    const rcv = handoff.receivingAttorney;
+    const rcvName = rcv?.name || "Opposing counsel";
+    const when = fmtDateTime(handoff.lastReceivingEditAt || handoff.completedAt);
+    return (
+      <div className="mb-6 rounded-md border-l-4 border-primary bg-primary/5 p-4 text-sm text-ink no-print">
+        <div className="font-serif text-base">
+          ↩️ <strong>{rcvName}</strong> sent this worksheet back
+          {when ? ` on ${when}` : ""}. Both sides are now filled in.
+        </div>
+        <p className="mt-2 text-xs text-ink/80">
+          Review their positions below — their column is shown with their
+          proposed numbers and rationale. You can amend your side and
+          send back for another round, or download the final worksheet
+          for filing.
+        </p>
+      </div>
+    );
+  }
+
+  // Receiving-side
+  const when = fmtDateTime(handoff.createdAt);
   return (
     <div className="mb-6 rounded-md border-l-4 border-accent bg-accent/15 p-4 text-sm text-ink no-print">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Two-attorney handoff
-          </div>
-          <div className="mt-1 font-serif text-base">
-            {caption.matterName || "Untitled matter"}
-            {caption.docketNumber ? ` — ${caption.docketNumber}` : ""}
-          </div>
-        </div>
-        <div className="text-xs text-muted-foreground">{statusLine(handoff)}</div>
+      <div className="font-serif text-base">
+        📥 You're opening a deviation worksheet from{" "}
+        <strong>
+          {origName}
+          {origFirm}
+        </strong>
+        {when ? `, sent ${when}` : ""}.
       </div>
+      <p className="mt-2 text-xs text-ink/80">
+        Their side is locked below. Add your client's positions on each
+        of the ten § 43-19-103 factors. The reconciliation panel on the
+        right updates as you fill in your numbers, showing the dollar
+        magnitude of every disagreement and a cumulative-through-age-21
+        projection.
+      </p>
+      <p className="mt-2 text-xs text-ink/80">
+        When you're done, send the link back to {origName} for review
+        (use the "Send back" button below), or download the final
+        worksheet if you've agreed.
+      </p>
 
-      <div className="mt-2 text-xs text-ink">
-        Originating counsel ({originatingPartyLabel}): <strong>{originatingLine}</strong>.{" "}
-        {isReceivingSession
-          ? `You are filling in proposed deviations for the ${handoff.originatingSide === "A" ? obligee : obligor} side; the other side is locked.`
-          : `This URL is locked to the ${handoff.originatingSide === "A" ? obligor : obligee} side.`}
-      </div>
-
-      {isOriginator && isReceivingSession && (
-        <div className="mt-2 rounded border border-primary/40 bg-primary/5 px-2 py-1 text-[11px] text-ink">
+      {isOriginator && (
+        <div className="mt-3 rounded border border-primary/40 bg-primary/5 px-2 py-1 text-[11px] text-ink">
           ⚠ This browser generated this handoff URL. Entries here will be
           attributed to opposing counsel in the PDF.
         </div>
       )}
 
-      {isReceivingSession && handoff.status !== "completed" && (
+      {handoff.status !== "completed" && (
         <div className="mt-3 grid grid-cols-2 gap-2">
           <div>
             <label className="block text-[11px] font-medium text-muted-foreground">
-              Your name (optional)
+              Your name (will appear on the final PDF)
             </label>
             <input
               value={name}
@@ -153,7 +161,7 @@ export function MSHandoffLandingBanner({
           </div>
           <div>
             <label className="block text-[11px] font-medium text-muted-foreground">
-              Your firm (optional)
+              Your firm
             </label>
             <input
               value={firm}
