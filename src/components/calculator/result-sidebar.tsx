@@ -1,9 +1,10 @@
 import { useState } from "react";
 import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
+import type { CaseCaption } from "@/lib/calc/share";
+import { defaultCaption } from "@/lib/calc/share";
 import { computeScenarioPair, hasImputation } from "@/lib/calc/scenarios";
 import { citationForBcso } from "@/lib/calc/citation-resolvers";
 import { RuleInfo } from "./rule-info";
-import { printPdf } from "@/lib/print-mode";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -18,14 +19,39 @@ function directionLabel(d: Direction, a: string, b: string) {
 export function ResultSidebar({
   inputs,
   outputs,
+  caption = defaultCaption(),
   onViewWorksheet,
   onViewComparison,
 }: {
   inputs: CalcInputs;
   outputs: CalcOutputs;
+  caption?: CaseCaption;
   onViewWorksheet: () => void;
   onViewComparison?: () => void;
 }) {
+  const [printing, setPrinting] = useState(false);
+  async function downloadAnnotated() {
+    if (printing) return;
+    setPrinting(true);
+    try {
+      const { renderWorksheetPdf } = await import("@/lib/pdf/worksheet-pdf");
+      const bytes = await renderWorksheetPdf({ inputs, outputs, caption });
+      const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const base = (caption.matterName || caption.docketNumber || "tn-child-support-worksheet")
+        .replace(/[^A-Za-z0-9_-]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "tn-child-support-worksheet";
+      a.download = `${base}-annotated.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } finally {
+      setPrinting(false);
+    }
+  }
   return (
     <div className="rounded-lg border border-rule bg-card p-5 shadow-sm">
       <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
