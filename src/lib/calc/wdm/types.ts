@@ -41,6 +41,8 @@
 
 import type { CitationKey } from "../citations";
 import type { IncomeMethodology } from "../types";
+import type { WDMDeviationsNarrative } from "../deviations-narrative";
+export type { WDMDeviationBlock, WDMDeviationsNarrative } from "../deviations-narrative";
 
 /** Refinement 1 (approved): drop A_/B_/C_ prefixes. */
 export type WDMValueCategory = "mechanical" | "structural" | "judgment";
@@ -193,6 +195,25 @@ export interface WDMStatutoryCapPanel {
   } | null;
 }
 
+/**
+ * PRP / ARP / SPLIT checkbox panel state for the AOC form's identification
+ * row. Phase A v2.1 addition: the overlay renderer reads this directly
+ * instead of re-deriving from inputs. `marginNote` carries the
+ * Equal-50/50 explainer when no boxes are checked under Rule .04(7)(b)(2)(i).
+ *
+ * SPLIT is reserved for true split-custody scenarios (different children
+ * residing with different parents). The current calc engine does not
+ * model split custody; the field is always false today and is kept on
+ * the shape so the overlay form can render the unchecked box without a
+ * branch.
+ */
+export interface WDMParentRoleCheckboxes {
+  parentA: { prp: boolean; arp: boolean; split: boolean };
+  parentB: { prp: boolean; arp: boolean; split: boolean };
+  marginNote: string | null;
+}
+
+
 export interface WDMPanels {
   /** Always present (Refinement 4). Use `engaged` to discriminate. */
   statutoryCap: WDMStatutoryCapPanel;
@@ -204,6 +225,11 @@ export interface WDMPanels {
   zeroPresumptiveNote: string | null;
   /** Deviation-methodology footnote (shown when any deviation is in play). */
   deviationMethodologyNote: string | null;
+  /** Phase A v2.1: PRP/ARP/SPLIT checkbox state for AOC form identification row. */
+  parentRoleCheckboxes: WDMParentRoleCheckboxes;
+  /** Phase A v2.1: structured deviations narrative; consumed by AOC
+   *  overlay (via flattenForCommentsBlock) and Phase D annotated PDF. */
+  deviationsNarrative: WDMDeviationsNarrative;
 }
 
 /**

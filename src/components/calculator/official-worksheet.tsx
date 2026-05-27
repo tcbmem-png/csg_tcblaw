@@ -21,11 +21,11 @@ import type { CaseCaption } from "@/lib/calc/share";
 import { defaultCaption } from "@/lib/calc/share";
 import {
   CITATIONS,
-  specialExpensesThresholdLine,
   type CitationKey,
 } from "@/lib/calc/citations";
 import { buildWDM } from "@/lib/calc/wdm/build";
 import type {
+  WDMDeviationsNarrative,
   WDMLine,
   WDMSection,
   WDMStatutoryCapPanel,
@@ -218,7 +218,7 @@ export function OfficialWorksheet({
             key={section.id}
             section={section}
             inputs={inputs}
-            outputs={outputs}
+            narrative={panels.deviationsNarrative}
           />
         ))}
 
@@ -262,18 +262,26 @@ export function OfficialWorksheet({
 
 /**
  * Renders a WDM section: section header, each line, plus the inline
- * sub-rows that aren't yet promoted into the WDM (income SourceLine
- * under Line 3, special-expenses threshold note under Line 14a).
+ * sub-rows that aren't structured WDM lines (income SourceLine under
+ * Line 3, special-expenses threshold note under Line 14a sourced from
+ * the shared deviationsNarrative).
  */
 function SectionBlock({
   section,
   inputs,
-  outputs,
+  narrative,
 }: {
   section: WDMSection;
   inputs: CalcInputs;
-  outputs: CalcOutputs;
+  narrative: WDMDeviationsNarrative;
 }) {
+  // The special-expenses block in the narrative carries the canonical
+  // threshold-line prose (byte-identical to the prior inline derivation
+  // via specialExpensesThresholdLine — same helper, hoisted into the
+  // shared composer per Phase A v2.1).
+  const seBlock = narrative.blocks.find(
+    (b) => b.citation === "special_expenses",
+  );
   return (
     <>
       <SectionHeader title={section.title} />
@@ -285,18 +293,12 @@ function SectionBlock({
             {line.subSource && (
               <SourceLine a={line.subSource.a} b={line.subSource.b} />
             )}
-            {/* Special-expenses threshold sub-note: appears once, right
-                after Line 14a. Not yet carried in the WDM — derived from
-                inputs/outputs here. Promotion tracked for Phase D. */}
             {section.id === "deviations" &&
               line.screenLineNo === "14a" &&
-              inputs.includeSpecialExpenses && (
+              inputs.includeSpecialExpenses &&
+              seBlock && (
                 <div className="border-b border-rule bg-cream/40 px-3 py-2 text-[11px] leading-snug text-muted-foreground">
-                  {specialExpensesThresholdLine({
-                    monthly: (inputs.specialExpensesAnnual || 0) / 12,
-                    threshold: outputs.specialExpensesThresholdAmount,
-                    basis: outputs.specialExpensesIncludedAsDeviation,
-                  })}
+                  {seBlock.body}
                 </div>
               )}
           </Fragment>

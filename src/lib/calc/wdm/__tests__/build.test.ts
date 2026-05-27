@@ -613,3 +613,138 @@ describe("buildWDM — lint invariants (Refinement 5)", () => {
     });
   }
 });
+
+// ============================================================
+// Phase A v2.1 — parentRoleCheckboxes panel
+// ============================================================
+
+describe("buildWDM v2.1 — parentRoleCheckboxes", () => {
+  it("Equal 50/50: no boxes checked, margin note carries Rule .04(7)(b)(2)(i)", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 5000,
+      parentBGrossMonthly: 5000,
+      numChildren: 2,
+      parentingType: "equal",
+    });
+    const p = wdm.panels.parentRoleCheckboxes;
+    expect(p.parentA).toEqual({ prp: false, arp: false, split: false });
+    expect(p.parentB).toEqual({ prp: false, arp: false, split: false });
+    expect(p.marginNote).toBe("Equal parenting — Rule .04(7)(b)(2)(i).");
+  });
+
+  it("Standard with ARP=parent_a: A is ARP, B is PRP, no margin note", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 4000,
+      parentBGrossMonthly: 6000,
+      numChildren: 2,
+      parentingType: "standard",
+      arpForStandard: "parent_a",
+    });
+    const p = wdm.panels.parentRoleCheckboxes;
+    expect(p.parentA).toEqual({ prp: false, arp: true, split: false });
+    expect(p.parentB).toEqual({ prp: true, arp: false, split: false });
+    expect(p.marginNote).toBeNull();
+  });
+
+  it("Standard with ARP=parent_b: B is ARP, A is PRP", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 6000,
+      parentBGrossMonthly: 4000,
+      numChildren: 2,
+      parentingType: "standard",
+      arpForStandard: "parent_b",
+    });
+    const p = wdm.panels.parentRoleCheckboxes;
+    expect(p.parentA).toEqual({ prp: true, arp: false, split: false });
+    expect(p.parentB).toEqual({ prp: false, arp: true, split: false });
+  });
+
+  it("Custom: ARP is the parent with fewer days", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 5000,
+      parentBGrossMonthly: 5000,
+      numChildren: 2,
+      parentingType: "custom",
+      parentADays: 120,
+      parentBDays: 245,
+    });
+    const p = wdm.panels.parentRoleCheckboxes;
+    expect(p.parentA.arp).toBe(true);
+    expect(p.parentB.prp).toBe(true);
+  });
+});
+
+// ============================================================
+// Phase A v2.1 — deviationsNarrative panel
+// ============================================================
+
+describe("buildWDM v2.1 — deviationsNarrative", () => {
+  it("No deviations → empty blocks", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 5000,
+      parentBGrossMonthly: 3000,
+      numChildren: 1,
+    });
+    expect(wdm.panels.deviationsNarrative.blocks).toEqual([]);
+  });
+
+  it("Private school only → private-school block + net-transfer block", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 6000,
+      parentBGrossMonthly: 4000,
+      numChildren: 2,
+      includePrivateSchool: true,
+      privateSchoolAnnual: 12000,
+      privateSchoolPaidBy: "parent_a",
+    });
+    const blocks = wdm.panels.deviationsNarrative.blocks;
+    expect(blocks.map((b) => b.citation)).toEqual([
+      "private_school",
+      "fcso",
+    ]);
+    expect(blocks[0].body).toMatch(/private-school tuition allocated pro rata/);
+    expect(blocks[1].body).toMatch(/Net deviation transfer on Line 14/);
+  });
+
+  it("Both deviations → three blocks in fixed order", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 6000,
+      parentBGrossMonthly: 4000,
+      numChildren: 2,
+      includePrivateSchool: true,
+      privateSchoolAnnual: 12000,
+      privateSchoolPaidBy: "parent_a",
+      includeSpecialExpenses: true,
+      specialExpensesAnnual: 6000,
+      specialExpensesPaidBy: "parent_a",
+    });
+    const cits = wdm.panels.deviationsNarrative.blocks.map((b) => b.citation);
+    expect(cits).toEqual(["private_school", "special_expenses", "fcso"]);
+  });
+
+  it("flattenForCommentsBlock concatenates bodies with single spaces", async () => {
+    const { flattenForCommentsBlock } = await import(
+      "../../deviations-narrative"
+    );
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 6000,
+      parentBGrossMonthly: 4000,
+      numChildren: 2,
+      includePrivateSchool: true,
+      privateSchoolAnnual: 12000,
+      privateSchoolPaidBy: "parent_a",
+    });
+    const flat = flattenForCommentsBlock(wdm.panels.deviationsNarrative);
+    expect(flat).toContain("private-school");
+    expect(flat).toContain("Net deviation transfer");
+    expect(flat).not.toMatch(/  /); // no double spaces
+  });
+});

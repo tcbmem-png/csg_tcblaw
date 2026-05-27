@@ -41,9 +41,11 @@ import type {
   WDMValueCategory,
   WDMCaption,
   WDMPanels,
+  WDMParentRoleCheckboxes,
   WDMStatutoryCapPanel,
   WDMUserElection,
 } from "./types";
+import { buildDeviationsNarrative } from "../deviations-narrative";
 
 
 
@@ -711,6 +713,46 @@ function buildStatutoryCapPanel(
   };
 }
 
+function buildParentRoleCheckboxes(
+  inputs: CalcInputs,
+  outputs: CalcOutputs,
+): WDMParentRoleCheckboxes {
+  const blank = { prp: false, arp: false, split: false };
+  // Equal 50/50 — all three boxes unchecked on both sides; the margin
+  // note carries the Rule .04(7)(b)(2)(i) explainer per approved spec.
+  if (inputs.parentingType === "equal") {
+    return {
+      parentA: { ...blank },
+      parentB: { ...blank },
+      marginNote: "Equal parenting — Rule .04(7)(b)(2)(i).",
+    };
+  }
+  // Standard — ARP is the user-elected non-residential parent; PRP is
+  // the other parent.
+  if (inputs.parentingType === "standard") {
+    const aIsArp = inputs.arpForStandard === "parent_a";
+    return {
+      parentA: { prp: !aIsArp, arp: aIsArp, split: false },
+      parentB: { prp: aIsArp, arp: !aIsArp, split: false },
+      marginNote: null,
+    };
+  }
+  // Custom — derive ARP from the parent with fewer days; ties → no boxes.
+  // (Split-custody is a distinct concept and not currently modeled by
+  // the calc engine; SPLIT stays false. See types.ts note.)
+  const daysA = inputs.parentADays ?? 0;
+  const daysB = inputs.parentBDays ?? 0;
+  if (daysA === daysB) {
+    return { parentA: { ...blank }, parentB: { ...blank }, marginNote: null };
+  }
+  const aIsArp = daysA < daysB;
+  return {
+    parentA: { prp: !aIsArp, arp: aIsArp, split: false },
+    parentB: { prp: aIsArp, arp: !aIsArp, split: false },
+    marginNote: null,
+  };
+}
+
 function buildPanels(inputs: CalcInputs, outputs: CalcOutputs): WDMPanels {
   return {
     statutoryCap: buildStatutoryCapPanel(inputs, outputs),
@@ -721,6 +763,8 @@ function buildPanels(inputs: CalcInputs, outputs: CalcOutputs): WDMPanels {
       inputs.includePrivateSchool || inputs.includeSpecialExpenses
         ? DEVIATION_METHODOLOGY_NOTE
         : null,
+    parentRoleCheckboxes: buildParentRoleCheckboxes(inputs, outputs),
+    deviationsNarrative: buildDeviationsNarrative(inputs, outputs),
   };
 }
 
