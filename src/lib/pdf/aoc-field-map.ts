@@ -833,16 +833,37 @@ const partVI: AocField[] = [
     },
   },
   // Comments / Calculations / Rebuttals block — wrapped, ~4 underlines starting
-  // at top=550, spanning x≈195..555.
+  // at top=550, spanning x≈195..555. Composed of (in order):
+  //   1. Net presumptive transfer summary (uses → glyph).
+  //   2. Above-cap analysis paragraph when statutory cap engaged (uses § glyph).
+  //   3. Deviations narrative flattened from wdm.panels.deviationsNarrative.
   {
     aocLine: "",
-    description: "Comments block — deviation narrative + overflow",
+    description: "Comments block — transfer summary + cap analysis + deviations",
     page: 2,
     rect: { x: 195, y: 548, w: 360, h: 48 },
     fit: { policy: "wrap", size: 8, align: "left" },
-    source: (wdm) => {
-      const flat = flattenForCommentsBlock(wdm.panels.deviationsNarrative);
-      return flat ? flat : null;
+    source: (wdm, inputs, outputs) => {
+      const parts: string[] = [];
+      const a = inputs.parentALabel || "Mother";
+      const b = inputs.parentBLabel || "Father";
+      if (
+        outputs.netPresumptiveSupport > 0 &&
+        outputs.presumptiveDirection !== "neutral"
+      ) {
+        const dir =
+          outputs.presumptiveDirection === "parent_a_to_b"
+            ? `${a} → ${b}`
+            : `${b} → ${a}`;
+        parts.push(
+          `Net presumptive support: $${fmtMoney(outputs.netPresumptiveSupport)}/mo (${dir}).`,
+        );
+      }
+      const cap = wdm.panels.statutoryCap;
+      if (cap.engaged && cap.capNote) parts.push(cap.capNote);
+      const dev = flattenForCommentsBlock(wdm.panels.deviationsNarrative);
+      if (dev) parts.push(dev);
+      return parts.length > 0 ? parts.join("  ") : null;
     },
   },
   // Preparer's Use Only — Name (top=614.4) + Date (right side)
