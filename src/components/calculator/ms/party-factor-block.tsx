@@ -111,6 +111,7 @@ export function MSPartyFactorBlock({
   handoffRound = 0,
   currentAuthor = null,
 }: BlockProps) {
+  void handoffRound; void currentAuthor; // wired through to PartyColumn in a follow-up; see ms-v2-changelog §1.5
   const inPlay = inPlayFrom(obligor, obligee);
 
   const setInPlay = (next: InPlay) => {
