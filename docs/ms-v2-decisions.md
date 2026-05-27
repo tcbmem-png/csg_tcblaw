@@ -248,3 +248,74 @@ Recommendation to be resolved at Phase 4 kickoff:
 No code change in this entry. Phase 4 opens with the selection
 recorded as a follow-up D-007 once locked.
 
+---
+
+## D-008: Chancellor-decisions engine wiring — legacy URL migration semantics
+
+**Date:** 2026-05-27
+**Status:** decided (shipped in Slice 1)
+
+**Context.** Slice 1 switched `calculateMS` from "sum the obligor's
+applicable deviations" to "sum the chancellor's per-factor decisions
+via `computeChancellorTotals(buildReconciliation(inputs).rows,
+inputs.chancellorDecisions)`." This is the right default for new
+cases (Option C semantics: pending = $0 contribution, no implicit
+adoption of either party's slate) but it raises a backward-compat
+question for share links in the wild that predate the
+`chancellorDecisions` field.
+
+**Decision.** Two-track behavior, gated on the presence of
+`inputs.chancellorDecisions`:
+
+- **New / current cases** (`chancellorDecisions` present, even when
+  all entries are `"none"`): drive the final order off the decision
+  map. A fresh case with deviations asserted but no chancellor
+  ruling shows the presumptive baseline, not either party's
+  proposal. The pending-count badge ("N of M pending decisions")
+  makes the gap visible.
+- **Legacy URLs** (`chancellorDecisions` absent entirely): fall back
+  to `sumDeviations(inputs.deviationsA)` — the pre-Slice-1 behavior.
+  Every existing share link continues to render the same number it
+  rendered before the engine change.
+
+The branch lives in `src/lib/calc/ms/calc.ts`:
+
+```ts
+let totalDeviationsMonthly: number;
+if (inputs.chancellorDecisions) {
+  const report = buildReconciliation(inputs);
+  const chancellor = computeChancellorTotals(
+    report.rows,
+    inputs.chancellorDecisions,
+  );
+  totalDeviationsMonthly = chancellor.totalMonthly;
+} else {
+  totalDeviationsMonthly = sumDeviations(inputs.deviationsA);
+}
+```
+
+**Why the fallback is sound.** `defaultMSInputs()` now seeds
+`chancellorDecisions` via `defaultChancellorDecisions()`, so every
+new case constructed in-app takes the decision-map branch. The only
+inputs that hit the legacy branch are URL payloads decoded from a
+share link that pre-dates the v2 surface — exactly the population
+the fallback exists to protect. As legacy URLs naturally age out (or
+are re-shared after a round-trip through the new UI, which re-encodes
+with the decision map), the fallback branch becomes vestigial. It
+can be removed in a future cleanup once analytics confirm zero
+legacy-URL traffic, but there is no urgency.
+
+**Pending UI cost.** The Option C semantics make the default
+display jump from "the obligor's proposed final" to "the
+presumptive baseline" for any in-progress case. The pending-count
+badge ("N of M pending decisions") and the per-row "pending"
+chancellor cell carry the explanation. Without that badge, $4,600
+on a Williams-shaped case looks like a final answer rather than a
+floor; with it, the user sees that the chancellor has not yet
+ruled on N factors and the displayed number will move once they do.
+
+**Source.** Slice 1 implementation; see
+`src/lib/calc/ms/__tests__/calc.test.ts` "pending chancellor
+decisions contribute $0" and "applicable deviations sum and apply
+(signed) when chancellor adopts them" for the boundary tests.
+
