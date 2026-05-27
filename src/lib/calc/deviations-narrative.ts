@@ -83,10 +83,11 @@ export function buildDeviationsNarrative(
   // deviations line. Refers to the AOC worksheet's Line 14 (deviations
   // total) so the prose anchors back to the structured row.
   if (blocks.length > 0) {
-    const net = outputs.totalDeviationFromA;
+    const net =
+      (inputs.includePrivateSchool ? outputs.privateSchoolDeviationFromA : 0) +
+      (inputs.includeSpecialExpenses ? outputs.specialExpensesDeviationFromA : 0);
     if (Number.isFinite(net) && Math.abs(net) > 0) {
-      const direction =
-        net > 0 ? `${b} pays ${a}` : `${a} pays ${b}`;
+      const direction = net > 0 ? `${b} pays ${a}` : `${a} pays ${b}`;
       blocks.push({
         heading: "Net deviation transfer",
         body: `Net deviation transfer on Line 14: $${fmtAbs(net)}/mo (${direction}).`,
