@@ -172,8 +172,12 @@ const identification: AocField[] = [
     aocLine: "",
     description: "Margin note: Equal parenting (Rule .04(7)(b)(2)(i))",
     source: (wdm) => {
+      // AOC boundary: numbers + structural cells only — no rule cites.
+      // Kept to a single line to fit cleanly in the annotation rect
+      // (151×26pt at 10pt DejaVu). Methodology pointer lives in the
+      // page-2 Comments block ("See annotated worksheet for methodology").
       const note = wdm.panels.parentRoleCheckboxes.marginNote;
-      return note ? `↑ Lines 5–7: ${note}` : null;
+      return note ? `↑ Equal parenting.` : null;
     },
   },
 ];
@@ -960,11 +964,11 @@ const partVI: AocField[] = [
         const capDollars = cap.statutoryMax.toLocaleString("en-US");
         if (cap.engaged) {
           parts.push(
-            `Calculation exceeds the $${capDollars}/mo statutory cap for ${cap.numChildren} ${childWord} (Tenn. Code Ann. § 36-5-101(e)(1)(B)); rebuttable presumption.`,
+            `Calculation exceeds the $${capDollars}/mo presumptive cap for ${cap.numChildren} ${childWord}; rebuttable presumption.`,
           );
         } else {
           parts.push(
-            `Calculation falls below the $${capDollars}/mo statutory cap for ${cap.numChildren} ${childWord} (Tenn. Code Ann. § 36-5-101(e)(1)(B)).`,
+            `Calculation falls below the $${capDollars}/mo presumptive cap for ${cap.numChildren} ${childWord}.`,
           );
         }
       }
@@ -980,6 +984,12 @@ const partVI: AocField[] = [
         netDevFromA,
       );
       if (devBrief) parts.push(devBrief);
+
+      // 4. Closing pointer — methodology lives on the annotated worksheet.
+      // Pointer, not a citation; permitted on the AOC face per architecture §0.
+      if (parts.length > 0 && !parts[parts.length - 1].includes("annotated worksheet")) {
+        parts.push("See annotated worksheet for methodology.");
+      }
 
       return parts.length > 0 ? parts.join(" ") : null;
     },
