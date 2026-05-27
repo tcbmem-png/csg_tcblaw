@@ -42,8 +42,9 @@ import { FIXTURES } from "./fixtures";
 function normalizeRadixIds(html: string): string {
   const idMap = new Map<string, string>();
   let counter = 0;
-  // Match the common React useId pattern (e.g. ":R0:", "«r0»", or Radix's "radix-«r0»").
-  const idPattern = /(?:«[^»]+»|:[Rr][a-z0-9]*:)/g;
+  // Match the common React useId patterns: ":R0:", "«r0»", Radix's
+  // "radix-«r0»", and React 19's "_R_xxx_" form.
+  const idPattern = /(?:«[^»]+»|:[Rr][a-z0-9]*:|_R_[a-z0-9]+_)/g;
   return html.replace(idPattern, (match) => {
     if (!idMap.has(match)) {
       idMap.set(match, `__id_${counter++}__`);
