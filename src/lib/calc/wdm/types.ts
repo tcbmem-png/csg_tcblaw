@@ -213,8 +213,6 @@ export interface WDMParentRoleCheckboxes {
   marginNote: string | null;
 }
 
-import type { WDMDeviationsNarrative } from "../deviations-narrative";
-export type { WDMDeviationBlock, WDMDeviationsNarrative } from "../deviations-narrative";
 
 export interface WDMPanels {
   /** Always present (Refinement 4). Use `engaged` to discriminate. */
