@@ -80,6 +80,23 @@ export function MSIncarcerationCheck({
               onChange={(b) => update({ hasMeansToPay: b })}
               label="Yes — obligor has means to pay"
             />
+            {inc.hasMeansToPay && (
+              <div className="mt-3">
+                <label className="block text-xs font-medium text-muted-foreground">
+                  Rationale for means-to-pay finding
+                  <span className="ml-1 font-normal text-muted-foreground/70">
+                    (carries into the worksheet)
+                  </span>
+                </label>
+                <textarea
+                  value={inc.meansToPayRationale ?? ""}
+                  onChange={(e) => update({ meansToPayRationale: e.target.value })}
+                  rows={3}
+                  placeholder="E.g. obligor receives ongoing royalty income unrelated to employment; prison-wage records dated …"
+                  className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary/60"
+                />
+              </div>
+            )}
           </Field>
 
           <div
