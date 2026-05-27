@@ -89,4 +89,50 @@ describe("§ 93-11-65(8) early-emancipation carve-outs", () => {
   it("defaultMSChild yields a status='none' child", () => {
     expect(defaultMSChild(12)).toEqual({ age: 12, emancipationStatus: "none" });
   });
+
+  // ---------------------------------------------------------------
+  // PT-MS-10 — multi-child cumulative age math.
+  // Ages 5 / 10 / 15 → (16 + 11 + 6) × 12 / 3 = 132 months remaining.
+  // ---------------------------------------------------------------
+  it("PT-MS-10: ages 5/10/15 average 132 months remaining", () => {
+    const children: MSChild[] = [
+      { age: 5, emancipationStatus: "none" },
+      { age: 10, emancipationStatus: "none" },
+      { age: 15, emancipationStatus: "none" },
+    ];
+    expect(computeAvgMonthsRemainingForChildren(children, NOW)).toBe(132);
+  });
+
+  // ---------------------------------------------------------------
+  // PT-MS-11 — emancipation carve-out drops the child from the average.
+  // Same ages 5/10/15, but the 15-year-old is asserted as already
+  // emancipated by marriage (no projected date → 0 months). The 5- and
+  // 10-year-olds still contribute their full age-21 defaults.
+  // mean(16*12, 11*12, 0) = mean(192, 132, 0) = 108 months.
+  // ---------------------------------------------------------------
+  it("PT-MS-11: marriage carve-out zeros that child's months in the average", () => {
+    const children: MSChild[] = [
+      { age: 5, emancipationStatus: "none" },
+      { age: 10, emancipationStatus: "none" },
+      { age: 15, emancipationStatus: "marriage" }, // already emancipated
+    ];
+    expect(computeAvgMonthsRemainingForChildren(children, NOW)).toBe(108);
+  });
+
+  // ---------------------------------------------------------------
+  // Williams cumulative anchor — ages 14 and 10 → 108 months. At a
+  // chancellor-net $2,800/mo final order, cumulative = $302,400, which
+  // is the canonical reference figure used as the negotiation anchor.
+  // This test pins the months-remaining input to the multiplication;
+  // calc.ts owns the $2,800 boundary (covered in calc.test.ts).
+  // ---------------------------------------------------------------
+  it("Williams anchor: ages 14 and 10 yield 108 months remaining → $2,800 × 108 = $302,400", () => {
+    const children: MSChild[] = [
+      { age: 14, emancipationStatus: "none" },
+      { age: 10, emancipationStatus: "none" },
+    ];
+    const months = computeAvgMonthsRemainingForChildren(children, NOW);
+    expect(months).toBe(108);
+    expect(2800 * months!).toBe(302_400);
+  });
 });
