@@ -243,15 +243,22 @@ const identificationFields: AocField[] = [
     font: "bold",
     source: (wdm) => (wdm.panels.parentRoleCheckboxes.parentB.split ? "X" : null),
   },
-  // Equal-50/50 margin note next to the parenting-time line — placed
-  // beneath the SPLIT column on the Mother row so it sits in unused space.
+  // Equal-50/50 margin note — positioned in the empty band between
+  // Line 7 (Adjusted BCSO, top≈494) and Part IV's section divider
+  // (top≈520). This places the annotation immediately under the
+  // parenting-time block (Lines 5-7) so it reads as the explanation
+  // for the blank Line 5, $0 Line 6, and cross-credit Line 7. The
+  // up-arrow prefix points the chancellor's eye back to that block.
   {
     aocLine: "",
     description: "Margin note: Equal parenting (Rule .04(7)(b)(2)(i))",
     page: 1,
-    rect: { x: 437, y: row(168, 24).y, w: 90, h: 24 },
-    fit: { policy: "wrap", size: 6.5, align: "left" },
-    source: (wdm) => wdm.panels.parentRoleCheckboxes.marginNote ?? null,
+    rect: { x: 366, y: 511, w: 190, h: 14 },
+    fit: { policy: "wrap", size: 7, align: "left" },
+    source: (wdm) => {
+      const note = wdm.panels.parentRoleCheckboxes.marginNote;
+      return note ? `↑ Lines 5–7: ${note}` : null;
+    },
   },
 ];
 
@@ -828,16 +835,37 @@ const partVI: AocField[] = [
     },
   },
   // Comments / Calculations / Rebuttals block — wrapped, ~4 underlines starting
-  // at top=550, spanning x≈195..555.
+  // at top=550, spanning x≈195..555. Composed of (in order):
+  //   1. Net presumptive transfer summary (uses → glyph).
+  //   2. Above-cap analysis paragraph when statutory cap engaged (uses § glyph).
+  //   3. Deviations narrative flattened from wdm.panels.deviationsNarrative.
   {
     aocLine: "",
-    description: "Comments block — deviation narrative + overflow",
+    description: "Comments block — transfer summary + cap analysis + deviations",
     page: 2,
     rect: { x: 195, y: 548, w: 360, h: 48 },
     fit: { policy: "wrap", size: 8, align: "left" },
-    source: (wdm) => {
-      const flat = flattenForCommentsBlock(wdm.panels.deviationsNarrative);
-      return flat ? flat : null;
+    source: (wdm, inputs, outputs) => {
+      const parts: string[] = [];
+      const a = inputs.parentALabel || "Mother";
+      const b = inputs.parentBLabel || "Father";
+      if (
+        outputs.netPresumptiveSupport > 0 &&
+        outputs.presumptiveDirection !== "none"
+      ) {
+        const dir =
+          outputs.presumptiveDirection === "parent_a_to_b"
+            ? `${a} → ${b}`
+            : `${b} → ${a}`;
+        parts.push(
+          `Net presumptive support: $${fmtMoney(outputs.netPresumptiveSupport)}/mo (${dir}).`,
+        );
+      }
+      const cap = wdm.panels.statutoryCap;
+      if (cap.capNote) parts.push(cap.capNote);
+      const dev = flattenForCommentsBlock(wdm.panels.deviationsNarrative);
+      if (dev) parts.push(dev);
+      return parts.length > 0 ? parts.join("  ") : null;
     },
   },
   // Preparer's Use Only — Name (top=614.4) + Date (right side)
