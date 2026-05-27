@@ -157,3 +157,18 @@ is a thin form pass before the Phase 2/3 check-in.
 ## Phase 5 — Verification — pending
 
 ### Full MS + TN test sweep
+
+---
+
+## Phase 3 — Greenfield (§1.7, §1.9)
+
+### §1.7 Imputation — twelve-factor form + application slider — **net-new**
+
+- **Types** (`types.ts`): replaced the legacy 5-boolean `MSImputationBasis` with a structured 12-factor record per § 43-19-101(5), plus `assertedBy` ("obligor" | "obligee"), `imputedAnnualGross`, and `applicationPct` (0..100). Added `defaultMSImputationBasis()` and `defaultMSImputationFactors()` factories.
+- **Calc** (`calc.ts`): when `agiBasis === "imputed"` AND `imputedAnnualGross > 0`, blends `actualGross × (1 − p/100) + imputed × (p/100)` and flows the blended figure through the standard AGI pipeline. New `MSOutputs` fields: `imputationActive`, `imputationApplicationPct`, `imputedAnnualGross`, `actualAnnualGross`, `blendedAnnualGross`. Emits a "scenario modeling — not a court determination" warning when active.
+- **Labels** (`imputation-labels.ts`, net-new): single source of truth for the twelve factor keys and display labels; `assertedImputationFactors()` returns the populated subset for read surfaces.
+- **UI** (`imputation-basis.tsx`): rebuilt as a 12-factor structured form with asserter radio, imputed-amount input, 0–100% slider, live actual/imputed/blended swatch row, and the scenario-modeling disclaimer.
+- **Read surfaces** (`worksheet-preview.tsx`, `pdf/ms-worksheet-pdf.ts`): callouts now list the populated twelve-factor basis, attribute the asserter, and surface the scenario-modeling label when blending is active.
+- **Tests** (`__tests__/imputation.test.ts`, net-new — 7 tests): 0/50/100% blend math, inactive-when-amount-zero short-circuit, scenario label emission, slider clamping, actual-basis ignores the imputation block. Suite now 95/95.
+
+Phase 3 §1.9 (chancellor decision surface) deferred to the next turn per the established check-in cadence.

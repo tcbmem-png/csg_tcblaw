@@ -224,17 +224,93 @@ export interface MSDeviation {
 
 // =================================================================
 // Imputation basis per § 43-19-101(5) (HB 1067, effective 2022-07-01)
+//
+// The 2022 amendment prohibits "imputation of income . . . based upon a
+// standard amount in lieu of fact-gathering" and enumerates twelve specific
+// factors that must support any imputed amount. The party asserting
+// imputation documents the position factor-by-factor in their own words.
+// The calculator does NOT produce a default imputed amount; it captures
+// the figure the asserting party proposes and blends it with the actual
+// figure via a 0–100% application slider for scenario modeling.
 // =================================================================
 
 export type MSAgiBasis = "actual" | "imputed";
 
+export type MSImputationAsserter = "" | "obligor" | "obligee";
+
+export interface MSImputationFactors {
+  /** Obligated parent's assets. */
+  assets: string;
+  /** Obligated parent's residence. */
+  residence: string;
+  /** Obligated parent's job skills. */
+  jobSkills: string;
+  /** Obligated parent's educational attainment. */
+  educational: string;
+  /** Obligated parent's literacy. */
+  literacy: string;
+  /** Obligated parent's age. */
+  age: string;
+  /** Obligated parent's health. */
+  health: string;
+  /** Obligated parent's criminal record and other employment barriers. */
+  criminalBarriers: string;
+  /** Obligated parent's record of seeking work. */
+  workSeeking: string;
+  /** The local job market. */
+  localJobMarket: string;
+  /** The availability of employers willing to hire the obligated parent. */
+  employersWilling: string;
+  /** Prevailing earnings level in the local community. */
+  prevailingLocal: string;
+}
+
 export interface MSImputationBasis {
-  pastEarnings: boolean;
-  jobSkills: boolean;
-  localMarket: boolean;
-  availableEmployers: boolean;
-  other: boolean;
+  /** Twelve enumerated factors per § 43-19-101(5). Free-text per factor. */
+  factors: MSImputationFactors;
+  /** Free-text catch-all note for context that doesn't fit the twelve. */
   note: string;
+  /** Party-asserter — drives the audit-trail label and worksheet attribution. */
+  assertedBy: MSImputationAsserter;
+  /**
+   * Asserting party's proposed imputed annual gross income. Used in the
+   * blended-AGI computation only when agiBasis === "imputed".
+   */
+  imputedAnnualGross: number;
+  /**
+   * Scenario slider 0..100. 0 = actual gross only; 100 = imputed gross only;
+   * intermediate values blend linearly. Chancellors rarely impute the full
+   * proposed figure; the slider quantifies the partial-imputation range
+   * for negotiation and scenario modeling.
+   */
+  applicationPct: number;
+}
+
+export function defaultMSImputationFactors(): MSImputationFactors {
+  return {
+    assets: "",
+    residence: "",
+    jobSkills: "",
+    educational: "",
+    literacy: "",
+    age: "",
+    health: "",
+    criminalBarriers: "",
+    workSeeking: "",
+    localJobMarket: "",
+    employersWilling: "",
+    prevailingLocal: "",
+  };
+}
+
+export function defaultMSImputationBasis(): MSImputationBasis {
+  return {
+    factors: defaultMSImputationFactors(),
+    note: "",
+    assertedBy: "",
+    imputedAnnualGross: 0,
+    applicationPct: 100,
+  };
 }
 
 // =================================================================
@@ -375,6 +451,18 @@ export interface MSOutputs {
   requiresFindingLowIncome: boolean;
   warnings: string[];
   guidelinesEffectiveDate: string;
+
+  // ----- § 43-19-101(5) imputation scenario surface -----
+  /** True when AGI basis is "imputed" AND a positive imputed gross is set. */
+  imputationActive: boolean;
+  /** Slider 0..100 actually applied to the blend (clamped). */
+  imputationApplicationPct: number;
+  /** Imputed annual gross used in the blend (0 when inactive). */
+  imputedAnnualGross: number;
+  /** The actual gross figure, surfaced for side-by-side display. */
+  actualAnnualGross: number;
+  /** actualGross × (1 − pct/100) + imputed × (pct/100). Equals actualGross when inactive. */
+  blendedAnnualGross: number;
 }
 
 // =================================================================

@@ -5,6 +5,7 @@ import type {
   MSFactorLetter,
   MSDeviationComputation,
 } from "./types";
+import { defaultMSImputationBasis } from "./types";
 import {
   MS_AGI_HIGH_THRESHOLD,
   MS_AGI_LOW_THRESHOLD,
@@ -49,14 +50,7 @@ export function defaultMSInputs(): MSInputs {
     preexistingSupportAnnual: 0,
     inHomeChildrenDeductionMonthly: 0,
     agiBasis: "actual",
-    imputationBasis: {
-      pastEarnings: false,
-      jobSkills: false,
-      localMarket: false,
-      availableEmployers: false,
-      other: false,
-      note: "",
-    },
+    imputationBasis: defaultMSImputationBasis(),
     healthInsuranceMonthly: 0,
     healthInsuranceProvidedBy: "neither",
     sharedCustodyFlag: false,
@@ -103,7 +97,27 @@ export function calculateMS(inputs: MSInputs): MSOutputs {
 
   // We still compute everything for display, but if suspension applies
   // we floor the final at zero and surface the suspension finding.
-  const gross = Math.max(0, inputs.obligorAnnualGross);
+  const actualGross = Math.max(0, inputs.obligorAnnualGross);
+  // ----- § 43-19-101(5) imputation blend -----
+  // Active only when basis === "imputed". The application slider (0..100)
+  // mixes actual and imputed gross linearly so the user can model partial
+  // imputation outcomes. The note that imputation is "scenario modeling —
+  // not a court determination" is emitted in warnings, below.
+  const imputationActive =
+    inputs.agiBasis === "imputed" && inputs.imputationBasis.imputedAnnualGross > 0;
+  const imputationApplicationPct = Math.min(
+    100,
+    Math.max(0, Number(inputs.imputationBasis.applicationPct ?? 100)),
+  );
+  const imputedGross = Math.max(
+    0,
+    Number(inputs.imputationBasis.imputedAnnualGross || 0),
+  );
+  const blendedGross = imputationActive
+    ? actualGross * (1 - imputationApplicationPct / 100) +
+      imputedGross * (imputationApplicationPct / 100)
+    : actualGross;
+  const gross = blendedGross;
   const taxes = Math.max(0, inputs.obligorAnnualTaxes);
   const ss = Math.max(0, inputs.obligorAnnualSocialSecurity);
   const mandRet = Math.max(0, inputs.obligorAnnualMandatoryRetirement);
@@ -196,6 +210,11 @@ export function calculateMS(inputs: MSInputs): MSOutputs {
     warnings.push(
       "Gross income is marked imputed. Under § 43-19-101(5) (effective 2022-07-01), imputation must be based on specific fact-gathering, not a standard amount.",
     );
+    if (imputationActive) {
+      warnings.push(
+        `Imputation scenario active — actual $${Math.round(actualGross).toLocaleString("en-US")}/yr blended with imputed $${Math.round(imputedGross).toLocaleString("en-US")}/yr at ${imputationApplicationPct}% application. Downstream amounts reflect scenario modeling — not a court determination. § 43-19-101(5).`,
+      );
+    }
   }
 
   return {
@@ -213,6 +232,11 @@ export function calculateMS(inputs: MSInputs): MSOutputs {
     requiresFindingLowIncome,
     warnings,
     guidelinesEffectiveDate: MS_GUIDELINES_EFFECTIVE_DATE,
+    imputationActive,
+    imputationApplicationPct,
+    imputedAnnualGross: imputationActive ? imputedGross : 0,
+    actualAnnualGross: actualGross,
+    blendedAnnualGross: blendedGross,
   };
 }
 
