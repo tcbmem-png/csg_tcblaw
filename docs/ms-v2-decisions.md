@@ -319,3 +319,77 @@ ruled on N factors and the displayed number will move once they do.
 decisions contribute $0" and "applicable deviations sum and apply
 (signed) when chancellor adopts them" for the boundary tests.
 
+
+## D-010 — Canonical-vs-runtime enum reconciliation for chancellor decisions
+
+**Status.** Decided. Adopt runtime strings as the canonical spec.
+
+**Context.** Two enum vocabularies were drifting:
+
+| Surface          | Decision identifiers used                                                                       |
+|------------------|-------------------------------------------------------------------------------------------------|
+| Canonical §1.9   | `adopt_obligor`, `adopt_obligee`, `split_difference`, `custom`, `decline`, `accept_agreed`      |
+| Runtime          | `adopt_obligor`, `adopt_obligee`, `split`, `custom`, `decline`, `accept_agreed`                 |
+
+The only delta is `split_difference` (canonical) vs `split`
+(runtime). A test agent constructing a share-URL payload from the
+canonical doc set `decision: "split_difference"`; the URL
+hydrator silently dropped the unrecognized kind back to `"none"`,
+the chancellor totals reported every row as pending, and the
+pending-count badge surfaced "N of N" instead of "0 of N". The
+symptom looked like a missing UI surface; the root cause was an
+enum-name mismatch — the same architectural class of defect as the
+`comparisonMode === "side_by_side"` gate (Slice 1) and the
+`status: "long"` vs `"over_180"` mismatch (Slice 3).
+
+**Decision.** Rename **the canonical doc** to match runtime
+(`split`, not `split_difference`). Runtime stays as-is.
+
+**Why runtime wins this one.** The general rule is the inverse —
+canonical is the spec, implementation tracks it — but the practical
+cost asymmetry here is large:
+
+- 28 call sites and ~190 lines of test assertions in
+  `src/lib/calc/ms/__tests__/chancellor-decisions.test.ts` and
+  `reconciliation.test.ts` use the literal string `"split"`.
+- The wire-format string is persisted in shared URLs and in any
+  saved-case payload encoded since Slice 1. Renaming the runtime
+  identifier silently invalidates existing share links.
+- The canonical doc has one source of the `split_difference`
+  spelling and zero downstream consumers other than this drift.
+
+The doc edit is one file; the runtime rename is a multi-file change
+that breaks persisted state. Doc moves.
+
+**Guardrail.** Add an exhaustive enum-name table to the canonical
+spec next to §1.9 so a future test agent constructing a payload from
+the spec uses the exact runtime strings. The table is the contract;
+prose around it is illustrative. If the canonical and runtime ever
+drift again, the table is the source of truth and the runtime is
+checked against it in CI (future: a typegen step that emits the
+canonical table from `MSChancellorDecisionKind`).
+
+**Related pattern — pending-badge wording.** The badge renders
+`Pending decisions | X of N` (header + value layout), not
+`X of N pending decisions` (inline phrasing). A grep-based audit
+for "pending decisions" matches; a grep for "of N pending" misses.
+Future visual audits should DOM-click the surface rather than
+grep for guessed phrasing — same posture the test agent now uses
+for the imputation surface.
+
+**Related pattern — cumulative-through-emancipation gate.** The
+cumulative figure is gated on `chancellorCumulative !== null`,
+which requires `totals.avgMonthsRemaining` to be non-null, which
+requires at least one child with an age set in the children
+roster. This is correct behavior — the cumulative figure is
+meaningless without a months-remaining horizon — but it means a
+share-URL payload that omits child ages renders the panel
+**without** the cumulative line, and the helper copy
+"Enter the children's ages above to see the cumulative impact"
+takes its place. The Williams reproduction sets ages 14/10 and
+the cumulative line renders correctly ($302,400 = $2,800 × 108
+mo). No gate fix needed; the conditional is doing its job.
+
+**Source.** This decision; no code change in this slice. Canonical
+spec patch lives in `docs/ms-canonical-spec.md` §1.9 enum table
+(follow-up edit).
