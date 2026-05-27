@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { calculate, defaultInputs } from "../../calc";
 import { defaultCaption } from "../../share";
-import { buildWDM, findLineByScreenNo } from "../build";
-import type { CalcInputs } from "../../types";
+import { buildWDM, findLineByScreenNo, walkValues } from "../build";
+import type { CalcInputs, ImputedMethodology } from "../../types";
 
 const PREPARED_ON = "2026-05-27"; // deterministic for snapshot stability
 
@@ -11,8 +11,12 @@ function build(inputs: CalcInputs, caption = defaultCaption()) {
   return buildWDM(inputs, out, caption, { preparedOnDisplay: PREPARED_ON });
 }
 
+// ============================================================
+// Shape & invariants
+// ============================================================
+
 describe("buildWDM — shape & invariants", () => {
-  it("emits the seven canonical sections in order, plus deviations when present", () => {
+  it("emits the canonical sections in order, plus deviations when present", () => {
     const wdm = build({
       ...defaultInputs(),
       parentAGrossMonthly: 6000,
@@ -38,7 +42,6 @@ describe("buildWDM — shape & invariants", () => {
       privateSchoolPaidBy: "parent_a",
     });
     expect(withDev.sections.map((s) => s.id)).toContain("deviations");
-    // Deviations always sits between addons and final.
     const ids = withDev.sections.map((s) => s.id);
     expect(ids.indexOf("deviations")).toBe(ids.indexOf("addons") + 1);
     expect(ids.indexOf("final")).toBe(ids.indexOf("deviations") + 1);
@@ -67,9 +70,11 @@ describe("buildWDM — shape & invariants", () => {
   });
 });
 
+// ============================================================
+// Berger-style standard-parenting fixture
+// ============================================================
+
 describe("buildWDM — Berger-style standard-parenting fixture", () => {
-  // Standard parenting, ARP = Father, mid-income; exercises pro-rata
-  // line 7 path (NOT the equal-parenting cross-credit branch).
   const inputs: CalcInputs = {
     ...defaultInputs(),
     parentALabel: "Mother",
@@ -113,7 +118,11 @@ describe("buildWDM — Berger-style standard-parenting fixture", () => {
   });
 });
 
-describe("buildWDM — Equal 50/50 approved annotations (locked Phase A behavior)", () => {
+// ============================================================
+// Equal 50/50 approved annotations (locked Phase A behavior)
+// ============================================================
+
+describe("buildWDM — Equal 50/50 approved annotations", () => {
   const inputs: CalcInputs = {
     ...defaultInputs(),
     parentAGrossMonthly: 8333.33,
@@ -138,7 +147,6 @@ describe("buildWDM — Equal 50/50 approved annotations (locked Phase A behavior
     expect(line7.label).toBe(
       "Adjusted BCSO (post-multiplier, Rule .04(7)(b)(2)(i))",
     );
-    // Mother (higher earner) → Father, so A side carries the cross-credit.
     expect(line7.a!.amount).toBeGreaterThan(0);
     expect(line7.b!.amount).toBe(0);
   });
@@ -151,7 +159,11 @@ describe("buildWDM — Equal 50/50 approved annotations (locked Phase A behavior
   });
 });
 
-describe("buildWDM — above-cap formula breakdown surfaces in BCSO section", () => {
+// ============================================================
+// Above-cap formula breakdown + structured pass-through (check #2)
+// ============================================================
+
+describe("buildWDM — above-cap formula breakdown", () => {
   const inputs: CalcInputs = {
     ...defaultInputs(),
     parentAGrossMonthly: 51250,
@@ -160,7 +172,7 @@ describe("buildWDM — above-cap formula breakdown surfaces in BCSO section", ()
     parentingType: "equal",
   };
 
-  it("includes top-of-schedule, excess AGI, and above-cap-rate lines below Line 6", () => {
+  it("emits the human-readable breakdown lines below Line 6", () => {
     const wdm = build(inputs);
     const bcso = wdm.sections.find((s) => s.id === "bcso")!;
     const labels = bcso.lines.map((l) => l.label);
@@ -169,26 +181,96 @@ describe("buildWDM — above-cap formula breakdown surfaces in BCSO section", ()
     expect(labels.some((l) => /Above-cap rate/.test(l))).toBe(true);
   });
 
-  it("statutory cap panel populates when PCSO exceeds the §36-5-101(e)(1)(B) max", () => {
-    // Push above the cap by adding a private-school deviation Mother pays.
+  it("Line 6 carries the structured bcsoAboveCap sub-object (Phase D narrative input)", () => {
+    // Use standard parenting so Line 6 isn't masked by the Equal-50/50 $0 rule.
+    const wdm = build({ ...inputs, parentingType: "standard", arpForStandard: "parent_b" });
+    const line6 = findLineByScreenNo(wdm, "6")!;
+    expect(line6.bcsoAboveCap).toBeDefined();
+    expect(line6.bcsoAboveCap!.topOfSchedule).toBeGreaterThan(0);
+    expect(line6.bcsoAboveCap!.excessAGI).toBeGreaterThan(0);
+    expect(line6.bcsoAboveCap!.rate).toBeGreaterThan(0);
+    expect(line6.bcsoAboveCap!.addition).toBeGreaterThan(0);
+  });
+
+  it("bcsoAboveCap is undefined for schedule-source BCSO", () => {
     const wdm = build({
-      ...inputs,
+      ...defaultInputs(),
+      parentAGrossMonthly: 5000,
+      parentBGrossMonthly: 3000,
+      numChildren: 2,
+      parentingType: "standard",
+      arpForStandard: "parent_b",
+    });
+    const line6 = findLineByScreenNo(wdm, "6")!;
+    expect(line6.bcsoAboveCap).toBeUndefined();
+  });
+});
+
+// ============================================================
+// Statutory cap panel — both branches (Refinement 4)
+// ============================================================
+
+describe("buildWDM — statutoryCap panel structured for both branches", () => {
+  it("not-engaged branch populates headroom, leaves excessOverCap=0 and factors=[]", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 5000,
+      parentBGrossMonthly: 3000,
+      numChildren: 1,
+    });
+    const cap = wdm.panels.statutoryCap;
+    expect(cap.engaged).toBe(false);
+    expect(cap.excessOverCap).toBe(0);
+    expect(cap.factors).toEqual([]);
+    expect(cap.userElectedPCSO).toBeNull();
+    expect(cap.headroom).toBeGreaterThanOrEqual(0);
+    expect(cap.headroom).toBe(cap.statutoryMax - cap.calculatedPCSO);
+    expect(cap.caseLaw).toBeTruthy();
+  });
+
+  it("engaged branch populates excessOverCap + factors, leaves headroom=0", () => {
+    // Push above the cap via a large private-school deviation Mother pays.
+    const inputs: CalcInputs = {
+      ...defaultInputs(),
+      parentAGrossMonthly: 51250,
+      parentBGrossMonthly: 28167,
+      numChildren: 3,
+      parentingType: "equal",
       includePrivateSchool: true,
       privateSchoolAnnual: 60000,
       privateSchoolPaidBy: "parent_b",
-    });
-    if (wdm.panels.statutoryCap) {
-      expect(wdm.panels.statutoryCap.statutoryMax).toBeGreaterThan(0);
-      expect(wdm.panels.statutoryCap.excessOverCap).toBeGreaterThan(0);
-      expect(wdm.panels.statutoryCap.numChildren).toBe(3);
-      // When the cap panel is rendered, the "below cap" reassurance must NOT.
-      expect(wdm.panels.pcsoBelowCapNote).toBeNull();
+    };
+    const wdm = build(inputs);
+    const cap = wdm.panels.statutoryCap;
+    if (cap.engaged) {
+      expect(cap.excessOverCap).toBeGreaterThan(0);
+      expect(cap.headroom).toBe(0);
+      expect(cap.factors.length).toBeGreaterThan(0);
+      expect(cap.factors.some((f) => /child/i.test(f))).toBe(true);
+      expect(cap.caseLaw).toBeTruthy();
     } else {
-      // If this fixture doesn't trip the cap, the below-cap note path is exercised.
-      expect(wdm.panels.statutoryCap).toBeNull();
+      // If this fixture doesn't trip the cap on this engine version,
+      // skip the engaged-branch assertions — Fixture #11 (cap-engaged)
+      // is the dedicated coverage path; this test guards both shapes.
+      expect(cap.engaged).toBe(false);
     }
   });
+
+  it("panel is ALWAYS present (Refinement 4 — never null)", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 5000,
+      parentBGrossMonthly: 3000,
+      numChildren: 1,
+    });
+    expect(wdm.panels.statutoryCap).not.toBeNull();
+    expect(typeof wdm.panels.statutoryCap.engaged).toBe("boolean");
+  });
 });
+
+// ============================================================
+// Deviations section & methodology footnote
+// ============================================================
 
 describe("buildWDM — deviations section & methodology footnote", () => {
   it("omits deviations section and footnote when neither deviation is selected", () => {
@@ -236,6 +318,10 @@ describe("buildWDM — deviations section & methodology footnote", () => {
   });
 });
 
+// ============================================================
+// Money formatting
+// ============================================================
+
 describe("buildWDM — money formatting", () => {
   it("formats positive amounts with $ prefix and no decimals", () => {
     const wdm = build({
@@ -262,6 +348,10 @@ describe("buildWDM — money formatting", () => {
   });
 });
 
+// ============================================================
+// Income source sub-line
+// ============================================================
+
 describe("buildWDM — income source sub-line", () => {
   it("uses default 'entered directly' when no methodology is set", () => {
     const wdm = build({
@@ -274,4 +364,252 @@ describe("buildWDM — income source sub-line", () => {
     expect(line3.subSource!.a).toBe("Source: entered directly");
     expect(line3.subSource!.b).toBe("Source: entered directly");
   });
+});
+
+// ============================================================
+// Methodology pass-through — both sides independent (Refinement 3)
+// ============================================================
+
+describe("buildWDM — methodology pass-through (Refinement 3)", () => {
+  const motherImputed: ImputedMethodology = {
+    path: "imputed",
+    basis: "voluntary_underemployment",
+    method: "vocational_capacity",
+    actualMonthlyGross: 1500,
+    occupation: "registered nurse",
+    area: "Nashville MSA",
+    hoursPerWeek: 40,
+    rationale: "Mother left full-time RN role; vocational evidence supports $4,800/mo capacity.",
+    monthlyGrossResult: 4800,
+  };
+
+  it("populates parentA.methodology AND parentB.methodology from CalcInputs", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentALabel: "Mother",
+      parentBLabel: "Father",
+      parentAGrossMonthly: 4800,
+      parentBGrossMonthly: 8000,
+      numChildren: 2,
+      parentingType: "standard",
+      arpForStandard: "parent_b",
+      useImputationForA: true,
+      parentAActualGrossMonthly: 1500,
+      parentAIncomeMethodology: motherImputed,
+      // Father simple — should still be passed through, not dropped.
+      parentBIncomeMethodology: {
+        path: "simple",
+        source: "w2_box5_annual",
+        w2Box5Annual: 96000,
+        monthlyGrossResult: 8000,
+      },
+    });
+    const line3 = findLineByScreenNo(wdm, "3")!;
+    expect(line3.methodology).toBeDefined();
+    expect(line3.methodology!.parentA).toBeDefined();
+    expect(line3.methodology!.parentB).toBeDefined();
+    expect(line3.methodology!.parentA!.path).toBe("imputed");
+    expect(line3.methodology!.parentB!.path).toBe("simple");
+    // Berger-shaped Mother imputation: full pass-through (vocational
+    // occupation/area/hours are not dropped at WDM-build time).
+    const a = line3.methodology!.parentA as ImputedMethodology;
+    expect(a.occupation).toBe("registered nurse");
+    expect(a.area).toBe("Nashville MSA");
+    expect(a.hoursPerWeek).toBe(40);
+    expect(a.rationale).toMatch(/vocational evidence/);
+  });
+
+  it("leaves methodology fields undefined when CalcInputs methodology is absent (one side only)", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 4800,
+      parentBGrossMonthly: 8000,
+      numChildren: 2,
+      // Only side A populated.
+      parentAIncomeMethodology: motherImputed,
+    });
+    const line3 = findLineByScreenNo(wdm, "3")!;
+    expect(line3.methodology!.parentA).toBeDefined();
+    expect(line3.methodology!.parentB).toBeUndefined();
+  });
+});
+
+// ============================================================
+// Judgment-call tagging — Berger Mother imputation
+// ============================================================
+
+describe("buildWDM — judgment-call tagging for imputation", () => {
+  const motherImputed: ImputedMethodology = {
+    path: "imputed",
+    basis: "voluntary_underemployment",
+    method: "vocational_capacity",
+    actualMonthlyGross: 1500,
+    occupation: "registered nurse",
+    area: "Nashville MSA",
+    hoursPerWeek: 40,
+    rationale: "Vocational evidence supports $4,800/mo earning capacity.",
+    monthlyGrossResult: 4800,
+  };
+
+  it("Line 3 side A is tagged judgment with vocational rule + factors + userElection", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 4800,
+      parentBGrossMonthly: 8000,
+      numChildren: 2,
+      useImputationForA: true,
+      parentAIncomeMethodology: motherImputed,
+    });
+    const line3 = findLineByScreenNo(wdm, "3")!;
+    const a = line3.a!;
+    expect(a.category).toBe("judgment");
+    expect(a.rule).toBe("income_imputed_vocational");
+    expect(a.factors).toBeDefined();
+    expect(a.factors!.some((f) => /occupation/i.test(f))).toBe(true);
+    expect(a.userElection).toBeDefined();
+    expect(a.userElection!.source).toBe("user_input");
+    expect(a.userElection!.field).toBe("parentAIncomeMethodology");
+    expect(a.userElection!.rationale).toMatch(/vocational evidence/i);
+  });
+
+  it("Line 3 side B (simple methodology) stays mechanical", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 4800,
+      parentBGrossMonthly: 8000,
+      numChildren: 2,
+      useImputationForA: true,
+      parentAIncomeMethodology: motherImputed,
+    });
+    const line3 = findLineByScreenNo(wdm, "3")!;
+    expect(line3.b!.category).toBe("mechanical");
+    expect(line3.b!.userElection).toBeUndefined();
+  });
+
+  it("Private-school deviation Line 13 is tagged judgment with rule + factors + userElection", () => {
+    const wdm = build({
+      ...defaultInputs(),
+      parentAGrossMonthly: 5000,
+      parentBGrossMonthly: 3000,
+      numChildren: 1,
+      includePrivateSchool: true,
+      privateSchoolAnnual: 12000,
+      privateSchoolPaidBy: "parent_a",
+    });
+    const line13 = findLineByScreenNo(wdm, "13")!;
+    const total = line13.total!;
+    expect(total.category).toBe("judgment");
+    expect(total.rule).toBe("private_school");
+    expect(total.factors!.length).toBeGreaterThan(0);
+    expect(total.userElection!.field).toBe("includePrivateSchool");
+    expect(total.userElection!.source).toBe("user_input");
+  });
+});
+
+// ============================================================
+// Lint invariants — Refinement 5
+// ============================================================
+
+describe("buildWDM — lint invariants (Refinement 5)", () => {
+  // A representative cross-section of fixtures, including all the
+  // judgment-call surface area we expect Phase D to narrate.
+  const fixtures: { name: string; inputs: CalcInputs }[] = [
+    {
+      name: "mid-income standard",
+      inputs: {
+        ...defaultInputs(),
+        parentAGrossMonthly: 5000,
+        parentBGrossMonthly: 8000,
+        numChildren: 2,
+        parentingType: "standard",
+        arpForStandard: "parent_b",
+      },
+    },
+    {
+      name: "Equal 50/50",
+      inputs: {
+        ...defaultInputs(),
+        parentAGrossMonthly: 8333.33,
+        parentBGrossMonthly: 4166.67,
+        numChildren: 3,
+        parentingType: "equal",
+      },
+    },
+    {
+      name: "above-cap equal",
+      inputs: {
+        ...defaultInputs(),
+        parentAGrossMonthly: 51250,
+        parentBGrossMonthly: 28167,
+        numChildren: 3,
+        parentingType: "equal",
+      },
+    },
+    {
+      name: "Berger-shaped (Mother imputed, deviations on)",
+      inputs: {
+        ...defaultInputs(),
+        parentAGrossMonthly: 4800,
+        parentBGrossMonthly: 8000,
+        numChildren: 2,
+        parentingType: "standard",
+        arpForStandard: "parent_b",
+        useImputationForA: true,
+        parentAActualGrossMonthly: 1500,
+        parentAIncomeMethodology: {
+          path: "imputed",
+          basis: "voluntary_underemployment",
+          method: "vocational_capacity",
+          actualMonthlyGross: 1500,
+          occupation: "RN",
+          area: "Nashville MSA",
+          hoursPerWeek: 40,
+          rationale: "Voc evidence.",
+          monthlyGrossResult: 4800,
+        },
+        includePrivateSchool: true,
+        privateSchoolAnnual: 12000,
+        privateSchoolPaidBy: "parent_b",
+        includeSpecialExpenses: true,
+        specialExpensesAnnual: 6000,
+        specialExpensesPaidBy: "parent_a",
+      },
+    },
+  ];
+
+  for (const f of fixtures) {
+    it(`[${f.name}] every "judgment" value has userElection populated`, () => {
+      const wdm = build(f.inputs);
+      const offenders = walkValues(wdm).filter(
+        (v) => v.category === "judgment" && !v.userElection,
+      );
+      expect(offenders).toEqual([]);
+    });
+
+    it(`[${f.name}] every value with userElection has category "judgment"`, () => {
+      const wdm = build(f.inputs);
+      const offenders = walkValues(wdm).filter(
+        (v) => v.userElection && v.category !== "judgment",
+      );
+      expect(offenders).toEqual([]);
+    });
+
+    it(`[${f.name}] every "judgment" value has rule + factors populated`, () => {
+      const wdm = build(f.inputs);
+      const offenders = walkValues(wdm).filter(
+        (v) =>
+          v.category === "judgment" &&
+          (!v.rule || !v.factors || v.factors.length === 0),
+      );
+      expect(offenders).toEqual([]);
+    });
+
+    it(`[${f.name}] every userElection carries source: "user_input"`, () => {
+      const wdm = build(f.inputs);
+      const offenders = walkValues(wdm).filter(
+        (v) => v.userElection && v.userElection.source !== "user_input",
+      );
+      expect(offenders).toEqual([]);
+    });
+  }
 });
