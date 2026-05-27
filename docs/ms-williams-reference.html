@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>§ 43-19-103 Deviation Worksheet — Williams v. Williams</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #444;
+    --ink-muted: #6b6b6b;
+    --paper: #faf8f3;
+    --paper-card: #ffffff;
+    --rule: #d8d3c4;
+    --accent: #5a3a14;
+    --accent-soft: #8a6a40;
+    --highlight: #fff6dc;
+    --obligor: #2b5d8f;
+    --obligor-soft: #e8eff7;
+    --obligor-tint: #f4f8fc;
+    --obligee: #7a3a8f;
+    --obligee-soft: #f0e7f5;
+    --obligee-tint: #faf6fc;
+    --green: #2e7d32;
+    --green-soft: #e8efe5;
+    --red: #c62828;
+    --amber: #d4843a;
+    --statute-bg: #f4f0e5;
+    --neutral-bg: #f8f6f1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    color: var(--ink);
+    background: var(--paper);
+    margin: 0;
+    padding: 2rem 1.25rem 4rem;
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  .page { max-width: 1180px; margin: 0 auto; }
+
+  header.case-header {
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  header.case-header h1 {
+    margin: 0 0 .25rem 0;
+    font-size: 1.65rem;
+    color: var(--accent);
+    letter-spacing: -.01em;
+  }
+  header.case-header .subtitle {
+    color: var(--ink-muted);
+    font-style: italic;
+    font-size: .95rem;
+  }
+  .case-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .5rem 1.5rem;
+    margin-top: 1rem;
+    font-size: .88rem;
+  }
+  .case-meta .label {
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-size: .7rem;
+    display: block;
+    margin-bottom: .15rem;
+  }
+
+  /* --- Sticky bottom-line bar --- */
+  .live-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--accent);
+    color: white;
+    padding: .9rem 1.5rem;
+    margin: 0 0 1.5rem 0;
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.25rem;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  }
+  .live-bar .stat {
+    text-align: center;
+  }
+  .live-bar .stat .label {
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-size: .65rem;
+    color: rgba(255,255,255,0.75);
+    display: block;
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+  }
+  .live-bar .stat .val {
+    font-size: 1.5rem;
+    font-weight: bold;
+    font-variant-numeric: tabular-nums;
+    margin-top: .15rem;
+    display: block;
+  }
+  .live-bar .stat.primary .val { font-size: 1.85rem; }
+  .live-bar .stat .sub {
+    font-size: .72rem;
+    color: rgba(255,255,255,0.7);
+    display: block;
+    margin-top: .15rem;
+  }
+
+  section.module {
+    background: var(--paper-card);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1.35rem 1.65rem;
+    margin-bottom: 1.25rem;
+  }
+  section.module > h2 {
+    margin: 0 0 .85rem 0;
+    font-size: 1.18rem;
+    color: var(--accent);
+    border-bottom: 1px dashed var(--rule);
+    padding-bottom: .45rem;
+  }
+  section.module > h2 .module-tag {
+    display: inline-block;
+    background: var(--statute-bg);
+    color: var(--accent);
+    padding: .15rem .55rem;
+    border-radius: 3px;
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-right: .65rem;
+    vertical-align: middle;
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-weight: 600;
+  }
+  h3 { color: var(--ink); margin: 1rem 0 .4rem; font-size: 1rem; }
+
+  .formula {
+    font-family: "Menlo", "Consolas", monospace;
+    font-size: .82rem;
+    background: var(--neutral-bg);
+    padding: .55rem .8rem;
+    border-radius: 3px;
+    color: var(--accent);
+    margin: .35rem 0;
+    border: 1px solid var(--rule);
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+
+  .cite {
+    color: var(--ink-muted);
+    font-size: .78rem;
+    font-style: italic;
+    margin-top: .25rem;
+  }
+  .cite::before { content: "↳ "; color: var(--accent-soft); }
+
+  .required-finding {
+    background: #fdf3e7;
+    border: 1px solid #d4843a;
+    padding: .6rem .9rem;
+    border-radius: 3px;
+    margin: .6rem 0;
+    font-size: .87rem;
+    color: var(--ink);
+  }
+  .required-finding::before {
+    content: "⚖ Required written finding under § 43-19-101(4)";
+    display: block;
+    color: #a55a14;
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: .25rem;
+    font-weight: 600;
+  }
+
+  /* --- Per-factor cards --- */
+  .factor {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: white;
+    margin: .9rem 0;
+    overflow: hidden;
+  }
+  .factor.in-dispute { border-color: var(--amber); border-width: 2px; }
+  .factor.agreed { border-color: var(--green); }
+  .factor.not-asserted { opacity: 0.55; }
+
+  .factor-header {
+    background: var(--neutral-bg);
+    padding: .65rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .factor-letter {
+    background: var(--accent);
+    color: white;
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-weight: 700;
+    font-size: .9rem;
+    flex-shrink: 0;
+  }
+  .factor-title {
+    flex: 1;
+    font-weight: 600;
+    color: var(--accent);
+    font-size: .98rem;
+  }
+  .factor-status {
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: .2rem .55rem;
+    border-radius: 3px;
+  }
+  .factor-status.in-dispute { background: #fdf3e7; color: #a55a14; }
+  .factor-status.agreed { background: var(--green-soft); color: var(--green); }
+  .factor-status.obligor-only { background: var(--obligor-soft); color: var(--obligor); }
+  .factor-status.obligee-only { background: var(--obligee-soft); color: var(--obligee); }
+  .factor-status.not-asserted { background: #ececea; color: var(--ink-muted); }
+
+  .statute-text {
+    background: var(--statute-bg);
+    padding: .65rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: .88rem;
+    color: var(--ink-soft);
+  }
+  .statute-text strong {
+    color: var(--accent);
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-right: .4rem;
+  }
+  .statute-text em { font-style: italic; color: var(--ink); }
+
+  .factor-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .position {
+    padding: .85rem 1rem;
+  }
+  .position.obligor {
+    background: var(--obligor-tint);
+    border-right: 1px solid var(--rule);
+  }
+  .position.obligee {
+    background: var(--obligee-tint);
+  }
+  .position-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: .5rem;
+    padding-bottom: .35rem;
+    border-bottom: 1px dotted var(--rule);
+  }
+  .position-header .party {
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 600;
+  }
+  .position.obligor .party { color: var(--obligor); }
+  .position.obligee .party { color: var(--obligee); }
+  .position-header .amount {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: .95rem;
+  }
+  .position-header .amount.negative { color: var(--green); }
+  .position-header .amount.positive { color: var(--red); }
+  .position-header .amount.neutral { color: var(--ink-muted); }
+
+  .position-narrative {
+    margin: .5rem 0;
+    font-size: .9rem;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .position-narrative.empty {
+    color: var(--ink-muted);
+    font-style: italic;
+    font-size: .85rem;
+  }
+  .position-meta {
+    font-size: .8rem;
+    margin-top: .55rem;
+    padding-top: .45rem;
+    border-top: 1px dotted var(--rule);
+  }
+  .position-meta dt {
+    color: var(--ink-muted);
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    text-transform: uppercase;
+    font-size: .68rem;
+    letter-spacing: .05em;
+    margin-top: .4rem;
+    margin-bottom: .15rem;
+  }
+  .position-meta dd { margin: 0; color: var(--ink-soft); }
+
+  /* --- Gap / decision surface --- */
+  .factor-gap {
+    background: #fffbf0;
+    border-top: 1px solid var(--rule);
+    padding: .6rem 1rem;
+    font-size: .85rem;
+    color: var(--ink-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .factor-gap .gap-label {
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--ink-muted);
+    margin-right: .35rem;
+  }
+  .factor-gap .gap-monthly { font-weight: 700; color: var(--amber); font-variant-numeric: tabular-nums; }
+  .factor-gap .gap-cumulative { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
+  .decision-surface {
+    border-top: 1px solid var(--rule);
+    background: white;
+    padding: .65rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    flex-wrap: wrap;
+  }
+  .decision-surface .decision-label {
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--ink-muted);
+    margin-right: .4rem;
+  }
+  .decision-options {
+    display: flex;
+    gap: .35rem;
+    flex-wrap: wrap;
+  }
+  .decision-btn {
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: .35rem .7rem;
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-size: .82rem;
+    cursor: pointer;
+    color: var(--ink-soft);
+    transition: all .15s;
+  }
+  .decision-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .decision-btn.selected {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .decision-btn.decline.selected { background: var(--ink-soft); border-color: var(--ink-soft); }
+  .decision-btn.adopt-obligor.selected { background: var(--obligor); border-color: var(--obligor); }
+  .decision-btn.adopt-obligee.selected { background: var(--obligee); border-color: var(--obligee); }
+  .decision-btn.split.selected { background: var(--amber); border-color: var(--amber); }
+
+  .custom-input {
+    margin-left: .5rem;
+    padding: .3rem .5rem;
+    width: 100px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    font-family: "Menlo", monospace;
+    font-size: .8rem;
+  }
+
+  /* --- Reconciliation table --- */
+  table.reconciliation {
+    width: 100%;
+    border-collapse: collapse;
+    margin: .6rem 0;
+    font-size: .88rem;
+    font-variant-numeric: tabular-nums;
+  }
+  table.reconciliation th, table.reconciliation td {
+    padding: .5rem .75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  table.reconciliation th {
+    background: var(--statute-bg);
+    color: var(--accent);
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    text-align: right;
+    font-weight: 600;
+  }
+  table.reconciliation th:first-child, table.reconciliation td:first-child { text-align: left; }
+  table.reconciliation th:not(:first-child), table.reconciliation td:not(:first-child) { text-align: right; }
+  table.reconciliation tr.total td {
+    background: var(--highlight);
+    font-weight: 700;
+    border-top: 2px solid var(--accent);
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .final-output {
+    background: var(--accent);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 4px;
+    margin: 1.25rem 0;
+    text-align: center;
+  }
+  .final-output .label {
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    font-size: .78rem;
+    color: rgba(255,255,255,0.85);
+  }
+  .final-output .amount {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: .4rem 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .final-output .cumulative {
+    font-size: .95rem;
+    color: rgba(255,255,255,0.85);
+    margin-top: .65rem;
+  }
+
+  footer.authorities {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--accent);
+    font-size: .82rem;
+    color: var(--ink-soft);
+  }
+  footer.authorities h3 { color: var(--accent); margin-top: 0; }
+  footer.authorities ul { padding-left: 1.4rem; }
+  footer.authorities li { margin-bottom: .25rem; }
+
+  .audience-note {
+    background: var(--statute-bg);
+    border-left: 4px solid var(--accent);
+    padding: .85rem 1rem;
+    margin: 1rem 0;
+    font-size: .9rem;
+    color: var(--ink-soft);
+    border-radius: 0 4px 4px 0;
+  }
+  .audience-note strong { color: var(--accent); }
+
+  @media (max-width: 800px) {
+    .factor-body { grid-template-columns: 1fr; }
+    .position.obligor { border-right: none; border-bottom: 1px solid var(--rule); }
+    .live-bar { grid-template-columns: 1fr; gap: .5rem; }
+    .case-meta { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media print {
+    body { background: white; padding: .4in; font-size: 10.5pt; }
+    .live-bar { position: static; box-shadow: none; }
+    .decision-surface { display: none; }
+    section.module { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="case-header">
+  <h1>§ 43-19-103 Deviation Worksheet</h1>
+  <div class="subtitle">Williams v. Williams — structured statement of both parties' positions and the resulting final order. Mississippi Chancery Court, Lafayette County.</div>
+  <div class="case-meta">
+    <div><span class="label">Docket no.</span>2026-D-0142</div>
+    <div><span class="label">Computation date</span>2026-05-27</div>
+    <div><span class="label">Children</span>2 (ages 14 and 10)</div>
+    <div><span class="label">Custody</span>50/50 (joint physical)</div>
+    <div><span class="label">Obligor</span>Robert Williams · counsel: J. Anders</div>
+    <div><span class="label">Obligee</span>Sarah Williams · counsel: M. Lee</div>
+    <div><span class="label">Statutory framework</span>Miss. Code Ann. § 43-19-101, -103</div>
+    <div><span class="label">Spec version</span>TCB Law MS Deviation v1.0</div>
+  </div>
+</header>
+
+<!-- ============================================================
+     STICKY LIVE BAR — updates as chancellor toggles decisions
+     ============================================================ -->
+
+<div class="live-bar">
+  <div class="stat">
+    <span class="label">Presumptive (§ 43-19-101)</span>
+    <span class="val">$4,600/mo</span>
+    <span class="sub">20% × $23,000 AGI · 2 children</span>
+  </div>
+  <div class="stat primary">
+    <span class="label">Final order under current decisions</span>
+    <span class="val" id="final-order">$2,750/mo</span>
+    <span class="sub">Obligor → Obligee · monthly</span>
+  </div>
+  <div class="stat">
+    <span class="label">Cumulative through emancipation (age 21)</span>
+    <span class="val" id="cumulative-total">$297,000</span>
+    <span class="sub">avg 108 months remaining</span>
+  </div>
+</div>
+
+<div class="audience-note">
+  <strong>Reading this document.</strong> The presumptive monthly amount under Miss. Code Ann. § 43-19-101 is fixed at $4,600. Below that, each of the ten enumerated deviation factors in § 43-19-103 is presented with the statute verbatim, both parties' positions side-by-side, and a chancellor's decision surface. Toggle a decision in any factor to see the final order at the top update in real time. Cumulative-through-emancipation uses the children's current ages against the age-21 default at Miss. Code Ann. § 93-11-65.
+</div>
+
+<!-- ============================================================
+     MODULE 1 — Presumptive amount (anchor)
+     ============================================================ -->
+
+<section class="module">
+  <h2><span class="module-tag">Module 1</span>The Presumptive Amount — § 43-19-101</h2>
+
+  <h3>Obligor income determination (Robert Williams)</h3>
+  <table class="reconciliation" style="max-width: 600px;">
+    <tbody>
+      <tr><td>Monthly gross from all sources (W-2 + investment income)</td><td>$35,000</td></tr>
+      <tr><td>Less: federal, state &amp; local taxes</td><td>−$10,000</td></tr>
+      <tr><td>Less: Social Security contributions</td><td>−$2,000</td></tr>
+      <tr><td>Less: mandatory retirement contributions</td><td>−$0</td></tr>
+      <tr><td>Less: existing court-ordered support for other children</td><td>−$0</td></tr>
+      <tr><td>Less: discretionary allowance, in-home other children</td><td>−$0</td></tr>
+      <tr class="total"><td><strong>Adjusted Gross Income (monthly)</strong></td><td><strong>$23,000</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="cite">Computed per § 43-19-101(3). Annualized: $276,000.</div>
+
+  <div class="required-finding">
+    <strong>Annual AGI $276,000 exceeds the $100,000 threshold of § 43-19-101(4).</strong> The court must make a written finding on the record as to whether application of the guideline percentage is reasonable in this case. That finding does not require deviation — it requires explicit consideration. The deviation analysis below addresses the substantive question.
+  </div>
+
+  <h3>Presumptive monthly support (2 children)</h3>
+  <div class="formula">Adjusted Gross Income × statutory percentage = monthly presumptive support
+$23,000 × 20% = <strong>$4,600 / month</strong></div>
+  <div class="cite">§ 43-19-101(1). Two children: 20% of AGI.</div>
+
+  <h3>Cumulative-through-emancipation projection</h3>
+  <div class="formula">Child 1 (age 14): 7 years to age 21 = 84 months
+Child 2 (age 10): 11 years to age 21 = 132 months
+Average remaining months across children: 108
+
+At presumptive of $4,600/month × 108 months = <strong>$496,800 cumulative</strong></div>
+  <div class="cite">Miss. Code Ann. § 93-11-65(8). Age 21 default unless a § 93-11-65 carve-out applies (marriage, military service, qualifying felony conviction with 2+ year sentence, full-time school discontinuance).</div>
+</section>
+
+<!-- ============================================================
+     MODULE 2 — Deviation analysis — § 43-19-103
+     ============================================================ -->
+
+<section class="module">
+  <h2><span class="module-tag">Module 2</span>Statutory Deviation Analysis — § 43-19-103</h2>
+
+  <p>The rebuttable presumption of § 43-19-101 may be overcome by a written finding under § 43-19-103 that application of the guideline percentage would be unjust or inappropriate, based on the ten enumerated criteria. Each factor below shows: the statute verbatim, both parties' positions in their own counsel's words, supporting facts and documentation, proposed dollar adjustments, and the chancellor's decision surface. The chancellor's selection on each factor flows directly to the final order calculation at the top.</p>
+</section>
+
+<!-- ====================== Factor (a) ====================== -->
+<section class="module" style="padding: 1rem;">
+
+<div class="factor in-dispute" data-factor="a" data-obligor="-1800" data-obligee="-1200" data-decision="split-difference" data-custom="">
+  <div class="factor-header">
+    <div class="factor-letter">a</div>
+    <div class="factor-title">Extraordinary medical, psychological, educational, or dental expenses</div>
+    <div class="factor-status in-dispute">Both assert — different amounts</div>
+  </div>
+
+  <div class="statute-text">
+    <strong>§ 43-19-103(a):</strong> <em>Extraordinary medical, psychological, educational or dental expenses.</em>
+  </div>
+
+  <div class="factor-body">
+    <div class="position obligor">
+      <div class="position-header">
+        <span class="party">Per counsel for Obligor (Robert Williams)</span>
+        <span class="amount negative">−$1,800/mo</span>
+      </div>
+      <div class="position-narrative">
+        Obligor pays $1,800/month directly to private school for both children. The children have attended St. Mary's School since 2021 and continued enrollment is consistent with their pre-separation lifestyle. This direct payment should reduce the guideline support amount because the presumptive percentage cannot reasonably include extraordinary educational expenses of this magnitude on top of all other obligations.
+      </div>
+      <dl class="position-meta">
+        <dt>Supporting facts</dt>
+        <dd>Tuition and fees $1,800/mo × 12 = $21,600/year, paid by Obligor since 2021. Both children enrolled, on track to continue through 12th grade.</dd>
+        <dt>Documentation</dt>
+        <dd>St. Mary's School tuition contract (Exh. R-3); cancelled checks 2024–2026 (Exh. R-4); enrollment letters (Exh. R-5).</dd>
+        <dt>Legal authority</dt>
+        <dd>§ 43-19-103(a); <em>Tedford v. Dempsey</em>, 437 So. 2d 410 (Miss. 1983).</dd>
+      </dl>
+    </div>
+
+    <div class="position obligee">
+      <div class="position-header">
+        <span class="party">Per counsel for Obligee (Sarah Williams)</span>
+        <span class="amount negative">−$1,200/mo</span>
+      </div>
+      <div class="position-narrative">
+        Obligee concedes that Obligor pays private school tuition directly and that a downward adjustment is warranted under factor (a). However, the children's extraordinary expenses also include unreimbursed medical, orthodontic ($350/month current ongoing), and educational therapy for the younger child ($200/month). The net deviation should reflect Obligor's direct payment minus Obligee's pro rata share of expenses she carries.
+      </div>
+      <dl class="position-meta">
+        <dt>Supporting facts</dt>
+        <dd>Acknowledges private school payment. Orthodontic treatment in progress for older child; educational therapy ongoing for younger child.</dd>
+        <dt>Documentation</dt>
+        <dd>Orthodontic treatment plan (Exh. S-2); educational therapy invoices (Exh. S-3); pediatric records (Exh. S-4).</dd>
+        <dt>Legal authority</dt>
+        <dd>§ 43-19-103(a); <em>Knutson v. Knutson</em>, 704 So. 2d 1331 (Miss. 1997).</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="factor-gap">
+    <div>
+      <span class="gap-label">Disagreement</span>
+      <span class="gap-monthly">$600/mo</span>
+    </div>
+    <div>
+      <span class="gap-label">Cumulative through emancipation</span>
+      <span class="gap-cumulative">$64,800 over 108 months</span>
+    </div>
+  </div>
+
+  <div class="decision-surface">
+    <span class="decision-label">Chancellor's decision</span>
+    <div class="decision-options">
+      <button class="decision-btn adopt-obligor" data-action="obligor">Adopt Obligor (−$1,800)</button>
+      <button class="decision-btn adopt-obligee" data-action="obligee">Adopt Obligee (−$1,200)</button>
+      <button class="decision-btn split selected" data-action="split">Split difference (−$1,500)</button>
+      <button class="decision-btn decline" data-action="decline">No deviation</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== Factor (b) ====================== -->
+
+<div class="factor not-asserted" data-factor="b" data-obligor="0" data-obligee="0" data-decision="decline" data-custom="">
+  <div class="factor-header">
+    <div class="factor-letter">b</div>
+    <div class="factor-title">Independent income of the child</div>
+    <div class="factor-status not-asserted">Not asserted</div>
+  </div>
+  <div class="statute-text">
+    <strong>§ 43-19-103(b):</strong> <em>Independent income of the child.</em>
+  </div>
+  <div class="factor-body">
+    <div class="position obligor">
+      <div class="position-header"><span class="party">Per counsel for Obligor</span><span class="amount neutral">—</span></div>
+      <div class="position-narrative empty">Not asserted — no independent income of the children.</div>
+    </div>
+    <div class="position obligee">
+      <div class="position-header"><span class="party">Per counsel for Obligee</span><span class="amount neutral">—</span></div>
+      <div class="position-narrative empty">Not asserted.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== Factor (c) ====================== -->
+
+<div class="factor not-asserted" data-factor="c" data-obligor="0" data-obligee="0" data-decision="decline" data-custom="">
+  <div class="factor-header">
+    <div class="factor-letter">c</div>
+    <div class="factor-title">Payment of both child support and spousal support to the obligee</div>
+    <div class="factor-status not-asserted">Not asserted</div>
+  </div>
+  <div class="statute-text">
+    <strong>§ 43-19-103(c):</strong> <em>The payment of both child support and spousal support to the obligee.</em>
+  </div>
+  <div class="factor-body">
+    <div class="position obligor">
+      <div class="position-header"><span class="party">Per counsel for Obligor</span><span class="amount neutral">—</span></div>
+      <div class="position-narrative empty">Not asserted — no spousal support sought in this proceeding.</div>
+    </div>
+    <div class="position obligee">
+      <div class="position-header"><span class="party">Per counsel for Obligee</span><span class="amount neutral">—</span></div>
+      <div class="position-narrative empty">Not asserted.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== Factor (d) ====================== -->
+
+<div class="factor not-asserted" data-factor="d" data-obligor="0" data-obligee="0" data-decision="decline" data-custom="">
+  <div class="factor-header">
+    <div class="factor-letter">d</div>
+    <div class="factor-title">Seasonal variations in one or both parents' incomes or expenses</div>
+    <div class="factor-status not-asserted">Not asserted</div>
+  </div>
+  <div class="statute-text">
+    <strong>§ 43-19-103(d):</strong> <em>Seasonal variations in one or both parents' incomes or expenses.</em>
+  </div>
+  <div class="factor-body">
+    <div class="position obligor">
+      <div class="position-header"><span class="party">Per counsel for Obligor</span><span class="amount neutral">—</span></div>
+      <div class="position-narrative empty">Not asserted — Obligor's income is steady, not seasonal.</div>
+    </div>
+    <div class="position obligee">
+      <div class="position-header"><span class="party">Per counsel for Obligee</span><span class="amount neutral">—</span></div>
+      <div class="position-narrative empty">Not asserted.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== Factor (e) ====================== -->
+
+<div class="factor in-dispute" data-factor="e" data-obligor="0" data-obligee="400" data-decision="adopt-obligee" data-custom="">
+  <div class="factor-header">
+    <div class="factor-letter">e</div>
+    <div class="factor-title">Age of the child — greater needs of older children</div>
+    <div class="factor-status obligee-only">Obligee only</div>
+  </div>
+  <div class="statute-text">
+    <strong>§ 43-19-103(e):</strong> <em>The age of the child, taking into account the greater needs of older children.</em>
+  </div>
+  <div class="factor-body">
+    <div class="position obligor">
+      <div class="position-header">
+        <span class="party">Per counsel for Obligor</span>
+        <span class="amount neutral">$0</span>
+      </div>
+      <div class="position-narrative">
+        Obligor does not contest that the older child has greater needs but takes the position that those needs are already accommodated by the private school deviation under (a) and by Obligor's direct contributions to activities. No separate adjustment is warranted under (e).
+      </div>
+    </div>
+    <div class="position obligee">
+      <div class="position-header">
+        <span class="party">Per counsel for Obligee</span>
+        <span class="amount positive">+$400/mo</span>
+      </div>
+      <div class="position-narrative">
+        The older child (age 14) is in the eighth grade and has significantly greater needs than younger siblings — extracurriculars, social and academic costs, an emerging need for tutoring in advanced math. The Mississippi Supreme Court has recognized this as a valid basis for upward adjustment.
+      </div>
+      <dl class="position-meta">
+        <dt>Supporting facts</dt>
+        <dd>Activity fees, school field trips, after-school program, tutoring costs averaging $400/month for older child specifically.</dd>
+        <dt>Documentation</dt>
+        <dd>Activity registration and tutoring receipts (Exh. S-7).</dd>
+        <dt>Legal authority</dt>
+        <dd>§ 43-19-103(e); <em>McEachern v. McEachern</em>, 605 So. 2d 809 (Miss. 1992).</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="factor-gap">
+    <div>
+      <span class="gap-label">Disagreement</span>
+      <span class="gap-monthly">$400/mo</span>
+    </div>
+    <div>
+      <span class="gap-label">Cumulative through emancipation</span>
+      <span class="gap-cumulative">$43,200 over 108 months</span>
+    </div>
+  </div>
+
+  <div class="decision-surface">
+    <span class="decision-label">Chancellor's decision</span>
+    <div class="decision-options">
+      <button class="decision-btn adopt-obligor" data-action="obligor">Adopt Obligor ($0)</button>
+      <button class="decision-btn adopt-obligee selected" data-action="obligee">Adopt Obligee (+$400)</button>
+      <button class="decision-btn split" data-action="split">Split difference (+$200)</button>
+      <button class="decision-btn decline" data-action="decline">No deviation</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== Factor (f) ====================== -->
+
+<div class="factor not-asserted" data-factor="f" data-obligor="0" data-obligee="0" data-decision="decline" data-custom="">
+  <div class="factor-header">
+    <div class="factor-letter">f</div>
+    <div class="factor-title">Special needs traditionally met within the family budget</div>
+    <div class="factor-status not-asserted">Not asserted</div>
+  </div>
+  <div class="statute-text">
+    <strong>§ 43-19-103(f):</strong> <em>Special needs that have traditionally been met within the family budget even though the fulfilling of those needs will cause the support to exceed the proposed guidelines.</em>
+  </div>
+  <div class="factor-body">
+    <div class="position obligor">
+      <div class="position-header"><span class="party">Per counsel for Obligor</span><span class="amount neutral">—</span></div>
+      <div class="position-narrative empty">Not asserted — no qualifying special needs that fit under (a)'s "extraordinary" treatment instead.</div>
+    </div>
+    <div class="position obligee">
+      <div class="position-header"><span class="party">Per counsel for Obligee</span><span class="amount neutral">—</span></div>
+      <div class="position-narrative empty">Not asserted; needs argued under (a) and (e).</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== Factor (g) ====================== -->
+
+<div class="factor in-dispute" data-factor="g" data-obligor="-1200" data-obligee="-600" data-decision="split-difference" data-custom="">
+  <div class="factor-header">
+    <div class="factor-letter">g</div>
+    <div class="factor-title">Particular shared parental arrangement (50/50 custody)</div>
+    <div class="factor-status in-dispute">Both assert — different amounts</div>
+  </div>
+  <div class="statute-text">
+    <strong>§ 43-19-103(g):</strong> <em>The particular shared parental arrangement, such as where the noncustodial parent spends a great deal of time with the children thereby reducing the financial expenditures incurred by the custodial parent, or the refusal of the noncustodial parent to become involved in the activities of the child, or giving due consideration to the custodial parent's homemaking services.</em>
+  </div>
+  <div class="factor-body">
+    <div class="position obligor">
+      <div class="position-header">
+        <span class="party">Per counsel for Obligor</span>
+        <span class="amount negative">−$1,200/mo</span>
+      </div>
+      <div class="position-narrative">
+        Obligor exercises true 50/50 physical custody — 182.5 days/year with each child. Obligor maintains a separate household sized for two children, with bedrooms, food, clothing, transportation, and activities for the children's time in his home. The presumptive 20% percentage was calibrated against typical noncustodial-visitation arrangements (a few weekends and holidays); applying it without adjustment to 50/50 produces a result that double-counts what Obligor is already paying directly. A meaningful downward adjustment is required to reflect the actual division of household expense.
+      </div>
+      <dl class="position-meta">
+        <dt>Supporting facts</dt>
+        <dd>50/50 schedule in effect since September 2024; Obligor's household carries housing, food, clothing, transportation, and entertainment expenses for the children half of every month.</dd>
+        <dt>Documentation</dt>
+        <dd>Parenting plan dated 2024-09-15 (Exh. R-1); household budget showing children's expenses in Obligor's home (Exh. R-9).</dd>
+        <dt>Legal authority</dt>
+        <dd>§ 43-19-103(g). Mississippi case law gives chancellors discretion on the magnitude of the (g) adjustment in 50/50 cases.</dd>
+      </dl>
+    </div>
+    <div class="position obligee">
+      <div class="position-header">
+        <span class="party">Per counsel for Obligee</span>
+        <span class="amount negative">−$600/mo</span>
+      </div>
+      <div class="position-narrative">
+        Obligee concedes that 50/50 parenting warrants some downward adjustment but disputes the magnitude. Obligee's household provides the children's primary residence stability — school enrollment, medical providers, social context, extracurricular logistics — all of which generate fixed costs that do not halve simply because the children are physically with the other parent half the time. A 25% downward adjustment ($1,150/mo reduction from presumptive) overstates the actual cost shift; a smaller adjustment of $600/mo more accurately reflects the marginal cost savings to Obligee.
+      </div>
+      <dl class="position-meta">
+        <dt>Supporting facts</dt>
+        <dd>Obligee maintains a five-bedroom home in school district necessary for the children's attendance, with utilities, mortgage, and operations costs that are not reduced by 50/50.</dd>
+        <dt>Documentation</dt>
+        <dd>Obligee's household budget (Exh. S-9).</dd>
+        <dt>Legal authority</dt>
+        <dd>§ 43-19-103(g).</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="factor-gap">
+    <div>
+      <span class="gap-label">Disagreement</span>
+      <span class="gap-monthly">$600/mo</span>
+    </div>
+    <div>
+      <span class="gap-label">Cumulative through emancipation</span>
+      <span class="gap-cumulative">$64,800 over 108 months</span>
+    </div>
+  </div>
+
+  <div class="decision-surface">
+    <span class="decision-label">Chancellor's decision</span>
+    <div class="decision-options">
+      <button class="decision-btn adopt-obligor" data-action="obligor">Adopt Obligor (−$1,200)</button>
+      <button class="decision-btn adopt-obligee" data-action="obligee">Adopt Obligee (−$600)</button>
+      <button class="decision-btn split selected" data-action="split">Split difference (−$900)</button>
+      <button class="decision-btn decline" data-action="decline">No deviation</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== Factor (h) ====================== -->
+
+<div class="factor in-dispute" data-factor="h" data-obligor="-300" data-obligee="0" data-decision="adopt-obligee" data-custom="">
+  <div class="factor-header">
+    <div class="factor-letter">h</div>
+    <div class="factor-title">Total available assets of obligee, obligor, and the child</div>
+    <div class="factor-status in-dispute">Both assert — different amounts</div>
+  </div>
+  <div class="statute-text">
+    <strong>§ 43-19-103(h):</strong> <em>Total available assets of the obligee, obligor and the child.</em>
+  </div>
+  <div class="factor-body">
+    <div class="position obligor">
+      <div class="position-header">
+        <span class="party">Per counsel for Obligor</span>
+        <span class="amount negative">−$300/mo</span>
+      </div>
+      <div class="position-narrative">
+        Obligee inherited approximately $400,000 from her mother in 2024. The inheritance is held in a brokerage account that has generated investment income averaging $1,500/month over the past 18 months. This represents a substantial increase in resources available to support the children beyond Obligee's school counselor salary. A modest downward adjustment of $300/month reflects the resources Obligee can deploy from the inheritance independently of the support order.
+      </div>
+      <dl class="position-meta">
+        <dt>Supporting facts</dt>
+        <dd>2024 estate distribution of $400,000; brokerage statements showing average $1,500/month income.</dd>
+        <dt>Documentation</dt>
+        <dd>Estate inventory (Exh. R-12); brokerage statements 2024–2026 (Exh. R-13).</dd>
+        <dt>Legal authority</dt>
+        <dd>§ 43-19-103(h).</dd>
+      </dl>
+    </div>
+    <div class="position obligee">
+      <div class="position-header">
+        <span class="party">Per counsel for Obligee</span>
+        <span class="amount neutral">$0</span>
+      </div>
+      <div class="position-narrative">
+        Obligee disputes that her inheritance is properly considered under factor (h) for purposes of reducing Obligor's support obligation. The inheritance is separate property under Mississippi law; Obligor's far greater income and assets remain the controlling consideration. Factor (h) considers "total available assets" of all parties, not just Obligee's. Obligor's net worth is significantly larger and any (h) analysis weighing both sides' assets counsels against reduction.
+      </div>
+      <dl class="position-meta">
+        <dt>Supporting facts</dt>
+        <dd>Obligor's net worth (from divorce financial statement) is approximately $3.2 million versus Obligee's $750,000 post-inheritance.</dd>
+        <dt>Documentation</dt>
+        <dd>Obligor's Rule 8.05 financial statement (Exh. S-12).</dd>
+        <dt>Legal authority</dt>
+        <dd>§ 43-19-103(h) (text addresses total available assets of all parties).</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="factor-gap">
+    <div>
+      <span class="gap-label">Disagreement</span>
+      <span class="gap-monthly">$300/mo</span>
+    </div>
+    <div>
+      <span class="gap-label">Cumulative through emancipation</span>
+      <span class="gap-cumulative">$32,400 over 108 months</span>
+    </div>
+  </div>
+
+  <div class="decision-surface">
+    <span class="decision-label">Chancellor's decision</span>
+    <div class="decision-options">
+      <button class="decision-btn adopt-obligor" data-action="obligor">Adopt Obligor (−$300)</button>
+      <button class="decision-btn adopt-obligee selected" data-action="obligee">Adopt Obligee ($0)</button>
+      <button class="decision-btn split" data-action="split">Split difference (−$150)</button>
+      <button class="decision-btn decline" data-action="decline">No deviation</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== Factor (i) ====================== -->
+
+<div class="factor" data-factor="i" data-obligor="200" data-obligee="200" data-decision="agreed" data-custom="">
+  <div class="factor-header">
+    <div class="factor-letter">i</div>
+    <div class="factor-title">Obligee's childcare expenses for employment</div>
+    <div class="factor-status agreed">Both assert — agreed amount</div>
+  </div>
+  <div class="statute-text">
+    <strong>§ 43-19-103(i):</strong> <em>Payment by the obligee of child care expenses in order that the obligee may seek or retain employment, or because of the disability of the obligee.</em>
+  </div>
+  <div class="factor-body">
+    <div class="position obligor">
+      <div class="position-header">
+        <span class="party">Per counsel for Obligor</span>
+        <span class="amount positive">+$200/mo</span>
+      </div>
+      <div class="position-narrative">
+        Obligor does not dispute Obligee's documented after-school care costs of $400/month for the younger child during the school year, necessary so Obligee can work her full school-counselor schedule. The pro rata share that should be reflected as an upward adjustment is approximately $200/month.
+      </div>
+    </div>
+    <div class="position obligee">
+      <div class="position-header">
+        <span class="party">Per counsel for Obligee</span>
+        <span class="amount positive">+$200/mo</span>
+      </div>
+      <div class="position-narrative">
+        Obligee carries $400/month in after-school care for the younger child during school year months. Both parties agree on an upward adjustment of $200/month under factor (i).
+      </div>
+      <dl class="position-meta">
+        <dt>Documentation</dt>
+        <dd>After-school program invoices (Exh. S-8 / Exh. R-8 — joint exhibit).</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="factor-gap" style="background: var(--green-soft);">
+    <div>
+      <span class="gap-label">Agreed adjustment</span>
+      <span class="gap-monthly" style="color: var(--green);">+$200/mo</span>
+    </div>
+    <div>
+      <span class="gap-label">Cumulative impact (treated as agreed)</span>
+      <span class="gap-cumulative">+$21,600 over 108 months</span>
+    </div>
+  </div>
+
+  <div class="decision-surface">
+    <span class="decision-label">Chancellor's decision</span>
+    <div class="decision-options">
+      <button class="decision-btn adopt-obligor selected" data-action="agreed">Accept agreed (+$200)</button>
+      <button class="decision-btn decline" data-action="decline">Decline (override agreement)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== Factor (j) ====================== -->
+
+<div class="factor in-dispute" data-factor="j" data-obligor="-500" data-obligee="0" data-decision="decline" data-custom="">
+  <div class="factor-header">
+    <div class="factor-letter">j</div>
+    <div class="factor-title">Equitable result — catchall</div>
+    <div class="factor-status obligor-only">Obligor only</div>
+  </div>
+  <div class="statute-text">
+    <strong>§ 43-19-103(j):</strong> <em>Any other adjustment which is needed to achieve an equitable result which may include, but not be limited to, a reasonable and necessary existing expense or debt.</em>
+  </div>
+  <div class="factor-body">
+    <div class="position obligor">
+      <div class="position-header">
+        <span class="party">Per counsel for Obligor</span>
+        <span class="amount negative">−$500/mo</span>
+      </div>
+      <div class="position-narrative">
+        Beyond the specific factors above, Obligor seeks a further $500/month downward adjustment under (j) to achieve an equitable result. Obligor's combined direct contributions to the children's lifestyle — private school, healthcare premiums, activities, the carried cost of 50/50 housing and food — already substantially exceed what the presumptive amount would provide. The catchall is available to prevent a result where the support order layered on top of these direct contributions produces total provision well in excess of the children's reasonable needs.
+      </div>
+      <dl class="position-meta">
+        <dt>Legal authority</dt>
+        <dd>§ 43-19-103(j) — equitable result catchall.</dd>
+      </dl>
+    </div>
+    <div class="position obligee">
+      <div class="position-header">
+        <span class="party">Per counsel for Obligee</span>
+        <span class="amount neutral">$0</span>
+      </div>
+      <div class="position-narrative">
+        Obligee disputes the (j) catchall as duplicative of the (a) and (g) deviations already granted in Obligor's favor. The catchall is intended for circumstances not captured by the enumerated factors; here, Obligor's circumstances are fully captured by (a), (g), and (h). Layering an additional (j) deduction risks reducing support below what is required to maintain the children's pre-separation standard of living in Obligee's household.
+      </div>
+    </div>
+  </div>
+
+  <div class="factor-gap">
+    <div>
+      <span class="gap-label">Disagreement</span>
+      <span class="gap-monthly">$500/mo</span>
+    </div>
+    <div>
+      <span class="gap-label">Cumulative through emancipation</span>
+      <span class="gap-cumulative">$54,000 over 108 months</span>
+    </div>
+  </div>
+
+  <div class="decision-surface">
+    <span class="decision-label">Chancellor's decision</span>
+    <div class="decision-options">
+      <button class="decision-btn adopt-obligor" data-action="obligor">Adopt Obligor (−$500)</button>
+      <button class="decision-btn adopt-obligee" data-action="obligee">Adopt Obligee ($0)</button>
+      <button class="decision-btn split" data-action="split">Split difference (−$250)</button>
+      <button class="decision-btn decline selected" data-action="decline">No deviation</button>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<!-- ============================================================
+     RECONCILIATION
+     ============================================================ -->
+
+<section class="module">
+  <h2><span class="module-tag">Module 3</span>Reconciliation — Both Sides' Bottom Lines</h2>
+
+  <table class="reconciliation">
+    <thead>
+      <tr>
+        <th>Component</th>
+        <th>Obligor proposes</th>
+        <th>Obligee proposes</th>
+        <th>Gap</th>
+        <th>Chancellor's current</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Presumptive § 43-19-101 (anchor)</td><td>$4,600</td><td>$4,600</td><td>—</td><td>$4,600</td></tr>
+      <tr><td>(a) Extraordinary educational/medical</td><td>−$1,800</td><td>−$1,200</td><td>$600</td><td id="cell-a">−$1,500</td></tr>
+      <tr><td>(b) Independent income of child</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>(c) Child + spousal support</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>(d) Seasonal income variation</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>(e) Age of older child</td><td>$0</td><td>+$400</td><td>$400</td><td id="cell-e">+$400</td></tr>
+      <tr><td>(f) Special needs in family budget</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>(g) Shared parental arrangement (50/50)</td><td>−$1,200</td><td>−$600</td><td>$600</td><td id="cell-g">−$900</td></tr>
+      <tr><td>(h) Total available assets</td><td>−$300</td><td>$0</td><td>$300</td><td id="cell-h">$0</td></tr>
+      <tr><td>(i) Obligee's work-related childcare</td><td>+$200 (agreed)</td><td>+$200 (agreed)</td><td>—</td><td id="cell-i">+$200</td></tr>
+      <tr><td>(j) Equitable-result catchall</td><td>−$500</td><td>$0</td><td>$500</td><td id="cell-j">$0</td></tr>
+      <tr class="total">
+        <td><strong>Final monthly order</strong></td>
+        <td id="obligor-total"><strong>$1,000</strong></td>
+        <td id="obligee-total"><strong>$3,400</strong></td>
+        <td id="gap-total"><strong>$2,400</strong></td>
+        <td id="chancellor-total"><strong>$2,800</strong></td>
+      </tr>
+      <tr>
+        <td>Cumulative through emancipation (108 mo avg)</td>
+        <td id="obligor-cumulative">$108,000</td>
+        <td id="obligee-cumulative">$367,200</td>
+        <td id="gap-cumulative-bottom" style="color: var(--amber); font-weight: 600;">$259,200</td>
+        <td id="chancellor-cumulative"><strong>$302,400</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="font-size: .87rem; color: var(--ink-soft); margin-top: .75rem;">
+    The "gap" column quantifies the dollar magnitude of every factor in dispute. At $2,400/month gap between the parties' proposed bottom lines — $259,200 cumulative over 108 average remaining months until both children reach 21 — the parties have an objective measure of what the litigation is over. The chancellor's column shows the running total based on the current decision selections above. Toggle any decision to see all totals update.
+  </p>
+</section>
+
+<!-- ============================================================
+     FINAL OUTPUT
+     ============================================================ -->
+
+<div class="final-output">
+  <div class="label">Final Order under current decisions — Robert Williams (Obligor) to Sarah Williams (Obligee)</div>
+  <div class="amount" id="final-amount">$2,800 / month</div>
+  <div class="cumulative">Cumulative through emancipation: <strong><span id="final-cumulative">$302,400</span></strong> over an average of 108 months remaining until each child reaches age 21</div>
+</div>
+
+<div class="audience-note">
+  <strong>For the negotiating parties.</strong> The four contested factors (a, e, g, h, j) together represent $2,400/month in disagreement — about $259,200 over the period before both children emancipate. That number is the maximum value of going to trial. The chancellor's column above models the result if the court splits the difference on the genuinely disputed quantitative factors (a, g), credits the obligee on the qualitative ones (e, h), and declines the speculative ones (j). Reasonable settlement bands sit in the $2,000–$3,500/month range; pick a number, document the rationale, and avoid the litigation cost.
+</div>
+
+<div class="audience-note">
+  <strong>For the chancellor.</strong> Use the decision buttons on each factor to reflect your ruling. The final order and the cumulative impact at the top of this document update in real time. If you accept the agreed factor (i) and rule on each disputed factor, the document captures the complete deviation analysis with written findings supplied by the parties under each statutory criterion. Print or save the final version to attach to the judgment as the structured deviation worksheet contemplated by Miss. Code Ann. § 43-19-101(2)'s written-finding requirement.
+</div>
+
+<!-- ============================================================
+     AUTHORITY FOOTER
+     ============================================================ -->
+
+<footer class="authorities">
+  <h3>Source Authorities</h3>
+
+  <h4 style="color: var(--accent); margin-top: 1rem;">Statutes</h4>
+  <ul>
+    <li><strong>Miss. Code Ann. § 43-19-101</strong> — Child support award guidelines (presumptive percentage, AGI computation, $10k/$100k written-finding thresholds, medical support).</li>
+    <li><strong>Miss. Code Ann. § 43-19-101(5)</strong> (HB 1067, effective 2022-07-01) — Imputation framework with specific factor list.</li>
+    <li><strong>Miss. Code Ann. § 43-19-103</strong> — Ten criteria for overcoming the presumption that guidelines are appropriate.</li>
+    <li><strong>Miss. Code Ann. § 43-19-36</strong> (SB 2082, effective 2023-07-01) — Suspension of obligation during 180+ day incarceration, with carve-outs at § 97-3-7, § 97-5-39, § 97-5-3.</li>
+    <li><strong>Miss. Code Ann. § 93-11-65(8)</strong> — Age-21 emancipation default; carve-outs for marriage, military, qualifying felony, full-time school discontinuance.</li>
+    <li><strong>Miss. Code Ann. § 93-5-23</strong> — Alimony framework (separate and distinct from child support).</li>
+  </ul>
+
+  <h4 style="color: var(--accent); margin-top: 1rem;">Case authorities cited by counsel</h4>
+  <ul>
+    <li><strong><em>Tedford v. Dempsey</em></strong>, 437 So. 2d 410 (Miss. 1983) — cited under (a) for extraordinary educational expenses.</li>
+    <li><strong><em>Knutson v. Knutson</em></strong>, 704 So. 2d 1331 (Miss. 1997) — cited under (a) for medical/dental cost allocation.</li>
+    <li><strong><em>McEachern v. McEachern</em></strong>, 605 So. 2d 809 (Miss. 1992) — cited under (e) for greater needs of older children.</li>
+  </ul>
+
+  <h4 style="color: var(--accent); margin-top: 1rem;">Documentation index</h4>
+  <ul style="columns: 2;">
+    <li>Exh. R-1: Parenting plan (2024-09-15)</li>
+    <li>Exh. R-3: St. Mary's tuition contract</li>
+    <li>Exh. R-4: Tuition cancelled checks 2024–2026</li>
+    <li>Exh. R-5: Enrollment letters</li>
+    <li>Exh. R-8: After-school program invoices (joint)</li>
+    <li>Exh. R-9: Obligor's household budget</li>
+    <li>Exh. R-12: Estate inventory (2024)</li>
+    <li>Exh. R-13: Brokerage statements 2024–2026</li>
+    <li>Exh. S-2: Orthodontic treatment plan</li>
+    <li>Exh. S-3: Educational therapy invoices</li>
+    <li>Exh. S-4: Pediatric records</li>
+    <li>Exh. S-7: Activity / tutoring receipts (older child)</li>
+    <li>Exh. S-8: After-school program invoices (joint)</li>
+    <li>Exh. S-9: Obligee's household budget</li>
+    <li>Exh. S-12: Obligor's Rule 8.05 financial statement</li>
+  </ul>
+
+  <p style="margin-top: 1.25rem; font-style: italic; color: var(--ink-muted);">
+    This document is a structured statement of both parties' positions on the § 43-19-103 deviation analysis, produced by the calculator at csg.tcblaw.org/ms. The presumptive amount, the gap quantification, and the chancellor's-decision logic are mechanical; the positions, the supporting facts, the legal authority, and the chancellor's ultimate ruling are matters of judgment that the document captures but does not predetermine.
+  </p>
+</footer>
+
+</div>
+
+<!-- ============================================================
+     INTERACTIVITY
+     ============================================================ -->
+<script>
+(function () {
+  const AVG_MONTHS = 108;            // average months to emancipation for this case
+  const PRESUMPTIVE = 4600;
+
+  // Read all factor data from the DOM
+  const factors = Array.from(document.querySelectorAll('.factor'));
+
+  function getChancellorAmount(factor) {
+    const obligor = parseInt(factor.dataset.obligor, 10) || 0;
+    const obligee = parseInt(factor.dataset.obligee, 10) || 0;
+    const decision = factor.dataset.decision;
+    const custom = parseInt(factor.dataset.custom, 10);
+    switch (decision) {
+      case 'obligor':  return obligor;
+      case 'obligee':  return obligee;
+      case 'agreed':   return obligor; // when both agree, obligor === obligee
+      case 'split':    return Math.round((obligor + obligee) / 2);
+      case 'split-difference': return Math.round((obligor + obligee) / 2);
+      case 'custom':   return isNaN(custom) ? 0 : custom;
+      case 'decline':
+      default:         return 0;
+    }
+  }
+
+  function recompute() {
+    let totalDeviation = 0;
+    let obligorTotal = 0;
+    let obligeeTotal = 0;
+    factors.forEach(f => {
+      const letter = f.dataset.factor;
+      const obligor = parseInt(f.dataset.obligor, 10) || 0;
+      const obligee = parseInt(f.dataset.obligee, 10) || 0;
+      const chancellor = getChancellorAmount(f);
+      obligorTotal += obligor;
+      obligeeTotal += obligee;
+      totalDeviation += chancellor;
+
+      const cell = document.getElementById('cell-' + letter);
+      if (cell) {
+        const display = chancellor === 0 ? '$0' :
+                        chancellor > 0 ? '+$' + chancellor :
+                        '−$' + Math.abs(chancellor);
+        cell.textContent = display;
+      }
+    });
+    const obligorFinal = PRESUMPTIVE + obligorTotal;
+    const obligeeFinal = PRESUMPTIVE + obligeeTotal;
+    const chancellorFinal = PRESUMPTIVE + totalDeviation;
+    const gap = Math.abs(obligeeFinal - obligorFinal);
+
+    document.getElementById('obligor-total').innerHTML  = '<strong>$' + obligorFinal.toLocaleString() + '</strong>';
+    document.getElementById('obligee-total').innerHTML  = '<strong>$' + obligeeFinal.toLocaleString() + '</strong>';
+    document.getElementById('gap-total').innerHTML       = '<strong>$' + gap.toLocaleString() + '</strong>';
+    document.getElementById('chancellor-total').innerHTML = '<strong>$' + chancellorFinal.toLocaleString() + '</strong>';
+
+    document.getElementById('obligor-cumulative').textContent  = '$' + (obligorFinal * AVG_MONTHS).toLocaleString();
+    document.getElementById('obligee-cumulative').textContent  = '$' + (obligeeFinal * AVG_MONTHS).toLocaleString();
+    document.getElementById('gap-cumulative-bottom').textContent = '$' + (gap * AVG_MONTHS).toLocaleString();
+    document.getElementById('chancellor-cumulative').innerHTML  = '<strong>$' + (chancellorFinal * AVG_MONTHS).toLocaleString() + '</strong>';
+
+    document.getElementById('final-order').textContent = '$' + chancellorFinal.toLocaleString() + '/mo';
+    document.getElementById('final-amount').textContent = '$' + chancellorFinal.toLocaleString() + ' / month';
+    document.getElementById('final-cumulative').textContent = '$' + (chancellorFinal * AVG_MONTHS).toLocaleString();
+    document.getElementById('cumulative-total').textContent = '$' + (chancellorFinal * AVG_MONTHS).toLocaleString();
+  }
+
+  // Wire up decision buttons
+  factors.forEach(factor => {
+    const buttons = factor.querySelectorAll('.decision-btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        factor.dataset.decision = btn.dataset.action;
+        recompute();
+      });
+    });
+  });
+
+  recompute();
+})();
+</script>
+
+</body>
+</html>
