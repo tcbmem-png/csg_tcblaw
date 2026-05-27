@@ -81,16 +81,18 @@ export const SECTIONS: SectionEntry[] = [
   },
 ];
 
-/** Flatten the registry against a WDM (and optional alternative). */
+/** Flatten the registry against a WDM (and optional alternative).
+ *  By default appends the Authority Block last. Pass
+ *  `{ includeAuthority: false }` from the authority-block builder itself
+ *  to avoid infinite recursion when it walks the body for citations. */
 export function renderRegistry(
   primary: WDM,
   alternative: WDM | null = null,
+  opts: { includeAuthority?: boolean } = {},
 ): Block[] {
+  const { includeAuthority = true } = opts;
   const out: Block[] = [];
   for (const section of SECTIONS) {
-    // Skip the authority block on the recursive walk inside its own
-    // builder — that walk passes the sentinel section list via the
-    // exported renderRegistryExcludingAuthority below.
     if (section.id === "authority_block") continue;
     if (section.mode === "single") {
       if (!section.gate(primary)) continue;
@@ -100,11 +102,11 @@ export function renderRegistry(
       out.push(...section.build(primary, alternative));
     }
   }
-  // Append authority block last (re-entry safe — its build re-uses this
-  // function which skips the authority entry above).
-  const auth = SECTIONS.find((s) => s.id === "authority_block");
-  if (auth && auth.mode === "compare") {
-    out.push(...auth.build(primary, alternative));
+  if (includeAuthority) {
+    const auth = SECTIONS.find((s) => s.id === "authority_block");
+    if (auth && auth.mode === "compare") {
+      out.push(...auth.build(primary, alternative));
+    }
   }
   return out;
 }
