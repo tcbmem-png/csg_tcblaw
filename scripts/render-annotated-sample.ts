@@ -11,7 +11,7 @@ import { FIXTURES } from "../src/lib/calc/wdm/__tests__/fixtures";
 import { renderAnnotatedPdf } from "../src/lib/pdf/annotated";
 
 const OUT_DIR = "/mnt/documents/annotated-sample";
-const TARGETS = new Set(["f02-equal-50-50", "f04-berger-imputed-with-deviations"]);
+const TARGETS = new Set(["f02-equal-50-50", "f04-standard-imputed-with-deviations"]);
 
 async function loadAssets() {
   const base = path.join("src/lib/pdf/assets/fonts");

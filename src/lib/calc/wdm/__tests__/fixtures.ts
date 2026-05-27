@@ -44,11 +44,13 @@ export const FIXTURES: WorksheetFixture[] = [
   },
 
   // -------------------------------------------------------------------
-  // F02 — Equal 50/50 (locked annotations live here)
+  // F02 — Equal parenting cross-credit, 3 children, no deviations
+  //   Dimensions: income tier within-schedule; parenting Equal 50/50;
+  //   deviations none; imputation none.
   // -------------------------------------------------------------------
   {
     slug: "f02-equal-50-50",
-    label: "Equal 50/50, 3 kids",
+    label: "Equal-parenting cross-credit, 3 children, no deviations",
     exercises: [
       "equal parenting",
       "Rule .04(7)(b)(2)(i) cross-credit",
@@ -81,12 +83,17 @@ export const FIXTURES: WorksheetFixture[] = [
   },
 
   // -------------------------------------------------------------------
-  // F04 — Berger-shaped: Mother vocationally imputed + both deviations
-  //   Exercises: vocational imputation, private school, special expenses
+  // F04 — Standard parenting, 2 children, one-side imputation,
+  //       Rule .07(2)(d) deviations applied (private school + special
+  //       expenses). Dimensions: income tier within-schedule; parenting
+  //       Standard (ARP=B); deviations both .07(2)(d)1 and .07(2)(d)2;
+  //       imputation on (Parent A, vocational_capacity /
+  //       voluntary_underemployment).
   // -------------------------------------------------------------------
   {
-    slug: "f04-berger-imputed-with-deviations",
-    label: "Berger-shaped: Mother imputed (vocational) + PS + SE deviations",
+    slug: "f04-standard-imputed-with-deviations",
+    label:
+      "Standard parenting, 2 children, imputation on (Parent A), Rule .07(2)(d) deviations applied",
     exercises: [
       "imputation (vocational_capacity / voluntary_underemployment)",
       "private school deviation",

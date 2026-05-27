@@ -597,11 +597,13 @@ function buildDeviationsSection(
         amount: outputs.privateSchoolMonthlyTotal,
         category: "judgment",
         rule: "private_school",
-        factors: [
-          "best interest of the child",
-          "consistency with the parents' financial means",
-          "history of the child's enrollment",
-        ],
+        // Rule .07(2)(d)1. does not enumerate a closed factor list for
+        // the extraordinary-educational deviation; the determination is
+        // committed to the tribunal's discretion subject to the written-
+        // findings requirements of Rule .07(1) (see `deviation_general`).
+        // Per drift-prevention rule #10 we do not fill the gap with
+        // synthesized factors; the §VII builder recites the rule's
+        // findings requirements verbatim from `deviation_general`.
         userElection: election,
       },
     });
@@ -639,11 +641,15 @@ function buildDeviationsSection(
               amount: outputs.specialExpensesIncludedAsDeviation,
               category: "judgment",
               rule: "special_expenses",
-              factors: [
-                "child's reasonable need for the expense",
-                "amount in excess of the 7% presumed-coverage threshold",
-                "whether the threshold has been waived by the court",
-              ],
+              // Rule .07(2)(d)2. mechanically defines the 7%-of-BCSO
+              // threshold and the excess-as-deviation computation; it
+              // does not enumerate a closed factor list for the
+              // tribunal's discretion. The 7% test itself is mechanical
+              // (not a "factor weighed") and the threshold-waiver is a
+              // separate input that changes the mechanical computation.
+              // Per drift-prevention rule #10 we do not synthesize
+              // factors; written-findings recital lives in §VII via
+              // `deviation_general`.
               userElection: seElection,
             }
           : text("—", "structural"),
@@ -690,9 +696,13 @@ function buildStatutoryCapPanel(
   inputs: CalcInputs,
   outputs: CalcOutputs,
 ): WDMStatutoryCapPanel {
+  // PCSO is the *pre-deviation* presumptive order: net presumptive support
+  // (post-SSR) plus mandatory add-ons. Tenn. Code Ann. § 36-5-101(e)(1)(B)
+  // applies the cap to the PCSO, not to the FCSO. Mirrors `pcsoMagnitude`
+  // computed in calc.ts for the engaged/headroom test.
   const calculatedPCSO =
-    Math.abs(outputs.allInMonthlyFromA) +
-    Math.abs(outputs.federalBenefitOffsetFromA);
+    Math.abs(outputs.netPresumptiveSupport) +
+    Math.abs(outputs.addOnsTotalFromA);
   const statutoryMax = outputs.pcsoStatutoryMax;
   const engaged = outputs.pcsoExceedsStatutoryMax;
 
@@ -765,6 +775,7 @@ function buildPanels(inputs: CalcInputs, outputs: CalcOutputs): WDMPanels {
         : null,
     parentRoleCheckboxes: buildParentRoleCheckboxes(inputs, outputs),
     deviationsNarrative: buildDeviationsNarrative(inputs, outputs),
+    bcsoAmount: Math.abs(outputs.bcso),
   };
 }
 

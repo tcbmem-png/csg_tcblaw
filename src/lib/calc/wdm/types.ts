@@ -230,6 +230,11 @@ export interface WDMPanels {
   /** Phase A v2.1: structured deviations narrative; consumed by AOC
    *  overlay (via flattenForCommentsBlock) and Phase D annotated PDF. */
   deviationsNarrative: WDMDeviationsNarrative;
+  /** Schedule-derived BCSO (pre-equal-parenting zero-out). Phase D §V
+   *  reads this for the cross-credit formula display so the equal-
+   *  parenting branch can show `BCSO × |PI_A − PI_B|` with actual values
+   *  without parsing the schedule-row sub-line label. */
+  bcsoAmount: number;
 }
 
 /**
