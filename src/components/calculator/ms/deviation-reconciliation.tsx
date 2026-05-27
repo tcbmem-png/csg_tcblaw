@@ -52,10 +52,18 @@ export function MSDeviationReconciliation({ inputs, setInputs }: Props) {
 
   const decisions = inputs.chancellorDecisions ?? defaultChancellorDecisions();
   const chancellor = computeChancellorTotals(report.rows, decisions);
+  // §1.9 / D-011 — three readings of the period:
+  //   • final order × months  (headline — canonical Williams $302,400 framing)
+  //   • presumptive baseline × months  (doctrinal anchor the rulings deviate from)
+  //   • chancellor's deviation impact × months  (mediation negotiation anchor)
+  const outputs = calculateMS(inputs);
+  const months = totals.avgMonthsRemaining;
+  const finalOrderCumulative =
+    months === null ? null : outputs.proposedFinalMonthly * months;
+  const presumptiveCumulative =
+    months === null ? null : outputs.presumptiveMonthly * months;
   const chancellorCumulative =
-    totals.avgMonthsRemaining === null
-      ? null
-      : chancellor.totalMonthly * totals.avgMonthsRemaining;
+    months === null ? null : chancellor.totalMonthly * months;
 
   const setDecision = (next: MSChancellorDecision) => {
     if (!setInputs) return;
