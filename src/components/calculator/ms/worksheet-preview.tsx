@@ -226,14 +226,33 @@ export function MSWorksheetPreview({
           stands.
         </p>
       ) : (
-        <div className="mt-2 space-y-3">
-          {applicable.map((d) => (
-            <StructuredDeviationSummary key={d.letter} d={d} />
-          ))}
-          <Table>
-            <Row label="Total proposed deviations" total={fmt(outputs.totalDeviationsMonthly, 2)} emphasis />
-          </Table>
-        </div>
+        (() => {
+          // Per-row chancellor-reconciled contributions so the per-factor
+          // amounts walk to the bottom-line "Total proposed deviations".
+          // Without this, the section listed obligor's-proposed per row but
+          // summed to the chancellor-reconciled total — a drift bug.
+          const report = buildReconciliation(inputs);
+          const decisions =
+            inputs.chancellorDecisions ?? defaultChancellorDecisions();
+          const chancellor = computeChancellorTotals(report.rows, decisions);
+          return (
+            <div className="mt-2 space-y-3">
+              {applicable.map((d) => (
+                <StructuredDeviationSummary
+                  key={d.letter}
+                  d={d}
+                  reconciledMonthly={chancellor.perFactor[d.letter] ?? 0}
+                  pending={
+                    (decisions[d.letter]?.decision ?? "none") === "none"
+                  }
+                />
+              ))}
+              <Table>
+                <Row label="Total proposed deviations" total={fmt(outputs.totalDeviationsMonthly, 2)} emphasis />
+              </Table>
+            </div>
+          );
+        })()
       )}
 
       <SectionTitle>V. Proposed Final Monthly Award</SectionTitle>
