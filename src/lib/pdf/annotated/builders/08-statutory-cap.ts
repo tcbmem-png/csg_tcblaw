@@ -121,10 +121,15 @@ export function build(wdm: WDM): Block[] {
     blocks.push(
       p(
         t(`Position selected on this worksheet: PCSO held at `),
-        userQuote(money(panel.userElectedPCSO)),
+        userQuote(money(panel.userElectedPCSO.amount)),
         t(`.`),
       ),
     );
+    if (panel.userElectedPCSO.rationale) {
+      blocks.push(
+        p(t(`User-entered rationale: `), userQuote(panel.userElectedPCSO.rationale)),
+      );
+    }
   }
 
   blocks.push(spacer(4));
