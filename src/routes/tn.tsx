@@ -11,7 +11,7 @@ import { PdfDownloadButtons } from "@/components/calculator/pdf-download-buttons
 import { ComparisonView } from "@/components/calculator/comparison";
 import { CaseCaptionForm } from "@/components/calculator/case-caption";
 import { ComparisonAppendix } from "@/components/calculator/comparison-appendix";
-import { FilingDetailsForm } from "@/components/calculator/filing-details";
+import { PartiesPlanChildren } from "@/components/calculator/parties-plan-children";
 import {
   defaultCaption,
   decodeShare,
@@ -82,12 +82,12 @@ function TNCalculatorPage() {
   useEffect(() => {
     if (!hydratedRef.current) return;
     if (!outputs.pcsoExceedsStatutoryMax) return;
-    if (caption.deviationNarrative.trim().length > 0) return;
+    if (caption.narrativeOverride.trim().length > 0) return;
     const n = inputs.numChildren;
     const excess = Math.round(outputs.pcsoExcessOverCap);
     const stub = `Presumptive PCSO exceeds the statutory maximum for ${n} ${n === 1 ? "child" : "children"} by $${excess.toLocaleString("en-US")}/mo (Tenn. Code Ann. § 36-5-101(e)(1)(B)). Deviation supported by: ____`;
-    setCaption({ ...caption, deviationNarrative: stub });
-  }, [outputs.pcsoExceedsStatutoryMax, outputs.pcsoExcessOverCap, inputs.numChildren, caption.deviationNarrative]);
+    setCaption({ ...caption, narrativeOverride: stub });
+  }, [outputs.pcsoExceedsStatutoryMax, outputs.pcsoExcessOverCap, inputs.numChildren, caption.narrativeOverride]);
 
 
 
@@ -156,15 +156,14 @@ function TNCalculatorPage() {
           {tab === "inputs" && (
             <>
               <CaseCaptionForm caption={caption} setCaption={setCaption} />
-              <IncomeHelperPanel inputs={inputs} setInputs={setInputs} />
-              <CalculatorInputs inputs={inputs} setInputs={setInputs} />
-              <FilingDetailsForm
+              <PartiesPlanChildren
+                inputs={inputs}
+                setInputs={setInputs}
                 caption={caption}
                 setCaption={setCaption}
-                numChildren={inputs.numChildren}
-                parentALabel={inputs.parentALabel}
-                parentBLabel={inputs.parentBLabel}
               />
+              <IncomeHelperPanel inputs={inputs} setInputs={setInputs} />
+              <CalculatorInputs inputs={inputs} setInputs={setInputs} />
             </>
           )}
           {tab === "comparison" && <ComparisonView inputs={inputs} />}

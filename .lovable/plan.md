@@ -1,109 +1,153 @@
+# TN Calculator UX Consolidation (revised)
 
-## Goal
+Single-source-of-truth refactor: kill the redundant "Filing Details" intake, fold its three remaining responsibilities (Mother/Father role, per-child rows, deviation narrative) into the upstream sections that already collect the same facts, and reorganize the input flow.
 
-Make the MS deviation handoff readable as "two attorneys email a worksheet back and forth; the link is the worksheet." State-aware status banner at the top of the deviations area, state-aware action panel where the current scattered handoff buttons live. Fix the round-trip identity bug so the originator's browser still recognizes a URL after the receiver edits it. Add a localStorage save-and-resume for receiving counsel with a true state-divergence check. MS-only; no server-state changes.
+## New section order on /tn
 
-## The five moments
-
-Derived from `handoff.status` + `activeSide` + `isOriginatorBrowser`:
-
-1. **Drafting** — `status === "none"`. No banner; primary action "Send to opposing counsel".
-2. **Sent — awaiting response** — `originated` AND originator browser AND not the receiving `?side=` session.
-3. **Your turn (receiver)** — `activeSide && activeSide !== originatingSide`.
-4. **Returned for review** — `in_progress` (or `completed`) AND `isOriginatorBrowser` AND not a receiver session.
-5. **Complete** — `status === "completed"`.
-
-A small `useHandoffMoment(handoff, activeSide, isOriginator)` hook returns `{ moment, counterpartyLabel, timestamp }` so banner and action panel share one source of truth.
-
-Known asymmetry (accepted, not fixed): once a receiver downloads the final PDF, the originator's view stays at moment 4 until they reopen the URL. PDF is the canonical artifact. Optional "Mark complete" affordance is out of scope for this cycle — flagged so we don't forget it.
-
-## Components
-
-```
-src/components/calculator/ms/
-  handoff-share-dialog.tsx        rewrite copy + remove jargon
-  handoff-landing-banner.tsx      rewrite + add originator-receives-back variant
-  handoff-status-banner.tsx       NEW — moment-driven status strip
-  handoff-action-panel.tsx        NEW — moment-driven primary/alt/secondary buttons
-  handoff-resume-prompt.tsx       NEW — divergence-aware resume prompt
-  handoff-resume-pill.tsx         NEW — quiet "saved draft available — restore?" pill
-  result-sidebar.tsx              remove handoff-specific buttons; keep "Copy shareable link" (see Sidebar decision)
+```text
+1. Case caption                           (matter / docket / court / prepared by / client)
+2. Parties, parenting plan & children     (NEW combined section — see below)
+3. Income — Parent A                      (Income Helper as collapsible sub-panel)
+4. Income — Parent B                      (Income Helper as collapsible sub-panel)
+5. Adjustments (credits)                  (unchanged)
+6. Mandatory add-ons (pro-rata)           (per-toggle "why" textareas added)
+7. Discretionary deviations               (per-toggle "why" textareas added)
 ```
 
-### Sidebar decision (open item resolved)
+"Filing Details (AOC form)" section is deleted entirely. Income Helper moves under each parent's income section (still collapsible, default collapsed). The `comments` field on Case Caption is also deleted (its only use was a Part VI overflow that is now auto-composed).
 
-Keep **Copy shareable link** in the sidebar as a universal affordance (option A in the review). It's not handoff-specific — it always copies the current URL — and it's useful at any moment for "send this to my paralegal / save to Clio". The new action panel handles the role-aware "Send to opposing counsel / Send back / Send revisions back" semantics; the sidebar's Copy is the plumbing-level escape hatch. They don't conflict — different jobs.
+## Section 2: combined "Parties, parenting plan & children"
 
-`MSHandoffShareDialog`, `Hand off to opposing counsel`, `Re-generate handoff URL`, and `Download deviation worksheet (PDF)` all leave the sidebar and move into `handoff-action-panel.tsx`.
+Three sub-blocks **in this order** so each step pre-seeds the next.
 
-### Copy (verbatim from spec)
+### 2a. Parties (required role per parent)
 
-Status banner uses `Intl.DateTimeFormat("en-US", { weekday:"long", month:"long", day:"numeric", hour:"numeric", minute:"2-digit" })` for "Tuesday, May 26 at 2:14 PM".
+Per parent row: label text input **+ required role segmented control** `[Mother] [Father]`. Roles are mutually exclusive across the two parents — selecting Mother on Parent A forces Parent B to Father (and vice versa), implemented as a paired toggle, not two independent radios. Until both are set, an inline notice appears ("Pick which parent is Mother — required for the AOC form"); does not block math.
 
-Send dialog: title "Send to opposing counsel". The existing "Scrub my financial entries" toggle becomes "☑ Show opposing counsel a blank slate (recommended)" — same boolean, new label/helper. Primary "Copy link"; secondary "Copy link & open email" (see mailto handling below); "Cancel".
+Role drives AOC PDF column assignment only. Engine math stays parent-A/parent-B neutral.
 
-Landing banner: two variants — receiving-side and originator-receives-back — text per spec.
+### 2b. Parenting plan (ARP / PRP — picked BEFORE child DOBs)
 
-## Round-trip case identity
+Required choice **before** the child list expands. Three options:
 
-Add `caseId: string | null` to `HandoffState`. Generated once at first Send via `randomToken(16)` — **16 bytes / 128 bits, same entropy as the existing C2 origin token** (called out so a future maintainer doesn't downsize). Preserved verbatim on re-generate.
+- **Standard schedule** — one parent has the children most of the year (default 285 / 80).
+- **Equal 50/50** — children split time equally.
+- **Custom days** — different totals per parent.
 
-- New `recordOriginatedHandoff(caseId)` / `isOriginatorBrowser(caseId, inputs, caption)` key off `caseId`. Storage shape: `ms.handoff.origins` → `{ [caseId]: token }`.
-- Back-compat: if `caseId` is null on a decoded payload, fall back to the existing `fingerprintShare(inputs, caption)` check. Old URLs in the wild still behave as today; once re-sent, they get a caseId.
-- `MSHandoffLandingBanner` switches to the single new API (which internally picks caseId or falls back to fingerprint).
+#### ARP / PRP terminology + paired toggle
 
-This makes "↩️ Returned" detection survive any number of receiving-side edits.
+First time the section renders, show a one-line glossary inline:
 
-## Receiving-side save-and-resume (state-divergence, not timestamp)
+> Tennessee labels the parent the children live with most as the **PRP** (Primary Residential Parent). The other parent is the **ARP** (Alternate Residential Parent). Support generally flows from ARP to PRP.
 
-New `src/lib/calc/ms/resume.ts`:
+For Standard and Custom, render a **single paired toggle** keyed by role-qualified labels (no parent-A-vs-parent-B ambiguity):
 
-- `saveReceivingDraft(caseId, { inputs, handoff, baseShareHash })` — writes to `localStorage["ms.handoff.draft." + caseId]`. **`baseShareHash` = a hash of the URL `?s=` value the receiver was editing against at the moment of save** (cheap djb2 or reuse `fingerprintShare`). Called from the receiver-side debounced URL-sync effect in `ms.tsx` so the saved snapshot and the hash are always taken together.
-- `loadReceivingDraft(caseId)` / `clearReceivingDraft(caseId)`.
-- On hydrate: if receiving session AND a stored draft exists for the URL's `caseId`, **compare the URL's current share hash to the stored `baseShareHash`** (not timestamps):
-  - **Equal** → URL is the same one the receiver was editing. Render `<MSHandoffResumePrompt variant="resumable">` with two options: "Continue your edits" / "Use the version they sent". This is the normal "you closed the tab" path.
-  - **Different** → originator sent a new URL since the draft. Render `<MSHandoffResumePrompt variant="diverged">` with three options: "Continue your edits", "Use the version they just sent", "Compare both" (Compare is wired but routes to a `toast.info("Side-by-side compare coming in a later cycle")` for now — UI affordance exists, implementation deferred).
-- **Dismiss (X) is non-destructive.** Hides the prompt for this session, preserves the draft. A small `<MSHandoffResumePill>` ("You have a saved draft for this case — restore?") sits in the deviations section header so the receiver can re-summon the prompt at any time. Only the explicit "Continue your edits" / "Use the version they sent" actions mutate state.
-- Draft is cleared when status flips to `completed`, AND when "Send back" successfully copies the URL (the receiver has handed it off; saved draft is now stale).
+```text
+Who is the ARP (paying parent)?
+  [ Jane / Mother ]   [ John / Father ]
+                ARP            PRP
+```
 
-## Send-back / send-revisions feedback
+Selecting one side instantly flips the labels under the buttons so the user can see at a glance that picking "Jane / Mother = ARP" makes "John / Father = PRP". This is a single state variable (`arpForStandard`), surfaced as a toggle so they can't set both or neither. Labels use the format `${parentLabel} / ${role}` — pulls from 2a, so it can't drift.
 
-Receiver clicks "Send back to Jane Counsel →" → URL copies → toast via `sonner`:
+For Equal 50/50, the ARP/PRP toggle hides and is replaced by a read-only note: "50/50 — neither parent is the ARP; cross-credit applies."
 
-> "Link copied. Paste it into your email to Jane — when she opens it, she'll see your client's positions filled in on her copy."
+### 2c. Children (auto-seeded from 2b)
 
-Same pattern for the originator's "Send revisions back". Inline confirmation also lives under the button (mirrors the existing `CopyLinkButton` idle/copied state) so users without notification permission still see the receipt.
+"Number of children" stepper (1–5). For each child added, the row pre-fills days **from the 2b decision**:
 
-## mailto handling (URL never goes through mailto)
+- Standard, ARP = Father → every child seeds `daysWithMother = 285`, `daysWithFather = 80`.
+- Equal 50/50 → every child seeds 182 / 183 (or labeled "≈ 182.5 each").
+- Custom (parent-level days entered) → every child seeds those parent-level days.
 
-"Send to opposing counsel / Copy link & open email" and the receiver-side "Send back & open email" do **two** things in order:
+User can override a single child's days if that child's schedule actually differs. Override appears as a small "differs from plan" badge on that row.
 
-1. `navigator.clipboard.writeText(url)` first.
-2. `window.location.href = "mailto:?subject=" + encodeURIComponent(subjectFromCaption) + "&body=" + encodeURIComponent("Paste your link below this line:\n\n----------\n")`.
+**Edge case (different days per child): explicitly out of scope.** When per-child days are inconsistent, the engine still uses the parent-level day totals from 2b for math (per current behavior). The per-child override is captured for the AOC form's per-child day cells only, with an inline note: *"Per-child schedules that differ from the overall plan are recorded on the AOC form but do not change the math — consult counsel."* No new engine code paths.
 
-The share URL is never embedded in the mailto body, so we never hit the ~2000-char client-side clipping ceiling on long deviation slates. Subject is derived from caption (`"[Matter] — MS deviation worksheet"`); falls back to a generic subject when caption is empty.
+Each child row also captures name + DOB. "Age of youngest child" is derived from the youngest DOB when present; falls back to a single stepper otherwise.
 
-## Tests
+## Per-toggle deviation "why" capture (kills the standalone narrative)
 
-Keep all existing `src/lib/calc/ms/__tests__/handoff.test.ts` assertions passing.
+`caption.deviationNarrative` (a single bottom-of-page textbox) is replaced by inline "Why is this a deviation?" textareas next to each toggle:
 
-- `caseId-origin-detection.test.ts`: generate URL → mutate inputs (simulate receiver edits) → re-encode → `isOriginatorBrowser` still true based on caseId.
-- `caseId-backcompat.test.ts`: decode a v3 payload with no caseId → fingerprint fallback still detects originator.
-- `resume.test.ts`:
-  - save → load round-trips inputs.
-  - resumable path: stored `baseShareHash` == current URL hash → returns `{ status: "resumable" }`.
-  - diverged path: stored hash differs → returns `{ status: "diverged" }`.
-  - clear on completion.
-  - **Dismiss is non-destructive** — calling the prompt's dismiss path does not remove the stored draft.
-- `handoff-status-banner.test.tsx` (RTL): for each of the five moments, render with a shaped `handoff` + `activeSide` and assert banner text.
-- `send-back-toast.test.tsx` (RTL): clicking "Send back" calls `navigator.clipboard.writeText` and emits the expected sonner toast string.
+- "Mandatory add-ons" → private school toggle → inline reason.
+- Same for special expenses, and any future deviation toggle.
+
+AOC Part VI narrative is auto-composed at PDF render time with rule citations prepended:
+
+```text
+Private school tuition deviation per Rule .07(2)(d): {private school reason}.
+Special expenses deviation per Rule .07(2)(d): {special expenses reason}.
+```
+
+A single "Edit composed narrative" expander lets the user override the composed text (rare). No standalone narrative box anywhere in the UI.
+
+## What gets deleted
+
+- `src/components/calculator/filing-details.tsx` — entire file.
+- `caption.comments` — field + all UI references.
+- `caption.deviationNarrative` — replaced by per-toggle `*Reason` fields on `CalcInputs`.
+- "Comments / rebuttal notes" field in `case-caption.tsx`.
+- `<FilingDetailsForm>` import + render in `src/routes/tn.tsx`.
+
+`preparer_*` on the AOC PDF is filled from `caption.preparedBy` (already in Case Caption). No second preparer input.
+
+## Backend / share-payload changes
+
+`CaseCaption` becomes:
+```ts
+interface CaseCaption {
+  matterName: string;
+  docketNumber: string;
+  court: string;
+  preparedBy: string;
+  client: string;
+  parentARole: "mother" | "father" | null;
+  parentBRole: "mother" | "father" | null;  // enforced opposite of A
+  children: ChildEntry[];                    // name + dob + per-child days (override-only)
+}
+```
+
+`CalcInputs` gains per-toggle reason fields:
+```ts
+privateSchoolReason: string;
+specialExpensesReason: string;
+```
+
+### Share-link back-compat
+`decodeShare` keeps reading legacy `comments` and `deviationNarrative` from v1/v2 payloads and folds them into a single "Imported narrative" override on the composed Part VI text, so existing shared URLs keep producing the same PDF output. Writing new payloads stops emitting those fields — payload bumps to `v: 3`.
+
+## AOC PDF fill (downstream of this refactor)
+
+This refactor produces the inputs the fillable-PDF plan needs:
+- Mother/Father columns: from required `parentARole` / `parentBRole`.
+- Per-child rows 1–6: from `caption.children[]` (name + DOB + per-role days, auto-seeded or overridden).
+- Part VI narrative: from auto-composed per-toggle reasons.
+- Preparer: from `caption.preparedBy`.
 
 ## Out of scope
 
-Real-time sync, round counters, full side-by-side diff implementation (the "Compare both" affordance is scaffolded only), receiver-initiated "Mark complete", anything TN.
+- Fillable-PDF wiring (the prior Phase B). This PR is the intake-side prerequisite.
+- Engine changes — math is identical. **Different days per child does NOT introduce a new math path**; per-child overrides are captured for AOC form display only.
+- MS calculator — same pattern could apply later.
 
-## Files
+## Files touched
 
-Edit: `src/lib/calc/ms/types.ts`, `src/lib/calc/ms/share.ts`, `src/components/calculator/ms/handoff-share-dialog.tsx`, `src/components/calculator/ms/handoff-landing-banner.tsx`, `src/components/calculator/ms/result-sidebar.tsx`, `src/routes/ms.tsx`, `src/lib/calc/ms/__tests__/handoff.test.ts`.
+- `src/lib/calc/share.ts` — `CaseCaption` shape, `v: 3` payload, back-compat reader, paired role validator.
+- `src/lib/calc/types.ts` — add reason fields to `CalcInputs`.
+- `src/lib/calc/calc.ts` — `defaultInputs()` adds empty reason strings.
+- `src/components/calculator/case-caption.tsx` — remove comments field.
+- `src/components/calculator/inputs.tsx` — replace Parents / Children / Parenting Time sections with the combined section (2a → 2b → 2c order, paired role toggle, paired ARP/PRP toggle, child rows auto-seeded from plan, per-child "differs from plan" override). Add inline "why" textareas next to deviation toggles.
+- `src/routes/tn.tsx` — drop `<FilingDetailsForm>`, reorder per the new outline.
+- `src/components/calculator/filing-details.tsx` — **deleted**.
+- `src/components/calculator/official-worksheet.tsx` + `src/lib/pdf/official-worksheet-pdf.ts` — read role + per-child rows + composed narrative from new sources; drop comments.
+- Tests: update `src/lib/calc/__tests__/calc.test.ts`; add `share-backcompat.test.ts` for v1/v2 payloads carrying `comments` / `deviationNarrative`; add `parties-children-seed.test.tsx` (RTL) for the auto-seed-on-plan-change behavior; add a paired-toggle test ensuring Parent A = Mother forces Parent B = Father.
 
-Create: `src/components/calculator/ms/handoff-status-banner.tsx`, `src/components/calculator/ms/handoff-action-panel.tsx`, `src/components/calculator/ms/handoff-resume-prompt.tsx`, `src/components/calculator/ms/handoff-resume-pill.tsx`, `src/lib/calc/ms/resume.ts`, plus the four new test files above.
+## Implementation phases
+
+- **Phase A** — types + share back-compat + Case Caption comments removal + reason fields on inputs (no UI swap yet; existing UI keeps working).
+- **Phase B** — build the combined Section 2 (2a → 2b → 2c) and the per-toggle "why" textareas; delete `filing-details.tsx`; wire AOC PDF to new sources.
+- **Phase C** — move Income Helper into per-parent sections (collapsed by default).
+- **Phase D** — test pass + manual QA against an existing v2 shared URL to confirm back-compat.
+
+Pause after Phase B for a UI sanity check before C and D.

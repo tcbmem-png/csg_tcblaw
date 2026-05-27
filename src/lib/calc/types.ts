@@ -171,12 +171,18 @@ export interface CalcInputs {
   includePrivateSchool: boolean;
   privateSchoolAnnual: number;
   privateSchoolPaidBy: "parent_a" | "parent_b" | "split_pro_rata";
+  /** Required when includePrivateSchool is true — drives the auto-composed
+   *  Part VI narrative. Captured at the point of toggle, not in a separate
+   *  filing-details form. */
+  privateSchoolReason: string;
 
   /** Special Expenses deviation per Rule .07(2)(d) — 7% threshold rule. */
   includeSpecialExpenses: boolean;
   specialExpensesAnnual: number;
   specialExpensesWaiveThreshold: boolean;
   specialExpensesPaidBy: "parent_a" | "parent_b" | "split_pro_rata";
+  /** Required when includeSpecialExpenses is true. See privateSchoolReason. */
+  specialExpensesReason: string;
 }
 
 export type Direction = "parent_a_to_b" | "parent_b_to_a" | "none";

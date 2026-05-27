@@ -46,10 +46,12 @@ function baseInputs(over: Partial<CalcInputs> = {}): CalcInputs {
     includePrivateSchool: false,
     privateSchoolAnnual: 0,
     privateSchoolPaidBy: "parent_a",
+    privateSchoolReason: "",
     includeSpecialExpenses: false,
     specialExpensesAnnual: 0,
     specialExpensesWaiveThreshold: false,
     specialExpensesPaidBy: "parent_a",
+    specialExpensesReason: "",
     ...over,
   };
 }
