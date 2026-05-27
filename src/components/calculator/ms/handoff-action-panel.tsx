@@ -23,7 +23,7 @@ import type {
 } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import type { MomentContext } from "@/lib/calc/ms/moment";
-import { encodeMSShare, otherSide } from "@/lib/calc/ms/share";
+import { encodeMSShare, otherSide, bumpHandoffRound } from "@/lib/calc/ms/share";
 import { clearReceivingDraft } from "@/lib/calc/ms/resume";
 import { downloadMSDeviationPdf } from "@/lib/pdf/ms-deviation-pdf";
 import { MSHandoffShareDialog } from "./handoff-share-dialog";
@@ -52,25 +52,27 @@ async function copySendBackUrl(args: {
   caption: CaseCaption;
   handoff: HandoffState;
   activeSide: HandoffSide | null;
-}): Promise<{ ok: boolean; url: string | null }> {
-  if (typeof window === "undefined") return { ok: false, url: null };
-  const encoded = encodeMSShare(args.inputs, args.caption, args.handoff);
+}): Promise<{ ok: boolean; url: string | null; handoff: HandoffState }> {
+  // §1.5 — bump the round so the receiving side sees this exchange
+  // as a new amendment cycle. Round 1 = originator draft, 2 = receiver
+  // sends back, 3 = originator revisions, etc.
+  const bumped = bumpHandoffRound(args.handoff);
+  if (typeof window === "undefined") return { ok: false, url: null, handoff: bumped };
+  const encoded = encodeMSShare(args.inputs, args.caption, bumped);
   const url = new URL(window.location.href);
   url.search = "";
   url.searchParams.set("s", encoded);
-  // Receiver's URL keeps ?side= so when the originator opens it the
-  // originator's UI shows their own (locked) side.
   if (args.activeSide) {
     url.searchParams.set("side", otherSide(args.activeSide));
   } else {
-    url.searchParams.set("side", args.handoff.originatingSide);
+    url.searchParams.set("side", bumped.originatingSide);
   }
   const urlStr = url.toString();
   try {
     await navigator.clipboard.writeText(urlStr);
-    return { ok: true, url: urlStr };
+    return { ok: true, url: urlStr, handoff: bumped };
   } catch {
-    return { ok: false, url: urlStr };
+    return { ok: false, url: urlStr, handoff: bumped };
   }
 }
 
@@ -112,6 +114,7 @@ export function MSHandoffActionPanel({
     const result = await copySendBackUrl({ inputs, caption, handoff, activeSide });
     const who = context.counterpartyLabel || "opposing counsel";
     if (result.ok) {
+      setHandoff(result.handoff);
       toast.success("Link copied to clipboard", {
         description: `Paste it into your email to ${who} — when they open it, they'll see your client's positions filled in on their copy.`,
       });
@@ -126,6 +129,7 @@ export function MSHandoffActionPanel({
     const result = await copySendBackUrl({ inputs, caption, handoff, activeSide });
     const who = context.counterpartyLabel || "opposing counsel";
     if (result.ok) {
+      setHandoff(result.handoff);
       toast.success("Link copied — opening your email client", {
         description: `Paste it into the message to ${who}.`,
       });

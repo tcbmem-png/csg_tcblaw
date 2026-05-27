@@ -73,6 +73,9 @@ export function MSHandoffShareDialog({
       createdAt: new Date().toISOString(),
       completedAt: null,
       caseId,
+      // §1.5 round attribution — round 1 = originator's initial draft.
+      // Receiver edits bump to 2; subsequent originator revisions to 3+.
+      handoffRound: Math.max(1, handoff.handoffRound ?? 0),
     };
     const encoded = encodeMSShare(scrubbed, caption, nextHandoff);
     const url = new URL(window.location.href);
