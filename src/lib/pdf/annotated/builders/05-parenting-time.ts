@@ -222,4 +222,3 @@ export function build(wdm: WDM): Block[] {
   return blocks;
 }
 
-}
