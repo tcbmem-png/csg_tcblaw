@@ -28,7 +28,7 @@ export function build(wdm: WDM, alternative: WDM | null = null): Block[] {
   // excluding the authority-block section itself from SECTIONS when
   // this builder runs (registry orders authority-block LAST).
   void SECTIONS;
-  const documentBlocks = renderRegistry(wdm, alternative);
+  const documentBlocks = renderRegistry(wdm, alternative, { includeAuthority: false });
   const keys = Array.from(new Set(collectCitationKeys(documentBlocks)));
 
   const groups = {
