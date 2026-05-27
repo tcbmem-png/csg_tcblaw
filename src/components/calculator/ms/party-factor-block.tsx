@@ -91,6 +91,9 @@ interface BlockProps {
   /** Two-attorney handoff lock — read-only slate for the originating side. */
   obligorLocked?: boolean;
   obligeeLocked?: boolean;
+  /** §1.5 attribution context for stamping author + handoff round. */
+  handoffRound?: number;
+  currentAuthor?: HandoffAttorney | null;
 }
 
 export function MSPartyFactorBlock({
