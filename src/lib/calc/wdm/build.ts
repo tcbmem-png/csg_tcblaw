@@ -597,11 +597,13 @@ function buildDeviationsSection(
         amount: outputs.privateSchoolMonthlyTotal,
         category: "judgment",
         rule: "private_school",
-        factors: [
-          "best interest of the child",
-          "consistency with the parents' financial means",
-          "history of the child's enrollment",
-        ],
+        // Rule .07(2)(d)1. does not enumerate a closed factor list for
+        // the extraordinary-educational deviation; the determination is
+        // committed to the tribunal's discretion subject to the written-
+        // findings requirements of Rule .07(1) (see `deviation_general`).
+        // Per drift-prevention rule #10 we do not fill the gap with
+        // synthesized factors; the §VII builder recites the rule's
+        // findings requirements verbatim from `deviation_general`.
         userElection: election,
       },
     });
