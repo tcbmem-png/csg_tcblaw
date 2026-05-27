@@ -57,6 +57,19 @@ export interface FieldFit {
   align?: Align;
   /** Vertical bottom-padding from rect bottom for single-line draws (default 2). */
   vPad?: number;
+  /**
+   * Explicit per-line baselines (pdfplumber top-down y, points). Wrap-policy
+   * fields can set this to sit text on the same baselines as the form's
+   * pre-printed underlines (e.g. the Comments / Rebuttals / Calculations
+   * block). One entry per line of capacity; overflow beyond `length` flows
+   * to the continuation page.
+   */
+  lineBaselines?: number[];
+  /**
+   * When `lineBaselines` is set, how many points to lift the baseline ABOVE
+   * the underline so glyph descenders don't strike through it. Default 1pt.
+   */
+  baselineOffset?: number;
 }
 
 export type FieldSource = (
