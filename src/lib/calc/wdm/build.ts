@@ -28,7 +28,7 @@ import type {
 } from "../types";
 import type { CaseCaption } from "../share";
 import { defaultCaption } from "../share";
-import { CITATIONS, type CitationKey } from "../citations";
+import { CITATIONS, DEVIATION_METHODOLOGY_NOTE, type CitationKey } from "../citations";
 import {
   citationForBcso,
   citationForParentingMode,
@@ -45,10 +45,7 @@ import type {
   WDMUserElection,
 } from "./types";
 
-const DEVIATION_METHODOLOGY_NOTE =
-  "Deviations are applied as monthly cash flows after the BCSO is set. " +
-  "The court must enter written findings stating the amount of support that " +
-  "would have been ordered under the guidelines and the reasons for the deviation.";
+
 
 // Burden-shift factor list, Nash v. Mulle progeny. Surfaced on the
 // statutoryCap panel when engaged; consumed by Phase D narrative.
