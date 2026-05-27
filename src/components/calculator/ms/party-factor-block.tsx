@@ -108,6 +108,8 @@ export function MSPartyFactorBlock({
   buildContextInputs,
   obligorLocked = false,
   obligeeLocked = false,
+  handoffRound = 0,
+  currentAuthor = null,
 }: BlockProps) {
   const inPlay = inPlayFrom(obligor, obligee);
 
