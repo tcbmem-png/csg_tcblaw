@@ -222,40 +222,4 @@ export function build(wdm: WDM): Block[] {
   return blocks;
 }
 
-/**
- * Pull the schedule-row label's combined-AGI dollar figure out of the
- * sub-line printed beneath Line 6, then re-derive BCSO is impractical
- * (we'd need the schedule table here). Instead: peek at the §IV
- * sub-lines for an "above-cap" breakdown when present, otherwise return
- * null and the §V Equal-50/50 branch falls back to the net presumptive
- * for display. The Phase D fixtures all run within-schedule so the
- * fallback chain is only exercised on the above-cap path.
- *
- * NOTE: in the equal-parenting branch, BCSO is the schedule-lookup
- * value the §IV builder emits in a sub-line as "Schedule row used: $X
- * combined AGI". We extract the dollar value from that label.
- */
-function recoverBcsoFromScheduleRow(
-  lines: import("@/lib/calc/wdm/types").WDMLine[] | undefined,
-): number | null {
-  if (!lines) return null;
-  // The schedule sub-line follows Line 6 and only prints when within-schedule.
-  // We want the *BCSO* not the AGI. Read Line 7's a+b totals for equal
-  // parenting (post-multiplier cross-credit), then back out the BCSO as
-  // the value before the cross-credit subtraction. Simpler and correct:
-  // re-derive nothing — use the BCSO amount captured at the structured
-  // Line 6 sub-line when present; otherwise return null.
-  for (const l of lines) {
-    if (l.screenLineNo === "6" && (l.total?.amount ?? 0) > 0) {
-      return Math.abs(l.total!.amount!);
-    }
-  }
-  // Equal-parenting branch: Line 6 prints $0 with annotation; the real
-  // BCSO is the structural value embedded in the schedule-row sub-line
-  // label. That label is "Schedule row used: $X combined AGI / N
-  // children". We avoid parsing dollar text — instead, find the line
-  // whose `total` carries the BCSO structurally. None exists in the
-  // current WDM for the equal-parenting case; signal a gap by returning
-  // null and let the §V builder degrade gracefully.
-  return null;
 }
