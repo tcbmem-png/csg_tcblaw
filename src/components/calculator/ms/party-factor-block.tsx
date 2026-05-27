@@ -26,7 +26,7 @@ import {
   buildReconciliation,
   summarizeRow,
 } from "@/lib/calc/ms/reconciliation";
-// stampPartyEdit is wired by parent component (inputs.tsx) on save; not needed here directly.
+import { stampPartyEdit } from "@/lib/calc/ms/share";
 import {
   Field,
   NumInput,
