@@ -885,7 +885,7 @@ const partVI: AocField[] = [
       size: 8,
       align: "left",
       lineBaselines: [553.3, 565.2, 577.8, 589.7, 601.6],
-      baselineOffset: 1.5,
+      baselineOffset: 3,
     },
     source: (wdm, inputs, outputs) => {
       const parts: string[] = [];
