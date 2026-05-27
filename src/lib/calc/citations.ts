@@ -84,7 +84,12 @@ export type CitationKey =
   | "pcso_max"
   | "ssr"
   | "minimum"
-  | "fcso";
+  | "fcso"
+  // -------- Case law (additive per Phase D+E ack §6) --------
+  | "case.nash_v_mulle"
+  | "case.richardson_v_spanos"
+  | "case.smallman_v_smallman"
+  | "case.massey_v_casals";
 
 export const CITATIONS: Record<CitationKey, Citation> = {
   // -------- Line 1 — Income basis --------
