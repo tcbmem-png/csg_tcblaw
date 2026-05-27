@@ -257,9 +257,9 @@ function buildImputationColumns(args: {
   return cols;
 }
 
-function avgMonthsFromChildren(children: MSChild[] | undefined): number | null {
-  if (!children || children.length === 0) return null;
-  const months = children.map((c) => Math.max(0, 21 - (c?.age ?? 0)) * 12);
+function avgMonthsFromChildren(ages: number[] | undefined): number | null {
+  if (!ages || ages.length === 0) return null;
+  const months = ages.map((a) => Math.max(0, 21 - (a ?? 0)) * 12);
   const sum = months.reduce((s, n) => s + n, 0);
   return Math.round(sum / months.length);
 }
