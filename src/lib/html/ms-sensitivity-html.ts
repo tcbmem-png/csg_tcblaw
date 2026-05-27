@@ -505,7 +505,7 @@ export function renderMSSensitivityHtml(args: {
 
   const childCount = inputs.numChildren;
   const childAgesStr =
-    inputs.childAges.length > 0 ? ` (ages ${inputs.childAges.map((c) => c.age).join(", ")})` : "";
+    inputs.childAges.length > 0 ? ` (ages ${inputs.childAges.join(", ")})` : "";
 
   const title = caption.matterName
     ? `${caption.matterName} \u2014 MS \u00a7 43-19-103 Deviation Sensitivity Analysis`
