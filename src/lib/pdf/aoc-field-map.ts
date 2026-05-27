@@ -861,21 +861,38 @@ const partVI: AocField[] = [
       return fmtMoney(adjusted);
     },
   },
-  // Comments / Calculations / Rebuttals block — wrapped, ~4 underlines starting
-  // at top=550, spanning x≈195..555. Composed of (in order):
-  //   1. Net presumptive transfer summary (uses → glyph).
-  //   2. Above-cap analysis paragraph when statutory cap engaged (uses § glyph).
-  //   3. Deviations narrative flattened from wdm.panels.deviationsNarrative.
+  // Comments / Rebuttals / Calculations block — sits ABOVE the five
+  // pre-printed underlines (measured via pdfplumber on the blank form at
+  // top-down y = 553.3, 565.2, 577.8, 589.7, 601.6). The renderer is
+  // wired with explicit baselines so glyph descenders never strike
+  // through an underline. Composition is BRIEF mode per Phase A v2.1:
+  //
+  //   1. Net presumptive support summary (≤1 line).
+  //   2. Cap status — engaged ("Above the $X/mo cap …") or below-cap
+  //      ("Falls below the $X/mo cap …"), single sentence.
+  //   3. Deviations brief (from flattenForCommentsBriefAOC) ending in
+  //      "Full methodology in annotated worksheet."
+  //
+  // Full per-deviation breakdown + threshold math + cap factor list
+  // lives in the annotated PDF (Phase D), not here.
   {
     aocLine: "",
-    description: "Comments block — transfer summary + cap analysis + deviations",
+    description: "Comments block — brief AOC summary (≤5 lines)",
     page: 2,
-    rect: { x: 195, y: 548, w: 360, h: 48 },
-    fit: { policy: "wrap", size: 8, align: "left" },
+    rect: { x: 195, y: 548, w: 360, h: 56 },
+    fit: {
+      policy: "wrap",
+      size: 8,
+      align: "left",
+      lineBaselines: [553.3, 565.2, 577.8, 589.7, 601.6],
+      baselineOffset: 1.5,
+    },
     source: (wdm, inputs, outputs) => {
       const parts: string[] = [];
       const a = inputs.parentALabel || "Mother";
       const b = inputs.parentBLabel || "Father";
+
+      // 1. Net presumptive support summary.
       if (
         outputs.netPresumptiveSupport > 0 &&
         outputs.presumptiveDirection !== "none"
@@ -888,11 +905,38 @@ const partVI: AocField[] = [
           `Net presumptive support: $${fmtMoney(outputs.netPresumptiveSupport)}/mo (${dir}).`,
         );
       }
+
+      // 2. Cap status — synthesized brief sentence (NOT the verbose
+      // wdm.panels.statutoryCap.capNote, which is reserved for the
+      // annotated PDF). Uses thousands-separated cap dollar amount.
       const cap = wdm.panels.statutoryCap;
-      if (cap.capNote) parts.push(cap.capNote);
-      const dev = flattenForCommentsBlock(wdm.panels.deviationsNarrative);
-      if (dev) parts.push(dev);
-      return parts.length > 0 ? parts.join("  ") : null;
+      if (cap.statutoryMax > 0 && cap.numChildren > 0) {
+        const childWord = cap.numChildren === 1 ? "child" : "children";
+        const capDollars = cap.statutoryMax.toLocaleString("en-US");
+        if (cap.engaged) {
+          parts.push(
+            `Calculation exceeds the $${capDollars}/mo statutory cap for ${cap.numChildren} ${childWord} (Tenn. Code Ann. § 36-5-101(e)(1)(B)); rebuttable presumption.`,
+          );
+        } else {
+          parts.push(
+            `Calculation falls below the $${capDollars}/mo statutory cap for ${cap.numChildren} ${childWord} (Tenn. Code Ann. § 36-5-101(e)(1)(B)).`,
+          );
+        }
+      }
+
+      // 3. Deviations brief.
+      const netDevFromA =
+        outputs.privateSchoolDeviationFromA +
+        outputs.specialExpensesDeviationFromA;
+      const devBrief = flattenForCommentsBriefAOC(
+        wdm.panels.deviationsNarrative,
+        a,
+        b,
+        netDevFromA,
+      );
+      if (devBrief) parts.push(devBrief);
+
+      return parts.length > 0 ? parts.join(" ") : null;
     },
   },
   // Preparer's Use Only — Name (top=614.4) + Date (right side)
