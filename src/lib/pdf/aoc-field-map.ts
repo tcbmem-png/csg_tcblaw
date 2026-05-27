@@ -243,15 +243,20 @@ const identificationFields: AocField[] = [
     font: "bold",
     source: (wdm) => (wdm.panels.parentRoleCheckboxes.parentB.split ? "X" : null),
   },
-  // Equal-50/50 margin note next to the parenting-time line — placed
-  // beneath the SPLIT column on the Mother row so it sits in unused space.
+  // Equal-50/50 margin note — positioned in the left instructions column
+  // adjacent to Line 5 (ARP avg parenting time, top≈461) so it reads as
+  // an explanatory annotation to the blank parenting-time row rather
+  // than orphaned chrome at the top of the form.
   {
     aocLine: "",
     description: "Margin note: Equal parenting (Rule .04(7)(b)(2)(i))",
     page: 1,
-    rect: { x: 437, y: row(168, 24).y, w: 90, h: 24 },
-    fit: { policy: "wrap", size: 6.5, align: "left" },
-    source: (wdm) => wdm.panels.parentRoleCheckboxes.marginNote ?? null,
+    rect: { x: 188, y: 458, w: 180, h: 28 },
+    fit: { policy: "wrap", size: 7.5, align: "left" },
+    source: (wdm) => {
+      const note = wdm.panels.parentRoleCheckboxes.marginNote;
+      return note ? `← Line 5/6: ${note}` : null;
+    },
   },
 ];
 
