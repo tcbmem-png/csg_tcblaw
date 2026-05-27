@@ -653,9 +653,11 @@ export function defaultInputs(): CalcInputs {
     includePrivateSchool: false,
     privateSchoolAnnual: 0,
     privateSchoolPaidBy: "split_pro_rata",
+    privateSchoolReason: "",
     includeSpecialExpenses: false,
     specialExpensesAnnual: 0,
     specialExpensesWaiveThreshold: false,
     specialExpensesPaidBy: "split_pro_rata",
+    specialExpensesReason: "",
   };
 }

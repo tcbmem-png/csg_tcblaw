@@ -10,20 +10,26 @@ export interface ChildEntry {
   daysWithB: number;
 }
 
+export type ParentRole = "mother" | "father" | null;
+
 export interface CaseCaption {
   matterName: string;
   docketNumber: string;
   court: string;
   preparedBy: string;
   client: string;
-  /** Free-text comments rendered in the official PDF's comments block. */
-  comments: string;
-  /** Which calculator parent fills the AOC's "Mother" row. Default: Parent A. */
-  parentARole: "mother" | "father";
-  /** Per-child entries for the AOC Part I sub-table. Length is synced to inputs.numChildren. */
+  /** Which calculator parent fills the AOC's "Mother" row. Required before AOC export.
+   *  Paired with parentBRole: setting one forces the other to the opposite. */
+  parentARole: ParentRole;
+  parentBRole: ParentRole;
+  /** Per-child entries for the AOC Part I sub-table. Length is synced to inputs.numChildren.
+   *  Days seed from the parenting plan; user can override per child for AOC display only
+   *  (does NOT change the math — engine still uses parent-level totals). */
   children: ChildEntry[];
-  /** Free-text narrative printed in Part VI deviation rows. */
-  deviationNarrative: string;
+  /** Optional override of the auto-composed Part VI narrative. When non-empty,
+   *  takes precedence over the composed text. Also receives back-compat imports
+   *  of legacy v1/v2 `comments` + `deviationNarrative` fields. */
+  narrativeOverride: string;
 }
 
 export function defaultCaption(): CaseCaption {
@@ -33,10 +39,10 @@ export function defaultCaption(): CaseCaption {
     court: "",
     preparedBy: "",
     client: "",
-    comments: "",
-    parentARole: "mother",
+    parentARole: null,
+    parentBRole: null,
     children: [],
-    deviationNarrative: "",
+    narrativeOverride: "",
   };
 }
 
@@ -44,17 +50,53 @@ export function defaultChildEntry(): ChildEntry {
   return { name: "", dob: "", daysWithA: 0, daysWithB: 0 };
 }
 
-interface SharePayloadV1 {
-  v: 1;
+/** Paired role setter: setting one parent's role forces the other to the opposite. */
+export function setParentRole(
+  caption: CaseCaption,
+  parent: "A" | "B",
+  role: Exclude<ParentRole, null>,
+): CaseCaption {
+  const opposite: Exclude<ParentRole, null> = role === "mother" ? "father" : "mother";
+  if (parent === "A") {
+    return { ...caption, parentARole: role, parentBRole: opposite };
+  }
+  return { ...caption, parentARole: opposite, parentBRole: role };
+}
+
+// --- Share payload versions -------------------------------------------------
+//
+// v1, v2 — legacy. Carried `comments` and `deviationNarrative` on CaseCaption.
+// v3      — current. Drops both fields in favour of per-toggle reasons on
+//           CalcInputs (privateSchoolReason / specialExpensesReason) plus an
+//           optional narrativeOverride for the rare "I want to write my own"
+//           case. Reader still understands v1/v2 and folds legacy free-text
+//           into narrativeOverride so existing shared URLs render the same PDF.
+
+interface LegacyCaption {
+  matterName?: string;
+  docketNumber?: string;
+  court?: string;
+  preparedBy?: string;
+  client?: string;
+  comments?: string;
+  parentARole?: "mother" | "father";
+  parentBRole?: "mother" | "father";
+  children?: ChildEntry[];
+  deviationNarrative?: string;
+  narrativeOverride?: string;
+}
+
+interface SharePayloadLegacy {
+  v: 1 | 2;
+  i: CalcInputs;
+  c: LegacyCaption;
+}
+interface SharePayloadV3 {
+  v: 3;
   i: CalcInputs;
   c: CaseCaption;
 }
-interface SharePayloadV2 {
-  v: 2;
-  i: CalcInputs;
-  c: CaseCaption;
-}
-type SharePayload = SharePayloadV1 | SharePayloadV2;
+type SharePayload = SharePayloadLegacy | SharePayloadV3;
 
 /** URL-safe base64. */
 function b64urlEncode(s: string): string {
@@ -70,7 +112,7 @@ function b64urlDecode(s: string): string {
 }
 
 export function encodeShare(inputs: CalcInputs, caption: CaseCaption): string {
-  const payload: SharePayloadV2 = { v: 2, i: inputs, c: caption };
+  const payload: SharePayloadV3 = { v: 3, i: inputs, c: caption };
   return b64urlEncode(JSON.stringify(payload));
 }
 
@@ -79,14 +121,69 @@ export function decodeShare(
 ): { inputs: CalcInputs; caption: CaseCaption } | null {
   try {
     const parsed = JSON.parse(b64urlDecode(s)) as Partial<SharePayload>;
-    // v1 and v2 share the same shape; v2 just permits the expanded
-    // IncomeMethodology discriminated union. Existing v1 payloads round-trip
-    // through the same merge.
-    if ((parsed.v !== 1 && parsed.v !== 2) || !parsed.i) return null;
+    if (!parsed || ![1, 2, 3].includes(parsed.v as number) || !parsed.i) {
+      return null;
+    }
     const inputs: CalcInputs = { ...defaultInputs(), ...parsed.i };
-    const caption: CaseCaption = { ...defaultCaption(), ...(parsed.c ?? {}) };
+
+    const rawCap = (parsed.c ?? {}) as LegacyCaption;
+    // Derive paired roles. v1/v2 only stored parentARole; infer B as opposite.
+    let aRole: ParentRole = rawCap.parentARole ?? null;
+    let bRole: ParentRole = rawCap.parentBRole ?? null;
+    if (aRole && !bRole) bRole = aRole === "mother" ? "father" : "mother";
+    if (bRole && !aRole) aRole = bRole === "mother" ? "father" : "mother";
+
+    // Back-compat: fold legacy comments + deviationNarrative into a single
+    // narrativeOverride. The new UI auto-composes Part VI from per-toggle
+    // reasons; an explicit override beats the composer.
+    const legacyParts = [
+      rawCap.narrativeOverride ?? "",
+      rawCap.deviationNarrative ?? "",
+      rawCap.comments ?? "",
+    ]
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    const narrativeOverride = legacyParts.join("\n\n");
+
+    const caption: CaseCaption = {
+      ...defaultCaption(),
+      matterName: rawCap.matterName ?? "",
+      docketNumber: rawCap.docketNumber ?? "",
+      court: rawCap.court ?? "",
+      preparedBy: rawCap.preparedBy ?? "",
+      client: rawCap.client ?? "",
+      parentARole: aRole,
+      parentBRole: bRole,
+      children: rawCap.children ?? [],
+      narrativeOverride,
+    };
     return { inputs, caption };
   } catch {
     return null;
   }
+}
+
+/**
+ * Compose the Part VI deviation narrative from per-toggle reasons.
+ * When `caption.narrativeOverride` is non-empty, it takes precedence.
+ */
+export function composeDeviationNarrative(
+  inputs: CalcInputs,
+  caption: CaseCaption,
+): string {
+  if (caption.narrativeOverride && caption.narrativeOverride.trim().length > 0) {
+    return caption.narrativeOverride.trim();
+  }
+  const parts: string[] = [];
+  if (inputs.includePrivateSchool && inputs.privateSchoolReason.trim()) {
+    parts.push(
+      `Private school tuition deviation per Rule .07(2)(d): ${inputs.privateSchoolReason.trim()}`,
+    );
+  }
+  if (inputs.includeSpecialExpenses && inputs.specialExpensesReason.trim()) {
+    parts.push(
+      `Special expenses deviation per Rule .07(2)(d): ${inputs.specialExpensesReason.trim()}`,
+    );
+  }
+  return parts.join(" ");
 }
