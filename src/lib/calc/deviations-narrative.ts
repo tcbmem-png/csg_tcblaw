@@ -110,3 +110,34 @@ export function flattenForCommentsBlock(
 ): string {
   return narrative.blocks.map((b) => b.body).join(" ");
 }
+
+/**
+ * Ultra-brief AOC-form adapter. Returns at most one short sentence
+ * summarizing the deviation footprint and pointing the reader to the
+ * annotated worksheet for the full breakdown. Designed to fit on a
+ * single underline row of the AOC Comments block.
+ *
+ * Shape:
+ *   "Deviations allocated pro rata per Rule .07(2)(d), net Line 14
+ *    transfer $X/mo {payer} → {payee}. Full methodology in annotated
+ *    worksheet."
+ *
+ * When no deviations are in play, returns null (caller drops the line).
+ */
+export function flattenForCommentsBriefAOC(
+  narrative: WDMDeviationsNarrative,
+  parentALabel: string,
+  parentBLabel: string,
+  netDeviationFromA: number,
+): string | null {
+  if (narrative.blocks.length === 0) return null;
+  const a = parentALabel || "Mother";
+  const b = parentBLabel || "Father";
+  const abs = Math.abs(netDeviationFromA);
+  if (!(abs > 0)) {
+    return `Deviations allocated pro rata per Rule .07(2)(d). Full methodology in annotated worksheet.`;
+  }
+  const direction = netDeviationFromA > 0 ? `${a} → ${b}` : `${b} → ${a}`;
+  const dollars = abs.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  return `Deviations allocated pro rata per Rule .07(2)(d), net Line 14 transfer $${dollars}/mo (${direction}). Full methodology in annotated worksheet.`;
+}

@@ -35,7 +35,7 @@
 import type { CalcInputs, CalcOutputs } from "../calc/types";
 import type { WDM } from "../calc/wdm/types";
 import { findLineByScreenNo } from "../calc/wdm/build";
-import { flattenForCommentsBlock } from "../calc/deviations-narrative";
+import { flattenForCommentsBriefAOC } from "../calc/deviations-narrative";
 
 export type FontStyle = "regular" | "bold";
 export type Align = "left" | "right" | "center";
@@ -57,6 +57,19 @@ export interface FieldFit {
   align?: Align;
   /** Vertical bottom-padding from rect bottom for single-line draws (default 2). */
   vPad?: number;
+  /**
+   * Explicit per-line baselines (pdfplumber top-down y, points). Wrap-policy
+   * fields can set this to sit text on the same baselines as the form's
+   * pre-printed underlines (e.g. the Comments / Rebuttals / Calculations
+   * block). One entry per line of capacity; overflow beyond `length` flows
+   * to the continuation page.
+   */
+  lineBaselines?: number[];
+  /**
+   * When `lineBaselines` is set, how many points to lift the baseline ABOVE
+   * the underline so glyph descenders don't strike through it. Default 1pt.
+   */
+  baselineOffset?: number;
 }
 
 export type FieldSource = (
@@ -125,9 +138,10 @@ const COL = {
   motherP2Money: { x: 380, w: 44 },
   fatherP2Money: { x: 432, w: 44 },
   caretakerP2Money: { x: 484, w: 44 },
-  // Percent cells (Line 3)
-  motherPct: { x: 380, w: 32 },
-  fatherPct: { x: 434, w: 32 },
+  // Percent cells (Line 3). Width narrowed so the right-aligned digits
+  // end BEFORE the form's pre-printed "%" glyph instead of striking it.
+  motherPct: { x: 380, w: 22 },
+  fatherPct: { x: 434, w: 22 },
   // Combined AGI (Line 2a) — narrower single cell
   combined2a: { x: 322, w: 44 },
   // ARP days (Line 5) — full cell width, mother/father columns
@@ -442,41 +456,54 @@ const partII: AocField[] = [
 
 const partIII: AocField[] = [
   // 4 BCSO allotted to PRP's household (top=434.9). Goes in the PRP column.
+  // Equal 50/50 has no PRP; per Rule .04(7)(b)(2)(i) the BCSO is shared
+  // symmetrically, so we populate BOTH columns with the BCSO. The Equal
+  // margin annotation already explains the symmetry.
   {
     aocLine: "4",
-    description: "BCSO allotted to PRP — Mother col (if Mother is PRP)",
+    description: "BCSO allotted to PRP — Mother col",
     page: 1,
     rect: { x: COL.motherP1Money.x + VALUE_X_OFFSET, y: row(435).y, w: COL.motherP1Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
-    source: (_w, _i, o) => (prpIs(o) === "parent_a" ? fmtMoney(o.bcso) : null),
+    source: (_w, _i, o) => {
+      const prp = prpIs(o);
+      if (prp === "parent_a" || prp === "equal") return fmtMoney(o.bcso);
+      return null;
+    },
   },
   {
     aocLine: "4",
-    description: "BCSO allotted to PRP — Father col (if Father is PRP)",
+    description: "BCSO allotted to PRP — Father col",
     page: 1,
     rect: { x: COL.fatherP1Money.x + VALUE_X_OFFSET, y: row(435).y, w: COL.fatherP1Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
-    source: (_w, _i, o) => (prpIs(o) === "parent_b" ? fmtMoney(o.bcso) : null),
+    source: (_w, _i, o) => {
+      const prp = prpIs(o);
+      if (prp === "parent_b" || prp === "equal") return fmtMoney(o.bcso);
+      return null;
+    },
   },
-  // 4a Share of BCSO owed to PRP (top=443.5). ARP's pro-rata share — goes
-  // in ARP column.
+  // 4a Each parent's pro-rata share of BCSO (top=443.5). The official form
+  // shows BOTH columns (PI × BCSO for each parent), not just the ARP's
+  // share — the ARP share is what's "owed" to the PRP, but Line 4a is the
+  // arithmetic decomposition. Populate both regardless of arpIdentity.
   {
     aocLine: "4a",
-    description: "Share of BCSO owed to PRP — Mother col (if Mother is ARP)",
+    description: "BCSO pro-rata share — Mother col",
     page: 1,
     rect: { x: COL.motherP1Money.x + VALUE_X_OFFSET, y: row(444).y, w: COL.motherP1Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
     source: (_w, _i, o) =>
-      o.arpIdentity === "parent_a" ? fmtMoney(o.parentABcsoShare) : null,
+      o.parentABcsoShare > 0 ? fmtMoney(o.parentABcsoShare) : null,
   },
   {
     aocLine: "4a",
-    description: "Share of BCSO owed to PRP — Father col (if Father is ARP)",
+    description: "BCSO pro-rata share — Father col",
     page: 1,
     rect: { x: COL.fatherP1Money.x + VALUE_X_OFFSET, y: row(444).y, w: COL.fatherP1Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
     source: (_w, _i, o) =>
-      o.arpIdentity === "parent_b" ? fmtMoney(o.parentBBcsoShare) : null,
+      o.parentBBcsoShare > 0 ? fmtMoney(o.parentBBcsoShare) : null,
   },
   // 5 ARP parent's average parenting time (top=460.6). Days as integer.
   // Equal 50/50 → leave blank (per Phase A approval; margin note covers).
@@ -834,21 +861,38 @@ const partVI: AocField[] = [
       return fmtMoney(adjusted);
     },
   },
-  // Comments / Calculations / Rebuttals block — wrapped, ~4 underlines starting
-  // at top=550, spanning x≈195..555. Composed of (in order):
-  //   1. Net presumptive transfer summary (uses → glyph).
-  //   2. Above-cap analysis paragraph when statutory cap engaged (uses § glyph).
-  //   3. Deviations narrative flattened from wdm.panels.deviationsNarrative.
+  // Comments / Rebuttals / Calculations block — sits ABOVE the five
+  // pre-printed underlines (measured via pdfplumber on the blank form at
+  // top-down y = 553.3, 565.2, 577.8, 589.7, 601.6). The renderer is
+  // wired with explicit baselines so glyph descenders never strike
+  // through an underline. Composition is BRIEF mode per Phase A v2.1:
+  //
+  //   1. Net presumptive support summary (≤1 line).
+  //   2. Cap status — engaged ("Above the $X/mo cap …") or below-cap
+  //      ("Falls below the $X/mo cap …"), single sentence.
+  //   3. Deviations brief (from flattenForCommentsBriefAOC) ending in
+  //      "Full methodology in annotated worksheet."
+  //
+  // Full per-deviation breakdown + threshold math + cap factor list
+  // lives in the annotated PDF (Phase D), not here.
   {
     aocLine: "",
-    description: "Comments block — transfer summary + cap analysis + deviations",
+    description: "Comments block — brief AOC summary (≤5 lines)",
     page: 2,
-    rect: { x: 195, y: 548, w: 360, h: 48 },
-    fit: { policy: "wrap", size: 8, align: "left" },
+    rect: { x: 195, y: 548, w: 360, h: 56 },
+    fit: {
+      policy: "wrap",
+      size: 8,
+      align: "left",
+      lineBaselines: [553.3, 565.2, 577.8, 589.7, 601.6],
+      baselineOffset: 3,
+    },
     source: (wdm, inputs, outputs) => {
       const parts: string[] = [];
       const a = inputs.parentALabel || "Mother";
       const b = inputs.parentBLabel || "Father";
+
+      // 1. Net presumptive support summary.
       if (
         outputs.netPresumptiveSupport > 0 &&
         outputs.presumptiveDirection !== "none"
@@ -861,11 +905,38 @@ const partVI: AocField[] = [
           `Net presumptive support: $${fmtMoney(outputs.netPresumptiveSupport)}/mo (${dir}).`,
         );
       }
+
+      // 2. Cap status — synthesized brief sentence (NOT the verbose
+      // wdm.panels.statutoryCap.capNote, which is reserved for the
+      // annotated PDF). Uses thousands-separated cap dollar amount.
       const cap = wdm.panels.statutoryCap;
-      if (cap.capNote) parts.push(cap.capNote);
-      const dev = flattenForCommentsBlock(wdm.panels.deviationsNarrative);
-      if (dev) parts.push(dev);
-      return parts.length > 0 ? parts.join("  ") : null;
+      if (cap.statutoryMax > 0 && cap.numChildren > 0) {
+        const childWord = cap.numChildren === 1 ? "child" : "children";
+        const capDollars = cap.statutoryMax.toLocaleString("en-US");
+        if (cap.engaged) {
+          parts.push(
+            `Calculation exceeds the $${capDollars}/mo statutory cap for ${cap.numChildren} ${childWord} (Tenn. Code Ann. § 36-5-101(e)(1)(B)); rebuttable presumption.`,
+          );
+        } else {
+          parts.push(
+            `Calculation falls below the $${capDollars}/mo statutory cap for ${cap.numChildren} ${childWord} (Tenn. Code Ann. § 36-5-101(e)(1)(B)).`,
+          );
+        }
+      }
+
+      // 3. Deviations brief.
+      const netDevFromA =
+        outputs.privateSchoolDeviationFromA +
+        outputs.specialExpensesDeviationFromA;
+      const devBrief = flattenForCommentsBriefAOC(
+        wdm.panels.deviationsNarrative,
+        a,
+        b,
+        netDevFromA,
+      );
+      if (devBrief) parts.push(devBrief);
+
+      return parts.length > 0 ? parts.join(" ") : null;
     },
   },
   // Preparer's Use Only — Name (top=614.4) + Date (right side)

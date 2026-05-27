@@ -152,21 +152,43 @@ function drawWrap(
   const { rect, fit } = field;
   const font = field.font === "bold" ? ctx.bold : ctx.regular;
   const size = fit.size;
-  const lineHeight = size * 1.18;
   const lines = wrapTextToWidth(text, font, size, rect.w);
-  const maxLines = Math.max(1, Math.floor(rect.h / lineHeight));
-  const drawn = lines.slice(0, maxLines);
-  const overflow = lines.slice(maxLines);
 
-  let y = rect.y + size; // baseline of first line just below top
-  for (const ln of drawn) {
-    const yBottomUp = ctx.pageHeight - y;
-    let x = rect.x;
-    if (fit.align === "right") x = rect.x + rect.w - measure(ln, font, size);
-    else if (fit.align === "center")
-      x = rect.x + (rect.w - measure(ln, font, size)) / 2;
-    ctx.page.drawText(ln, { x, y: yBottomUp, size, font, color: INK });
-    y += lineHeight;
+  // Two layout modes:
+  //  - explicit per-line baselines (pdfplumber top-down y), used by the
+  //    Comments block to sit text ABOVE each pre-printed underline.
+  //  - default: even line-height inside the rect.
+  const baselines = fit.lineBaselines;
+  let drawn: string[];
+  let overflow: string[];
+  if (baselines && baselines.length > 0) {
+    drawn = lines.slice(0, baselines.length);
+    overflow = lines.slice(baselines.length);
+    for (let i = 0; i < drawn.length; i += 1) {
+      const ln = drawn[i];
+      const baseTopDown = baselines[i] - (fit.baselineOffset ?? 1);
+      const yBottomUp = ctx.pageHeight - baseTopDown;
+      let x = rect.x;
+      if (fit.align === "right") x = rect.x + rect.w - measure(ln, font, size);
+      else if (fit.align === "center")
+        x = rect.x + (rect.w - measure(ln, font, size)) / 2;
+      ctx.page.drawText(ln, { x, y: yBottomUp, size, font, color: INK });
+    }
+  } else {
+    const lineHeight = size * 1.18;
+    const maxLines = Math.max(1, Math.floor(rect.h / lineHeight));
+    drawn = lines.slice(0, maxLines);
+    overflow = lines.slice(maxLines);
+    let y = rect.y + size;
+    for (const ln of drawn) {
+      const yBottomUp = ctx.pageHeight - y;
+      let x = rect.x;
+      if (fit.align === "right") x = rect.x + rect.w - measure(ln, font, size);
+      else if (fit.align === "center")
+        x = rect.x + (rect.w - measure(ln, font, size)) / 2;
+      ctx.page.drawText(ln, { x, y: yBottomUp, size, font, color: INK });
+      y += lineHeight;
+    }
   }
 
   if (overflow.length === 0) return null;
@@ -218,29 +240,44 @@ export async function renderOverlay(
     }
   }
 
-  // Overflow tail — append "(continued from Line X)" lines to bottom margin
-  // of page 2 if any wrap field overflowed. The Comments block is the only
-  // current consumer, and it already has buildDeviationsNarrative output,
-  // so overflow here is expected to be rare.
+  // Overflow handling — when any wrap field overflows its rect, add a
+  // dedicated continuation page (NOT a stray block hanging off the bottom
+  // of page 2) with a proper header. The AOC brief-mode Comments block
+  // shouldn't overflow on typical fixtures; if it does, this surfaces a
+  // legible appendix instead of crashing into the form footer.
   if (overflows.length > 0) {
-    const tailField: AocField = {
+    const continuationPage = pdf.addPage([page2.getWidth(), page2.getHeight()]);
+    const cPageHeight = continuationPage.getHeight();
+    // Header
+    continuationPage.drawText("Worksheet — Continuation Page", {
+      x: 54,
+      y: cPageHeight - 54,
+      size: 14,
+      font: bold,
+      color: INK,
+    });
+    continuationPage.drawText(
+      "Overflow from the Comments / Rebuttals / Calculations block of the AOC worksheet.",
+      { x: 54, y: cPageHeight - 72, size: 9, font: regular, color: INK },
+    );
+    const bodyField: AocField = {
       aocLine: "",
-      description: "Overflow tail",
+      description: "Continuation body",
       page: 2,
-      rect: { x: 36, y: 720, w: 540, h: 60 },
-      fit: { policy: "wrap", size: 7, align: "left" },
+      rect: { x: 54, y: 96, w: page2.getWidth() - 108, h: cPageHeight - 160 },
+      fit: { policy: "wrap", size: 10, align: "left" },
       source: () => null,
     };
-    const text = overflows
-      .map((o) => `(continued — ${o.fieldDescription}) ${o.remainingLines.join(" ")}`)
-      .join("\n");
     const ctx: DrawCtx = {
-      page: page2,
-      pageHeight: page2.getHeight() || PAGE_HEIGHT_FALLBACK,
+      page: continuationPage,
+      pageHeight: cPageHeight,
       regular,
       bold,
     };
-    drawWrap(ctx, text, tailField);
+    const text = overflows
+      .map((o) => `${o.fieldDescription}:\n${o.remainingLines.join(" ")}`)
+      .join("\n\n");
+    drawWrap(ctx, text, bodyField);
   }
 
   pdf.setAuthor(opts.authorMetadata ?? DEFAULT_AUTHOR);
