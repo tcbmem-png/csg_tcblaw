@@ -862,7 +862,7 @@ const partVI: AocField[] = [
         );
       }
       const cap = wdm.panels.statutoryCap;
-      if (cap.engaged && cap.capNote) parts.push(cap.capNote);
+      if (cap.capNote) parts.push(cap.capNote);
       const dev = flattenForCommentsBlock(wdm.panels.deviationsNarrative);
       if (dev) parts.push(dev);
       return parts.length > 0 ? parts.join("  ") : null;
