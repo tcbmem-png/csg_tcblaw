@@ -350,6 +350,36 @@ export const CITATIONS: Record<CitationKey, Citation> = {
       "FCSO is the PCSO adjusted by any deviations the tribunal grants under Rule .07 with written findings. When no deviation is granted, FCSO equals PCSO.",
     url: TN_CHAPTER_URL,
   },
+
+  // -------- Case law (additive per Phase D+E ack §6) --------
+  // Each case is its own manifest key. Builders never inline citation
+  // strings — they consume these by key. pcso_max.caseNote remains in
+  // place (deprecation deferred to a separate cycle).
+  "case.nash_v_mulle": {
+    rule: "Nash v. Mulle, 846 S.W.2d 803 (Tenn. 1993)",
+    name: "Nash v. Mulle",
+    plain:
+      "Tennessee Supreme Court decision establishing that above the statutory presumptive cap the recipient parent bears the burden of proving the child's reasonable need for support exceeding the cap; the obligor's lifestyle and the child's standard of living absent separation are among the considerations.",
+  },
+  "case.richardson_v_spanos": {
+    rule: "Richardson v. Spanos, 189 S.W.3d 720 (Tenn. Ct. App. 2005)",
+    name: "Richardson v. Spanos",
+    plain:
+      "Court of Appeals application of the Nash framework: the recipient parent's proof of need above the presumptive cap must be specific to the child rather than reflective of the recipient parent's own standard of living.",
+  },
+  "case.smallman_v_smallman": {
+    rule: "Smallman v. Smallman, 689 S.W.3d 845 (Tenn. Ct. App. 2023)",
+    name: "Smallman v. Smallman",
+    plain:
+      "Recent Court of Appeals decision restating and applying the Nash / Richardson above-cap burden-shift framework under the current Income Shares Guidelines and the statutory presumptive maximums of § 36-5-101(e)(1)(B).",
+  },
+  "case.massey_v_casals": {
+    rule:
+      "Massey v. Casals, 315 S.W.3d 788 (Tenn. Ct. App. 2009), perm. app. denied (Tenn. May 17, 2010)",
+    name: "Massey v. Casals",
+    plain:
+      "Court of Appeals decision addressing the reasonable-averaging-period requirement for variable income under Rule 1240-02-04-.04(3)(b); the averaging period selected must be consistent with the circumstances and the parent's earnings pattern.",
+  },
 };
 
 /**
