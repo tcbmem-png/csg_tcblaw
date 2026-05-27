@@ -11,17 +11,16 @@
  * on the AOC overlay (which uses the same TTFs via @pdf-lib/fontkit).
  */
 
-// pdfmake server-side Printer. Loaded via createRequire so this module
-// works in ESM (tsx/node) without bundler interop quirks.
+// pdfmake server-side singleton. Use the package's top-level API which
+// wires up virtualfs + URL resolver + access policies for us.
 import { createRequire } from "node:module";
 const nodeRequire = createRequire(import.meta.url);
-const PdfPrinter = nodeRequire("pdfmake/js/Printer").default as new (
-  fontDescriptors: TFontDictionary,
-) => {
-  createPdfKitDocument: (
-    doc: TDocumentDefinitions,
-  ) => NodeJS.ReadableStream & { end: () => void };
-};
+interface PdfMakeServer {
+  setFonts: (fonts: TFontDictionary) => void;
+  setLocalAccessPolicy: (cb: (path: string) => boolean) => void;
+  createPdf: (doc: TDocumentDefinitions) => { getBuffer: () => Promise<Buffer> };
+}
+const pdfMake = nodeRequire("pdfmake") as PdfMakeServer;
 
 import type {
   Content,
