@@ -641,11 +641,15 @@ function buildDeviationsSection(
               amount: outputs.specialExpensesIncludedAsDeviation,
               category: "judgment",
               rule: "special_expenses",
-              factors: [
-                "child's reasonable need for the expense",
-                "amount in excess of the 7% presumed-coverage threshold",
-                "whether the threshold has been waived by the court",
-              ],
+              // Rule .07(2)(d)2. mechanically defines the 7%-of-BCSO
+              // threshold and the excess-as-deviation computation; it
+              // does not enumerate a closed factor list for the
+              // tribunal's discretion. The 7% test itself is mechanical
+              // (not a "factor weighed") and the threshold-waiver is a
+              // separate input that changes the mechanical computation.
+              // Per drift-prevention rule #10 we do not synthesize
+              // factors; written-findings recital lives in §VII via
+              // `deviation_general`.
               userElection: seElection,
             }
           : text("—", "structural"),
