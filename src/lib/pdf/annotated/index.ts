@@ -251,6 +251,7 @@ function buildWorksheetTable(wdm: WDM): Content {
       headerRows: 1,
       widths: TABLE_WIDTHS,
       body,
+      dontBreakRows: true,
     },
     layout: {
       hLineWidth: () => 0.5,
