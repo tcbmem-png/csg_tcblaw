@@ -146,6 +146,46 @@ describe("§1.5 round attribution", () => {
     expect(fR3.handoffRound).toBe(3);
     expect(fR3.authoredByName).toBe("Alice Originator");
   });
+
+  it("Phase 2.5 prop-threading: handoffRound=2 + author stamps end-to-end", () => {
+    // Mirrors the production path: ms.tsx → MSCalculatorInputs →
+    // DeviationPickList → MSPartyFactorBlock → PartyColumn.updateParty.
+    // Hydrates a case mid-handoff (round 2, Bob as receiving counsel),
+    // applies a single substantive edit to one party entry, and asserts
+    // the stamp lands with the right round + author + a fresh authoredAt.
+    const base = defaultMSInputs();
+    const prev = {
+      ...base,
+      deviationsA: base.deviationsA.map((d) =>
+        d.letter === "a"
+          ? { ...d, applicable: true, party: { ...basePartyEntry() } }
+          : d,
+      ),
+    };
+    const next = {
+      ...prev,
+      deviationsA: prev.deviationsA.map((d) =>
+        d.letter === "a"
+          ? {
+              ...d,
+              party: { ...d.party!, proposedMonthly: 425, factsAsserted: "orthodontia" },
+            }
+          : d,
+      ),
+    };
+    const t0 = Date.now();
+    const stamped = stampSlatesAfterEdit(prev, next, { handoffRound: 2, author: BOB });
+    const aEntry = stamped.deviationsA.find((d) => d.letter === "a")!.party!;
+    expect(aEntry.handoffRound).toBe(2);
+    expect(aEntry.authoredByName).toBe("Bob Receiver");
+    expect(aEntry.authoredByFirm).toBe("B LLP");
+    expect(new Date(aEntry.authoredAt!).getTime()).toBeGreaterThanOrEqual(t0);
+    // No other entry should have been touched.
+    for (const d of stamped.deviationsA) {
+      if (d.letter === "a") continue;
+      expect(d.party?.handoffRound ?? null).toBeNull();
+    }
+  });
 });
 
 describe("§1.4 four-state classifier (regression)", () => {
