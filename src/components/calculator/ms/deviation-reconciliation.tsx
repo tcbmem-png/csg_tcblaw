@@ -9,6 +9,7 @@ import {
   buildReconciliation,
   type ReconciliationRow,
 } from "@/lib/calc/ms/reconciliation";
+import { inPlayPresentation } from "@/lib/calc/ms/in-play-labels";
 
 function fmt(n: number): string {
   const a = Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -16,18 +17,12 @@ function fmt(n: number): string {
 }
 
 function inPlayBadge(row: ReconciliationRow): string {
-  switch (row.inPlay) {
-    case "neither":
-      return "—";
-    case "agree":
-      return "Agreed";
-    case "both":
-      return "Both, differ";
-    case "obligor_only":
-      return "Obligor only";
-    case "obligee_only":
-      return "Obligee only";
-  }
+  // Canonical short label from in-play-labels.ts. The reconciliation row
+  // historically used per-variant phrasing ("Both, differ", "Obligor only");
+  // those drifted from the factor card's "In dispute" / "Asserted by obligor"
+  // chips. Now identical across surfaces.
+  if (row.inPlay === "neither") return "—";
+  return inPlayPresentation(row.inPlay).label;
 }
 
 export function MSDeviationReconciliation({ inputs }: { inputs: MSInputs }) {
