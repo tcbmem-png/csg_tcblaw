@@ -87,7 +87,7 @@ export function build(wdm: WDM): Block[] {
       blocks.push(
         p(
           t(`Formula: `),
-          t(`net presumptive = BCSO × |PI_${a[0]} − PI_${b[0]}|`, { bold: true }),
+          t(`net presumptive = BCSO × |PI_${a} − PI_${b}|`, { bold: true }),
           t(`.`),
         ),
       );
