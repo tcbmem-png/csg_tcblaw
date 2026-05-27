@@ -114,6 +114,7 @@ export function MSHandoffActionPanel({
     const result = await copySendBackUrl({ inputs, caption, handoff, activeSide });
     const who = context.counterpartyLabel || "opposing counsel";
     if (result.ok) {
+      setHandoff(result.handoff);
       toast.success("Link copied to clipboard", {
         description: `Paste it into your email to ${who} — when they open it, they'll see your client's positions filled in on their copy.`,
       });
@@ -128,6 +129,7 @@ export function MSHandoffActionPanel({
     const result = await copySendBackUrl({ inputs, caption, handoff, activeSide });
     const who = context.counterpartyLabel || "opposing counsel";
     if (result.ok) {
+      setHandoff(result.handoff);
       toast.success("Link copied — opening your email client", {
         description: `Paste it into the message to ${who}.`,
       });
