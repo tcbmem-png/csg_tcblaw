@@ -138,9 +138,10 @@ const COL = {
   motherP2Money: { x: 380, w: 44 },
   fatherP2Money: { x: 432, w: 44 },
   caretakerP2Money: { x: 484, w: 44 },
-  // Percent cells (Line 3)
-  motherPct: { x: 380, w: 32 },
-  fatherPct: { x: 434, w: 32 },
+  // Percent cells (Line 3). Width narrowed so the right-aligned digits
+  // end BEFORE the form's pre-printed "%" glyph instead of striking it.
+  motherPct: { x: 380, w: 22 },
+  fatherPct: { x: 434, w: 22 },
   // Combined AGI (Line 2a) — narrower single cell
   combined2a: { x: 322, w: 44 },
   // ARP days (Line 5) — full cell width, mother/father columns
