@@ -388,6 +388,16 @@ export interface MSInputs {
    * `childAges` is kept in sync for backward-compatible decode/encode.
    */
   children?: MSChild[];
+
+  /**
+   * §1.9 chancellor decision surface. Per-factor decision record keyed by
+   * letter; persists across re-renders and into the URL share payload so
+   * the chancellor's most recent ruling is the current case state. The
+   * audit-trail captures the decision (and timestamp), not just the
+   * derived contribution — see chancellor-decisions.ts for the contract.
+   * Optional on legacy URLs; default-initialized to all "none".
+   */
+  chancellorDecisions?: Record<MSFactorLetter, import("./chancellor-decisions").MSChancellorDecision>;
 }
 
 // =================================================================
