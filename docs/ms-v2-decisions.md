@@ -96,3 +96,23 @@ the statute literally.
 **Decision.** Keep the literal statutory phrasing in
 `suspensionReason`. The chancellor sees the precise formula. Canonical spec
 text will be corrected to match the statute in a future revision.
+
+---
+
+## D-005: Canonical spec patch — § 43-19-36 resumption language
+
+**Date:** 2026-05-27
+**Status:** decided (canonical-patch item; no code impact)
+
+**Context.** Canonical spec §1.8 paraphrases the post-incarceration
+resumption rule as "the obligation resumes 60 days after release." The
+statute (§ 43-19-36(3)) actually specifies "the first day of the month
+following 60 days after release." The distinction matters at the
+arrearage-timing level: resumption falls on a calendar-aligned date, not
+a sliding 60-day window.
+
+**Decision.** Patch the canonical spec to mirror the statute literally.
+Code matched the statute pre-v2 (see D-004); only the spec text needs
+updating. No code or test changes required.
+
+**Source.** Miss. Code Ann. § 43-19-36(3) text.

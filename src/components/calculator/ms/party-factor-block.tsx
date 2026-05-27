@@ -26,7 +26,7 @@ import {
   buildReconciliation,
   summarizeRow,
 } from "@/lib/calc/ms/reconciliation";
-// stampPartyEdit is wired by parent component (inputs.tsx) on save; not needed here directly.
+import { stampPartyEdit } from "@/lib/calc/ms/share";
 import {
   Field,
   NumInput,
@@ -111,7 +111,6 @@ export function MSPartyFactorBlock({
   handoffRound = 0,
   currentAuthor = null,
 }: BlockProps) {
-  void handoffRound; void currentAuthor; // wired through to PartyColumn in a follow-up; see ms-v2-changelog §1.5
   const inPlay = inPlayFrom(obligor, obligee);
 
   const setInPlay = (next: InPlay) => {
@@ -148,18 +147,50 @@ export function MSPartyFactorBlock({
         { value: "obligor" as const, label: "This factor applies" },
       ];
 
+  // §1.4 visual treatment — Williams reference. The four-state classifier
+  // maps to border accents readable at a glance:
+  //   neither   → muted (faded)
+  //   agree     → green (success)
+  //   both      → amber (accent / in-dispute)
+  //   *_only    → party-color (primary for obligor, accent for obligee)
+  const reportInPlay = row.inPlay;
+  const cardBorder =
+    reportInPlay === "neither"
+      ? "border-rule opacity-70"
+      : reportInPlay === "agree"
+        ? "border-l-4 border-l-success border-rule"
+        : reportInPlay === "both"
+          ? "border-l-4 border-l-accent border-rule"
+          : reportInPlay === "obligor_only"
+            ? "border-l-4 border-l-primary border-rule"
+            : reportInPlay === "obligee_only"
+              ? "border-l-4 border-l-accent border-rule"
+              : "border-rule";
+
+  const summaryAccent =
+    reportInPlay === "agree"
+      ? "border-l-2 border-success bg-success/5"
+      : reportInPlay === "both"
+        ? "border-l-2 border-accent bg-accent/10"
+        : "border-l-2 border-primary bg-primary/5";
+
   return (
-    <div className="rounded-md border border-rule bg-background p-4">
-      <header className="mb-3">
-        <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          § 43-19-103({letter})
+    <div className={`rounded-md border bg-background p-4 ${cardBorder}`}>
+      <header className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            § 43-19-103({letter})
+          </div>
+          <h4 className="mt-1 font-serif text-base text-ink">
+            {FACTOR_TITLES[letter]}
+          </h4>
+          <p className="mt-1 text-xs italic text-muted-foreground">
+            "{FACTOR_STATUTORY_TEXT[letter]}"
+          </p>
         </div>
-        <h4 className="mt-1 font-serif text-base text-ink">
-          {FACTOR_TITLES[letter]}
-        </h4>
-        <p className="mt-1 text-xs italic text-muted-foreground">
-          "{FACTOR_STATUTORY_TEXT[letter]}"
-        </p>
+        {reportInPlay !== "neither" && (
+          <InPlayBadge state={reportInPlay} />
+        )}
       </header>
 
       <Field label="Is this factor in play?">
@@ -193,6 +224,8 @@ export function MSPartyFactorBlock({
                 deviation={obligor}
                 onChange={setObligor}
                 showDetailDisclosure
+                handoffRound={handoffRound}
+                currentAuthor={currentAuthor}
               />
             </div>
           )}
@@ -212,16 +245,39 @@ export function MSPartyFactorBlock({
                   factorLetter={letter}
                   deviation={obligee}
                   onChange={setObligee}
+                  handoffRound={handoffRound}
+                  currentAuthor={currentAuthor}
                 />
               </div>
             )}
         </div>
       )}
 
-      <div className="mt-4 rounded border-l-2 border-primary bg-primary/5 px-3 py-2 text-xs text-ink">
+      <div className={`mt-4 rounded px-3 py-2 text-xs text-ink ${summaryAccent}`}>
         {summary}
       </div>
     </div>
+  );
+}
+
+function InPlayBadge({
+  state,
+}: {
+  state: "obligor_only" | "obligee_only" | "both" | "agree";
+}) {
+  const map = {
+    obligor_only: { label: "Asserted by obligor", cls: "border-primary text-primary" },
+    obligee_only: { label: "Asserted by obligee", cls: "border-accent text-accent-foreground bg-accent/15" },
+    both: { label: "In dispute", cls: "border-accent text-accent-foreground bg-accent/15" },
+    agree: { label: "Agreed amount", cls: "border-success text-success bg-success/10" },
+  } as const;
+  const cfg = map[state];
+  return (
+    <span
+      className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${cfg.cls}`}
+    >
+      {cfg.label}
+    </span>
   );
 }
 
@@ -232,6 +288,8 @@ function PartyColumn({
   deviation,
   onChange,
   showDetailDisclosure = false,
+  handoffRound = 0,
+  currentAuthor = null,
 }: {
   header: string;
   accent: "obligor" | "obligee";
@@ -239,15 +297,27 @@ function PartyColumn({
   deviation: MSDeviation;
   onChange: (n: MSDeviation) => void;
   showDetailDisclosure?: boolean;
+  handoffRound?: number;
+  currentAuthor?: HandoffAttorney | null;
 }) {
   const [showDetail, setShowDetail] = useState(false);
   const party = deviation.party ?? defaultParty();
 
+  // §1.5 stamping — substantive changes only. stampPartyEdit is a no-op
+  // when the material fields (position, factsAsserted, documentationReferenced,
+  // proposedMonthly, legalAuthority) are unchanged, so a focus/blur or a
+  // re-render with identical content does NOT bump authoredAt / handoffRound.
+  // Round 0 means "no handoff initiated yet" — skip stamping entirely so
+  // single-attorney drafting doesn't pollute the audit trail.
   const updateParty = (patch: Partial<MSPartyEntry>) => {
-    const next = { ...party, ...patch };
+    const merged = { ...party, ...patch };
+    const stamped =
+      handoffRound > 0
+        ? stampPartyEdit(party, merged, { handoffRound, author: currentAuthor })
+        : merged;
     onChange({
       ...deviation,
-      party: next,
+      party: stamped,
       // Keep MSDeviation.proposedMonthly in sync — this is the field
       // calculateMS reads from for the obligor-side total.
       proposedMonthly:
