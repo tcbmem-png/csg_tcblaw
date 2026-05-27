@@ -305,7 +305,45 @@ export interface MSInputs {
    * Empty array → cumulative display is suppressed.
    */
   childAges: number[];
+
+  /**
+   * Optional per-child carve-out roster per Miss. Code Ann. § 93-11-65(8).
+   * When present, supersedes `childAges` for reconciliation projections.
+   * `childAges` is kept in sync for backward-compatible decode/encode.
+   */
+  children?: MSChild[];
 }
+
+// =================================================================
+// § 93-11-65(8) early-emancipation carve-outs
+// =================================================================
+
+export type MSEmancipationStatus =
+  | "none"
+  | "marriage"
+  | "military_service"
+  | "qualifying_felony" // sentence of 2+ years
+  | "school_discontinuance"; // full-time enrollment ended (absent disability)
+
+export interface MSChild {
+  /** Optional display label ("Child 1", "A.B.", etc.). */
+  label?: string;
+  /** Current age in years. */
+  age: number;
+  /** Asserted early-emancipation status; "none" = age-21 default applies. */
+  emancipationStatus: MSEmancipationStatus;
+  /**
+   * ISO date (YYYY-MM-DD). Required only when emancipation has not yet
+   * occurred but is asserted on the horizon. Empty when the event has
+   * already occurred (treat as already-emancipated, 0 months remaining).
+   */
+  projectedEmancipationDate?: string;
+  /** Free-text supporting note (e.g. enlistment unit, school name). */
+  note?: string;
+}
+
+export function defaultMSChild(age = 0): MSChild {
+  return { age, emancipationStatus: "none" };
 
 export interface MSDeviationComputation {
   totalMonthly: number;
