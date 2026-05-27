@@ -412,6 +412,13 @@ export interface HandoffState {
    * that case origin detection falls back to fingerprint(inputs+caption).
    */
   caseId: string | null;
+  /**
+   * §1.5 audit-trail counter. Round 1 = originator's initial send;
+   * round 2 = receiver's first amendments; round 3+ = subsequent re-sends.
+   * Bumped via `bumpHandoffRound` at URL generation / receiver edit time.
+   * Default 0 on a brand-new state (no handoff initiated yet).
+   */
+  handoffRound: number;
 }
 
 export function defaultHandoffState(): HandoffState {
@@ -424,5 +431,6 @@ export function defaultHandoffState(): HandoffState {
     lastReceivingEditAt: null,
     completedAt: null,
     caseId: null,
+    handoffRound: 0,
   };
 }
