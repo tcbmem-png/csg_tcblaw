@@ -6,6 +6,7 @@ import type {
   MSDeviationComputation,
 } from "./types";
 import { defaultMSImputationBasis } from "./types";
+import { defaultChancellorDecisions } from "./chancellor-decisions";
 import {
   MS_AGI_HIGH_THRESHOLD,
   MS_AGI_LOW_THRESHOLD,
@@ -60,6 +61,7 @@ export function defaultMSInputs(): MSInputs {
     deviationsB: undefined,
     childAges: [],
     children: [],
+    chancellorDecisions: defaultChancellorDecisions(),
   };
 }
 

@@ -307,7 +307,7 @@ function MSDeviationsSection({
       )}
 
       {inputs.comparisonMode === "side_by_side" && (
-        <MSDeviationReconciliation inputs={inputs} />
+        <MSDeviationReconciliation inputs={inputs} setInputs={setInputs} />
       )}
 
       <MSChildrenRoster inputs={inputs} setInputs={setInputs} />
