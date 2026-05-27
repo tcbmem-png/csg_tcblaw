@@ -1029,9 +1029,24 @@ should use this table verbatim.
 ### A.6 Test-injection example (attribution surface)
 
 Payload fragment that causes the obligee column of factor (e) to render
-"Amended in round 2 by Maria Lopez" after URL hydration:
+"Amended in round 2 by Maria Lopez" after URL hydration.
+
+**CRITICAL — mount-gate prerequisite.** `PartyColumn` (in
+`src/components/calculator/ms/party-factor-block.tsx`) only mounts when
+`inPlayFrom(deviationsA[i], deviationsB[i]) !== "neither"`, which reads
+the `.applicable` boolean on the **deviation itself**, NOT any field
+under `.party`. A payload that sets `party.position = "applies"` but
+leaves `deviationsA[i].applicable === false` and
+`deviationsB[i].applicable === false` short-circuits the grid block;
+`PartyColumn` never mounts and the attribution line inside it never
+enters the DOM. `.applicable` and `.party.*` are sibling concerns;
+both are required to exercise the attribution surface.
 
 ```ts
+// (1) Flip the mount-gate. Without this, PartyColumn never renders.
+deviationsB[/* index of letter "e" */].applicable = true;
+
+// (2) Populate the party-level fields the renderer reads.
 deviationsB[/* index of letter "e" */].party = {
   position: "upward",
   factsAsserted: "Eldest child enters travel-team season Aug–Nov; …",
