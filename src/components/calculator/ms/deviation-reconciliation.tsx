@@ -21,6 +21,7 @@ import {
   defaultChancellorDecisions,
   type MSChancellorDecision,
 } from "@/lib/calc/ms/chancellor-decisions";
+import { calculateMS } from "@/lib/calc/ms/calc";
 import { MSChancellorDecisionRow } from "./chancellor-decision-row";
 
 function fmt(n: number): string {
