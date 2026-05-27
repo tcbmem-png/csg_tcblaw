@@ -983,6 +983,12 @@ const partVI: AocField[] = [
       );
       if (devBrief) parts.push(devBrief);
 
+      // 4. Closing pointer — methodology lives on the annotated worksheet.
+      // Pointer, not a citation; permitted on the AOC face per architecture §0.
+      if (parts.length > 0 && !parts[parts.length - 1].includes("annotated worksheet")) {
+        parts.push("See annotated worksheet for methodology.");
+      }
+
       return parts.length > 0 ? parts.join(" ") : null;
     },
   },
