@@ -25,13 +25,38 @@
  *   6. Set Author/Producer/Creator metadata to TCB Law branding.
  */
 
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, PDFDict, PDFName, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import type { CalcInputs, CalcOutputs } from "../calc/types";
 import type { WDM } from "../calc/wdm/types";
 import { AOC_FIELD_MAP } from "./aoc-field-map";
 
 void rgb; // reserved for future overlay-on-top draws (none in v2 path)
+
+/**
+ * Strip the fillable-mode field-highlight background (/MK /BG) from every
+ * widget annotation in the form. The v2 fillable template tags each text
+ * widget with `/MK /BG = [0.93, 0.97, 1]` (light blue) so fillers can see
+ * the editable region — but pdf-lib's `updateFieldAppearances` honors that
+ * BG when rebuilding the appearance stream, and `flatten()` then bakes the
+ * tint into the page content. For filing-ready output we want clean white
+ * cells, so we drop the BG entry (and any empty /MK dict) before
+ * regenerating appearances.
+ */
+function stripFieldHighlightBackgrounds(form: ReturnType<PDFDocument["getForm"]>) {
+  const MK = PDFName.of("MK");
+  const BG = PDFName.of("BG");
+  for (const field of form.getFields()) {
+    for (const widget of field.acroField.getWidgets()) {
+      const dict = widget.dict;
+      const mk = dict.lookup(MK);
+      if (mk instanceof PDFDict) {
+        mk.delete(BG);
+        if (mk.keys().length === 0) dict.delete(MK);
+      }
+    }
+  }
+}
 
 export interface OverlayAssets {
   /** v2 fillable AcroForm PDF (tn-cs-worksheet-fillable.pdf). */
