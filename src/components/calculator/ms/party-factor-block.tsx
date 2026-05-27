@@ -288,6 +288,8 @@ function PartyColumn({
   deviation,
   onChange,
   showDetailDisclosure = false,
+  handoffRound = 0,
+  currentAuthor = null,
 }: {
   header: string;
   accent: "obligor" | "obligee";
@@ -295,15 +297,27 @@ function PartyColumn({
   deviation: MSDeviation;
   onChange: (n: MSDeviation) => void;
   showDetailDisclosure?: boolean;
+  handoffRound?: number;
+  currentAuthor?: HandoffAttorney | null;
 }) {
   const [showDetail, setShowDetail] = useState(false);
   const party = deviation.party ?? defaultParty();
 
+  // §1.5 stamping — substantive changes only. stampPartyEdit is a no-op
+  // when the material fields (position, factsAsserted, documentationReferenced,
+  // proposedMonthly, legalAuthority) are unchanged, so a focus/blur or a
+  // re-render with identical content does NOT bump authoredAt / handoffRound.
+  // Round 0 means "no handoff initiated yet" — skip stamping entirely so
+  // single-attorney drafting doesn't pollute the audit trail.
   const updateParty = (patch: Partial<MSPartyEntry>) => {
-    const next = { ...party, ...patch };
+    const merged = { ...party, ...patch };
+    const stamped =
+      handoffRound > 0
+        ? stampPartyEdit(party, merged, { handoffRound, author: currentAuthor })
+        : merged;
     onChange({
       ...deviation,
-      party: next,
+      party: stamped,
       // Keep MSDeviation.proposedMonthly in sync — this is the field
       // calculateMS reads from for the obligor-side total.
       proposedMonthly:
