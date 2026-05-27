@@ -58,15 +58,12 @@ export function build(wdm: WDM): Block[] {
 
   const bcsoSection = wdm.sections.find((s) => s.id === "bcso");
   const bcsoLine = bcsoSection?.lines.find((l) => l.screenLineNo === "6");
-  // Equal-parenting Line 6 prints $0 with a cross-credit annotation; the
-  // *real* BCSO for the cross-credit formula sits on the schedule lookup
-  // sub-line beneath it. Recover it from the schedule-row sub-line label
-  // for the equal-parenting branch; for all other bands the Line 6 total
-  // already carries the BCSO amount.
+  // For all bands except equal, Line 6 carries the BCSO; for equal,
+  // Line 6 prints $0 and the real schedule-derived BCSO lives on the
+  // panel field added in Phase D drift-fix.
   const bcsoAmount =
     band === "equal"
-      ? recoverBcsoFromScheduleRow(bcsoSection?.lines) ??
-        Math.abs(line9?.total?.amount ?? 0) // fallback: net itself (shouldn't hit)
+      ? wdm.panels.bcsoAmount
       : Math.abs(bcsoLine?.total?.amount ?? 0);
 
   blocks.push(h(1, "V. Parenting Time and Net Presumptive Support"));
