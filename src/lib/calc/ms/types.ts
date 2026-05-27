@@ -196,6 +196,17 @@ export interface MSPartyEntry {
   /** Signed monthly amount. Same sign convention as MSDeviation.proposedMonthly. */
   proposedMonthly: number;
   legalAuthority: string;
+  // ---------------- §1.5 attribution (audit trail) ----------------
+  /** Handoff round in which this entry was last materially edited.
+   *  1 = originator's initial send; 2 = receiver's first amendments;
+   *  3+ = subsequent re-sends. Null on legacy URLs predating attribution. */
+  handoffRound?: number | null;
+  /** ISO timestamp of the last material edit. */
+  authoredAt?: string | null;
+  /** Display name of the attorney who authored the last material edit. */
+  authoredByName?: string | null;
+  /** Firm of the attorney who authored the last material edit (optional). */
+  authoredByFirm?: string | null;
 }
 
 export interface MSDeviation {
