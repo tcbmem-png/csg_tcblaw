@@ -40,11 +40,16 @@ export function MSCalculatorInputs({
   inputs,
   setInputs,
   lockedSide = null,
+  handoffRound = 0,
+  currentAuthor = null,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
   /** When non-null, the named slate is read-only (two-attorney handoff). */
   lockedSide?: HandoffSide | null;
+  /** §1.5 audit-trail context — propagates to MSPartyFactorBlock for stamping. */
+  handoffRound?: number;
+  currentAuthor?: HandoffAttorney | null;
 }) {
   const u = (patch: Partial<MSInputs>) => setInputs({ ...inputs, ...patch });
   const suspensionApplies = calculateMS(inputs).suspensionApplies;
