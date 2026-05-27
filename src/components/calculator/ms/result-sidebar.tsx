@@ -162,7 +162,7 @@ export function MSResultSidebar({
       </div>
 
       <p className="mt-3 text-[10px] text-muted-foreground">
-        Guidelines effective {outputs.guidelinesEffectiveDate}. Not legal advice.
+        Guidelines: {outputs.guidelinesEffectiveDate}. Not legal advice.
       </p>
     </div>
   );
