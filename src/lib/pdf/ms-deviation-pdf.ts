@@ -676,7 +676,7 @@ export function renderMSDeviationPdf(args: {
   h1(ctx, "Mississippi Deviation Worksheet");
   small(
     ctx,
-    `Miss. Code Ann. § 43-19-103 (criteria for overcoming the presumption). Guidelines effective ${outputs.guidelinesEffectiveDate}.`,
+    `Miss. Code Ann. § 43-19-103 (criteria for overcoming the presumption). Guidelines: ${outputs.guidelinesEffectiveDate}.`,
   );
 
   h2(ctx, "I. Case Information");

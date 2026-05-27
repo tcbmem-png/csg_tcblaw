@@ -4,7 +4,7 @@
  * SB 2259 (2024) would have amended these but died in committee.
  */
 
-export const MS_GUIDELINES_EFFECTIVE_DATE = "July 1, 1989 (text current through 2020 MDHS revision)";
+export const MS_GUIDELINES_EFFECTIVE_DATE = "Miss. Code Ann. § 43-19-101 (originally 1989; current through HB 1067, 2022; SB 2082, 2023)";
 
 /**
  * Returns the statutory percentage as a decimal (e.g. 0.14 for 1 child).

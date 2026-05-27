@@ -439,7 +439,7 @@ export async function renderMSWorksheetPdf(args: {
   if (outputs.suspensionApplies) {
     small(
       ctx,
-      `Miss. Code Ann. § 43-19-36 (suspension during incarceration). Guidelines effective ${outputs.guidelinesEffectiveDate}.`,
+      `Miss. Code Ann. § 43-19-36 (suspension during incarceration). Guidelines: ${outputs.guidelinesEffectiveDate}.`,
     );
     captionBlock(ctx, inputs, caption);
     renderSuspensionFinding(ctx, outputs);
@@ -461,7 +461,7 @@ export async function renderMSWorksheetPdf(args: {
 
   small(
     ctx,
-    `Miss. Code Ann. § 43-19-101 (presumptive guideline) and § 43-19-103 (deviation criteria). Guidelines effective ${outputs.guidelinesEffectiveDate}.`,
+    `Miss. Code Ann. § 43-19-101 (presumptive guideline) and § 43-19-103 (deviation criteria). Guidelines: ${outputs.guidelinesEffectiveDate}.`,
   );
 
   captionBlock(ctx, inputs, caption);
