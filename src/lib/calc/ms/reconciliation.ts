@@ -7,7 +7,7 @@
  * The math here is display-only: it does NOT influence calculateMS or any
  * worksheet result. The chancellor weighs the evidence; we only show gaps.
  */
-import type { MSDeviation, MSFactorLetter, MSInputs } from "./types";
+import type { MSChild, MSDeviation, MSFactorLetter, MSInputs } from "./types";
 
 // Letters match Miss. Code Ann. § 43-19-103 verbatim (2024 codification).
 // Verified against MDHS-published statute, Justia 2024, FindLaw, and the
