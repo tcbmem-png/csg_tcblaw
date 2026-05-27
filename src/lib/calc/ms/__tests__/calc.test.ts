@@ -143,6 +143,42 @@ describe("MS calc — § 43-19-36 incarceration suspension (Test D)", () => {
     expect(out.suspensionReason).toContain("§ 43-19-36");
     expect(out.warnings.some((w) => w.includes("§ 43-19-36"))).toBe(true);
   });
+
+  it("incarceration under 180 days does NOT engage § 43-19-36 — normal calc proceeds", () => {
+    const inputs = withDefaults({
+      numChildren: 2,
+      obligorAnnualGross: 30000,
+      obligorAnnualTaxes: 4000,
+      obligorAnnualSocialSecurity: 1860,
+      incarceration: {
+        status: "under_180",
+        reasons: { domesticViolence: false, childAbuse: false, criminalNonpayment: false },
+        hasMeansToPay: false,
+      },
+    });
+    const out = calculateMS(inputs);
+    expect(out.suspensionApplies).toBe(false);
+    expect(out.suspensionReason).toBeNull();
+    expect(out.proposedFinalMonthly).toBeCloseTo(402.33, 2);
+    expect(out.warnings.some((w) => w.includes("§ 43-19-36"))).toBe(false);
+  });
+
+  it("suspension reason names the 60-day post-release resumption window", () => {
+    const inputs = withDefaults({
+      numChildren: 1,
+      obligorAnnualGross: 30000,
+      obligorAnnualTaxes: 4000,
+      obligorAnnualSocialSecurity: 1860,
+      incarceration: {
+        status: "over_180",
+        reasons: { domesticViolence: false, childAbuse: false, criminalNonpayment: false },
+        hasMeansToPay: false,
+      },
+    });
+    const out = calculateMS(inputs);
+    expect(out.suspensionReason).toContain("60 days after release");
+    expect(out.suspensionReason).toContain("§ 43-19-36");
+  });
 });
 
 describe("MS calc — § 43-19-36 carve-out (Test E)", () => {
