@@ -39,6 +39,17 @@ function setSide(
     : { ...base, comparisonMode: "side_by_side", deviationsB: next };
 }
 
+function withFactor(
+  side: "A" | "B",
+  letter: MSFactorLetter,
+  amount: number,
+): MSInputs {
+  return setSide(defaultMSInputs(), side, letter, {
+    applicable: true,
+    proposedMonthly: amount,
+  });
+}
+
 describe("availableDecisions", () => {
   it("collapses `agree` to two buttons (accept_agreed + decline)", () => {
     expect(availableDecisions("agree")).toEqual(["accept_agreed", "decline"]);
@@ -74,23 +85,18 @@ describe("availableDecisions", () => {
 
 describe("decisionContribution", () => {
   it("returns 0 for pending and declined decisions", () => {
-    let inputs = defaultMSInputs();
-    inputs = setSide(inputs, "A", "a", { applicable: true, proposedMonthly: 300 });
-    const row = buildReconciliation(inputs).rows.find((r) => r.letter === "a")!;
+    const row = buildReconciliation(withFactor("A", "a", 300)).rows.find((r) => r.letter === "a")!;
+    expect(decisionContribution(row, defaultChancellorDecision("a"))).toBe(0);
     expect(
-      decisionContribution(row, { ...defaultChancellorDecision("a") }),
-    ).toBe(0);
-    expect(
-      decisionContribution(row, recordDecision(defaultChancellorDecision("a"), { decision: "decline" })),
+      decisionContribution(
+        row,
+        recordDecision(defaultChancellorDecision("a"), { decision: "decline" }),
+      ),
     ).toBe(0);
   });
 
-  it("adopt_obligor uses obligor's amount; falls back to 0 when not applicable", () => {
-    let inputs = defaultMSInputs();
-    inputs = setSide(inputs, "A", "a", { applicable: true, proposedMonthly: 400 });
-    let inputs = defaultMSInputs();
-    inputs = setSide(inputs, "B", "a", { applicable: false, proposedMonthly: 0 });
-    const row = buildReconciliation(inputs).rows.find((r) => r.letter === "a")!;
+  it("adopt_obligor uses obligor's amount; adopt_obligee returns 0 when obligee absent", () => {
+    const row = buildReconciliation(withFactor("A", "a", 400)).rows.find((r) => r.letter === "a")!;
     expect(
       decisionContribution(row, recordDecision(defaultChancellorDecision("a"), { decision: "adopt_obligor" })),
     ).toBe(400);
@@ -100,9 +106,7 @@ describe("decisionContribution", () => {
   });
 
   it("split averages the two applicable positions on `both`", () => {
-    let inputs = defaultMSInputs();
-    inputs = setSide(inputs, "A", "h", { applicable: true, proposedMonthly: 600 });
-    let inputs = defaultMSInputs();
+    let inputs = withFactor("A", "h", 600);
     inputs = setSide(inputs, "B", "h", { applicable: true, proposedMonthly: 200 });
     const row = buildReconciliation(inputs).rows.find((r) => r.letter === "h")!;
     expect(
@@ -111,46 +115,7 @@ describe("decisionContribution", () => {
   });
 
   it("custom decision uses the chancellor's signed amount, clamped to ±$50k", () => {
-    let inputs = defaultMSInputs();
-    inputs = setSide(inputs, "A", "j", { applicable: true, proposedMonthly: 0 });
-    const row = buildReconciliation(inputs).rows.find((r) => r.letter === "j")!;
-    expect(
-      decisionContribution(row, { ...defaultChancellorDecision("a") }),
-    ).toBe(0);
-    expect(
-      decisionContribution(row, recordDecision(defaultChancellorDecision("a"), { decision: "decline" })),
-    ).toBe(0);
-  });
-
-  it("adopt_obligor uses obligor's amount; falls back to 0 when not applicable", () => {
-    let inputs = defaultMSInputs();
-    inputs = setSide(inputs, "A", "a", { applicable: true, proposedMonthly: 400 });
-    let inputs = defaultMSInputs();
-    inputs = setSide(inputs, "B", "a", { applicable: false, proposedMonthly: 0 });
-    const row = buildReconciliation(inputs).rows.find((r) => r.letter === "a")!;
-    expect(
-      decisionContribution(row, recordDecision(defaultChancellorDecision("a"), { decision: "adopt_obligor" })),
-    ).toBe(400);
-    expect(
-      decisionContribution(row, recordDecision(defaultChancellorDecision("a"), { decision: "adopt_obligee" })),
-    ).toBe(0);
-  });
-
-  it("split averages the two applicable positions on `both`", () => {
-    let inputs = defaultMSInputs();
-    inputs = setSide(inputs, "A", "h", { applicable: true, proposedMonthly: 600 });
-    let inputs = defaultMSInputs();
-    inputs = setSide(inputs, "B", "h", { applicable: true, proposedMonthly: 200 });
-    const row = buildReconciliation(inputs).rows.find((r) => r.letter === "h")!;
-    expect(
-      decisionContribution(row, recordDecision(defaultChancellorDecision("h"), { decision: "split" })),
-    ).toBe(400);
-  });
-
-  it("custom decision uses the chancellor's signed amount, clamped to ±$50k", () => {
-    let inputs = defaultMSInputs();
-    inputs = setSide(inputs, "A", "j", { applicable: true, proposedMonthly: 0 });
-    const row = buildReconciliation(inputs).rows.find((r) => r.letter === "j")!;
+    const row = buildReconciliation(withFactor("A", "j", 0)).rows.find((r) => r.letter === "j")!;
     expect(
       decisionContribution(
         row,
@@ -172,47 +137,43 @@ describe("decisionContribution", () => {
   });
 
   it("accept_agreed adopts the stipulated amount on an `agree` row", () => {
-    let inputs = defaultMSInputs();
-    inputs = setSide(inputs, "A", "f", { applicable: true, proposedMonthly: 150 });
-    let inputs = defaultMSInputs();
+    let inputs = withFactor("A", "f", 150);
     inputs = setSide(inputs, "B", "f", { applicable: true, proposedMonthly: 150 });
     const row = buildReconciliation(inputs).rows.find((r) => r.letter === "f")!;
     expect(row.inPlay).toBe("agree");
     expect(
-      decisionContribution(
-        row,
-        recordDecision(defaultChancellorDecision("f"), { decision: "accept_agreed" }),
-      ),
+      decisionContribution(row, recordDecision(defaultChancellorDecision("f"), { decision: "accept_agreed" })),
     ).toBe(150);
   });
 });
 
 describe("recordDecision — audit trail timestamping", () => {
   it("stamps decidedAt on any non-`none` decision and clears it on revert", () => {
-    const prev = defaultChancellorDecision("a");
-    const adopted = recordDecision(prev, { decision: "adopt_obligor" }, new Date("2026-05-27T15:32:18Z"));
+    const adopted = recordDecision(
+      defaultChancellorDecision("a"),
+      { decision: "adopt_obligor" },
+      new Date("2026-05-27T15:32:18Z"),
+    );
     expect(adopted.decidedAt).toBe("2026-05-27T15:32:18.000Z");
     expect(adopted.decision).toBe("adopt_obligor");
     const reverted = recordDecision(adopted, { decision: "none" });
     expect(reverted.decidedAt).toBeNull();
   });
 
-  it("custom decision retains the chancellor's amount (clamped); non-custom zeros it", () => {
-    const prev = defaultChancellorDecision("j");
-    const custom = recordDecision(prev, { decision: "custom", customAmount: -750 });
+  it("custom retains the clamped amount; non-custom zeros it", () => {
+    const custom = recordDecision(defaultChancellorDecision("j"), {
+      decision: "custom",
+      customAmount: -750,
+    });
     expect(custom.customAmount).toBe(-750);
-    const swap = recordDecision(custom, { decision: "decline" });
-    expect(swap.customAmount).toBe(0);
+    expect(recordDecision(custom, { decision: "decline" }).customAmount).toBe(0);
   });
 });
 
 describe("computeChancellorTotals — running total + pending tracking", () => {
   it("sums per-factor contributions and counts active vs. pending rows", () => {
-    let inputs = defaultMSInputs();
-    inputs = setSide(inputs, "A", "a", { applicable: true, proposedMonthly: 300 });
-    let inputs = defaultMSInputs();
+    let inputs = withFactor("A", "a", 300);
     inputs = setSide(inputs, "A", "h", { applicable: true, proposedMonthly: 600 });
-    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "B", "h", { applicable: true, proposedMonthly: 200 });
     const rows = buildReconciliation(inputs).rows;
     const decisions = defaultChancellorDecisions();
@@ -242,9 +203,10 @@ describe("integration — chancellor cascade across all ten factors", () => {
     inputs.comparisonMode = "side_by_side";
     inputs.deviationsB = inputs.deviationsA.map((d) => defaultDeviation(d.letter));
 
-    // Mixed scenario: 3 agreed, 3 in-dispute, 2 obligor-only, 1 obligee-only, 1 not-asserted.
+    // Mixed scenario: 2 agreed, 3 in-dispute, 2 obligor-only, 1 obligee-only,
+    // 1 agreed-but-declined (override), 1 not-asserted.
     const setup: { letter: MSFactorLetter; a?: number; b?: number }[] = [
-      { letter: "a", a: 300, b: 100 },  // both — dispute, split → 200
+      { letter: "a", a: 300, b: 100 },  // both — split → 200
       { letter: "b", a: 50, b: 50 },    // agree → accept 50
       { letter: "c", a: 200 },          // obligor_only → adopt_obligor 200
       { letter: "d", b: 150 },          // obligee_only → adopt_obligee 150
@@ -262,28 +224,28 @@ describe("integration — chancellor cascade across all ten factors", () => {
 
     const report = buildReconciliation(inputs);
     const decisions = defaultChancellorDecisions();
-    decisions.a = recordDecision(decisions.a, { decision: "split" });            // +200
-    decisions.b = recordDecision(decisions.b, { decision: "accept_agreed" });    // +50
-    decisions.c = recordDecision(decisions.c, { decision: "adopt_obligor" });    // +200
-    decisions.d = recordDecision(decisions.d, { decision: "adopt_obligee" });    // +150
-    decisions.e = recordDecision(decisions.e, { decision: "accept_agreed" });    // +75
-    decisions.f = recordDecision(decisions.f, { decision: "adopt_obligor" });    // +400
-    decisions.g = recordDecision(decisions.g, { decision: "custom", customAmount: -250 }); // -250
-    decisions.h = recordDecision(decisions.h, { decision: "decline" });          // 0
-    decisions.i = recordDecision(decisions.i, { decision: "decline" });          // 0
-    // j stays "none" — not asserted, no contribution either way
+    decisions.a = recordDecision(decisions.a, { decision: "split" });
+    decisions.b = recordDecision(decisions.b, { decision: "accept_agreed" });
+    decisions.c = recordDecision(decisions.c, { decision: "adopt_obligor" });
+    decisions.d = recordDecision(decisions.d, { decision: "adopt_obligee" });
+    decisions.e = recordDecision(decisions.e, { decision: "accept_agreed" });
+    decisions.f = recordDecision(decisions.f, { decision: "adopt_obligor" });
+    decisions.g = recordDecision(decisions.g, { decision: "custom", customAmount: -250 });
+    decisions.h = recordDecision(decisions.h, { decision: "decline" });
+    decisions.i = recordDecision(decisions.i, { decision: "decline" });
+    // j stays "none" — not asserted
 
     const totals = computeChancellorTotals(report.rows, decisions);
     const expectedMonthly = 200 + 50 + 200 + 150 + 75 + 400 - 250 + 0 + 0;
     expect(totals.totalMonthly).toBe(expectedMonthly);
 
-    // Active rows: a, b, c, d, e, f, g, h, i = 9. j is "neither" → not active.
-    expect(totals.activeCount).toBe(9);
+    expect(totals.activeCount).toBe(9); // j is "neither"
     expect(totals.pendingCount).toBe(0);
 
     // Cumulative-through-emancipation: ages [10,15] → avg 102 months.
     expect(report.totals.avgMonthsRemaining).toBe(102);
-    const expectedCumulative = expectedMonthly * 102;
-    expect(totals.totalMonthly * report.totals.avgMonthsRemaining!).toBe(expectedCumulative);
+    expect(totals.totalMonthly * report.totals.avgMonthsRemaining!).toBe(
+      expectedMonthly * 102,
+    );
   });
 });
