@@ -347,20 +347,21 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
             : "very substantial — detailed evidentiary record of the children's actual needs is typically required";
     const annualExcess = pcsoExcessOverCap * 12;
     const privSchoolDev = Math.abs(r$(privateSchoolDeviationFromA));
+    const $$ = (n: number) => n.toLocaleString("en-US");
     const base =
       `Above the statutory presumptive cap (Tenn. Code Ann. §36-5-101(e)(1)(B)). ` +
-      `Calculated PCSO is $${r$(pcsoMagnitude)}/mo; the cap for ${inputs.numChildren} ${childWord} is $${pcsoStatutoryMax}/mo — an excess of $${pcsoExcessOverCap}/mo ($${annualExcess.toLocaleString("en-US")}/yr). ` +
+      `Calculated PCSO is $${$$(r$(pcsoMagnitude))}/mo; the cap for ${inputs.numChildren} ${childWord} is $${$$(pcsoStatutoryMax)}/mo — an excess of $${$$(pcsoExcessOverCap)}/mo ($${$$(annualExcess)}/yr). ` +
       `This is a rebuttable presumption, not a hard cap: the parent receiving support has the burden to prove by a preponderance of the evidence that the additional amount is reasonably necessary for the children's actual needs (Hugger v. Hugger, Tenn. Ct. App. 1999; Smith v. Smith, Tenn. Ct. App. 2007; Nash v. Mulle, 846 S.W.2d 803 (Tenn. 1993)). ` +
-      `If that burden is not met, the order would be capped at $${pcsoStatutoryMax}/mo. ` +
+      `If that burden is not met, the order would be capped at $${$$(pcsoStatutoryMax)}/mo. ` +
       `The size of this excess is ${magnitudeLabel}.`;
     const privLine =
       inputs.includePrivateSchool && privSchoolDev > 0
-        ? ` Your private-school deviation of $${privSchoolDev}/mo is included in this total and is a common basis for findings above the cap.`
+        ? ` Your private-school deviation of $${$$(privSchoolDev)}/mo is included in this total and is a common basis for findings above the cap.`
         : "";
     pcsoCapNote = base + privLine;
   } else if (pcsoMagnitude > 0 && pcsoStatutoryMax > 0) {
     pcsoBelowCapNote =
-      `This calculation falls below the statutory presumptive cap of $${pcsoStatutoryMax}/mo for ${inputs.numChildren} ${childWord} (Tenn. Code Ann. §36-5-101(e)(1)(B)). The guideline amount is presumed appropriate.`;
+      `This calculation falls below the statutory presumptive cap of $${pcsoStatutoryMax.toLocaleString("en-US")}/mo for ${inputs.numChildren} ${childWord} (Tenn. Code Ann. §36-5-101(e)(1)(B)). The guideline amount is presumed appropriate.`;
   }
 
   // === Above-schedule-cap BCSO breakdown (Rule .09(2)(d)) ===
