@@ -372,6 +372,8 @@ function DeviationPickList({
             buildContextInputs={() => inputs}
             obligorLocked={lockedSide === "A"}
             obligeeLocked={lockedSide === "B"}
+            handoffRound={handoffRound}
+            currentAuthor={currentAuthor}
           />
         );
       })}
