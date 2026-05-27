@@ -14,7 +14,7 @@ const OUT_DIR = "/mnt/documents/c1-aoc-renders";
 const TARGETS = new Set([
   "f02-equal-50-50",
   "f03-above-schedule-standard",
-  "f04-berger-imputed-with-deviations",
+  "f04-standard-imputed-with-deviations",
 ]);
 
 async function loadAssets() {
