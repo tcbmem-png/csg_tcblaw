@@ -25,8 +25,10 @@ import {
   FACTOR_TITLES,
   buildReconciliation,
   summarizeRow,
+  type FactorInPlay,
 } from "@/lib/calc/ms/reconciliation";
 import { stampPartyEdit } from "@/lib/calc/ms/share";
+import { inPlayPresentation } from "@/lib/calc/ms/in-play-labels";
 import {
   Field,
   NumInput,
@@ -147,32 +149,15 @@ export function MSPartyFactorBlock({
         { value: "obligor" as const, label: "This factor applies" },
       ];
 
-  // §1.4 visual treatment — Williams reference. The four-state classifier
-  // maps to border accents readable at a glance:
-  //   neither   → muted (faded)
-  //   agree     → green (success)
-  //   both      → amber (accent / in-dispute)
-  //   *_only    → party-color (primary for obligor, accent for obligee)
+  // §1.4 visual treatment — Williams reference. All label + accent decisions
+  // delegate to inPlayPresentation() so the chip, card border, and summary
+  // background stay locked to a single source of truth across every surface
+  // (factor block, reconciliation table, sticky live-bar, PDF).
   const reportInPlay = row.inPlay;
+  const present = inPlayPresentation(reportInPlay);
   const cardBorder =
-    reportInPlay === "neither"
-      ? "border-rule opacity-70"
-      : reportInPlay === "agree"
-        ? "border-l-4 border-l-success border-rule"
-        : reportInPlay === "both"
-          ? "border-l-4 border-l-accent border-rule"
-          : reportInPlay === "obligor_only"
-            ? "border-l-4 border-l-primary border-rule"
-            : reportInPlay === "obligee_only"
-              ? "border-l-4 border-l-accent border-rule"
-              : "border-rule";
-
-  const summaryAccent =
-    reportInPlay === "agree"
-      ? "border-l-2 border-success bg-success/5"
-      : reportInPlay === "both"
-        ? "border-l-2 border-accent bg-accent/10"
-        : "border-l-2 border-primary bg-primary/5";
+    reportInPlay === "neither" ? `${present.borderClass} opacity-70` : present.borderClass;
+  const summaryAccent = present.bgClass;
 
   return (
     <div className={`rounded-md border bg-background p-4 ${cardBorder}`}>
@@ -260,23 +245,14 @@ export function MSPartyFactorBlock({
   );
 }
 
-function InPlayBadge({
-  state,
-}: {
-  state: "obligor_only" | "obligee_only" | "both" | "agree";
-}) {
-  const map = {
-    obligor_only: { label: "Asserted by obligor", cls: "border-primary text-primary" },
-    obligee_only: { label: "Asserted by obligee", cls: "border-accent text-accent-foreground bg-accent/15" },
-    both: { label: "In dispute", cls: "border-accent text-accent-foreground bg-accent/15" },
-    agree: { label: "Agreed amount", cls: "border-success text-success bg-success/10" },
-  } as const;
-  const cfg = map[state];
+function InPlayBadge({ state }: { state: FactorInPlay }) {
+  if (state === "neither") return null;
+  const p = inPlayPresentation(state);
   return (
     <span
-      className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${cfg.cls}`}
+      className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${p.chipClass}`}
     >
-      {cfg.label}
+      {p.label}
     </span>
   );
 }
@@ -336,8 +312,18 @@ function PartyColumn({
           : "border-accent/40 bg-accent/[0.05]")
       }
     >
-      <div className="mb-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-        {header}
+      <div className="mb-3 flex items-baseline justify-between gap-2">
+        <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          {header}
+        </div>
+        {/* §1.5 attribution line. Renders only for amendments — round 1 is
+            the initial draft and is implicit from the column header itself. */}
+        {party.handoffRound && party.handoffRound > 1 ? (
+          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/80">
+            Amended in round {party.handoffRound}
+            {party.authoredByName ? ` by ${party.authoredByName}` : ""}
+          </div>
+        ) : null}
       </div>
 
       <div className="space-y-3">

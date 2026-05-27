@@ -1,4 +1,9 @@
-import type { MSInputs, MSDeviation, HandoffSide } from "@/lib/calc/ms/types";
+import type {
+  MSInputs,
+  MSDeviation,
+  HandoffSide,
+  HandoffAttorney,
+} from "@/lib/calc/ms/types";
 import { calculateMS, defaultDeviation } from "@/lib/calc/ms/calc";
 import {
   NumInput,
@@ -17,6 +22,7 @@ import {
 } from "./deviation-walkthrough";
 import { MSPartyFactorBlock } from "./party-factor-block";
 import { MSDeviationReconciliation } from "./deviation-reconciliation";
+import { MSChildrenRoster } from "./children-roster";
 
 type Setter = (next: MSInputs) => void;
 
@@ -34,11 +40,16 @@ export function MSCalculatorInputs({
   inputs,
   setInputs,
   lockedSide = null,
+  handoffRound = 0,
+  currentAuthor = null,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
   /** When non-null, the named slate is read-only (two-attorney handoff). */
   lockedSide?: HandoffSide | null;
+  /** §1.5 audit-trail context — propagates to MSPartyFactorBlock for stamping. */
+  handoffRound?: number;
+  currentAuthor?: HandoffAttorney | null;
 }) {
   const u = (patch: Partial<MSInputs>) => setInputs({ ...inputs, ...patch });
   const suspensionApplies = calculateMS(inputs).suspensionApplies;
@@ -213,6 +224,8 @@ export function MSCalculatorInputs({
         inputs={inputs}
         setInputs={setInputs}
         lockedSide={lockedSide}
+        handoffRound={handoffRound}
+        currentAuthor={currentAuthor}
       />
     </div>
   );
@@ -222,10 +235,14 @@ function MSDeviationsSection({
   inputs,
   setInputs,
   lockedSide,
+  handoffRound,
+  currentAuthor,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
   lockedSide: HandoffSide | null;
+  handoffRound: number;
+  currentAuthor: HandoffAttorney | null;
 }) {
   const updateMode = (m: typeof inputs.comparisonMode) => {
     if (m === "side_by_side" && !inputs.deviationsB) {
@@ -273,6 +290,8 @@ function MSDeviationsSection({
         <MSDeviationWalkthrough
           inputs={inputs}
           setInputs={setInputs}
+          handoffRound={handoffRound}
+          currentAuthor={currentAuthor}
           onFinish={() => {
             /* no-op: walkthrough flips itself; user can scroll on */
           }}
@@ -282,6 +301,8 @@ function MSDeviationsSection({
           inputs={inputs}
           setInputs={setInputs}
           lockedSide={lockedSide}
+          handoffRound={handoffRound}
+          currentAuthor={currentAuthor}
         />
       )}
 
@@ -289,38 +310,8 @@ function MSDeviationsSection({
         <MSDeviationReconciliation inputs={inputs} />
       )}
 
-      <ChildAgesInput inputs={inputs} setInputs={setInputs} />
+      <MSChildrenRoster inputs={inputs} setInputs={setInputs} />
     </Section>
-  );
-}
-
-function ChildAgesInput({
-  inputs,
-  setInputs,
-}: {
-  inputs: MSInputs;
-  setInputs: Setter;
-}) {
-  const value = (inputs.childAges ?? []).join(", ");
-  return (
-    <div className="rounded-md border border-rule bg-background p-4">
-      <Field
-        label="Children's ages (optional)"
-        help="Comma-separated, e.g. 8, 11. Powers the reconciliation view's cumulative-impact estimate. Leave blank to skip."
-      >
-        <TextInput
-          value={value}
-          onChange={(s) => {
-            const parsed = s
-              .split(/[,\s]+/)
-              .map((t) => parseInt(t, 10))
-              .filter((n) => Number.isFinite(n) && n >= 0 && n <= 21);
-            setInputs({ ...inputs, childAges: parsed });
-          }}
-          placeholder="8, 11"
-        />
-      </Field>
-    </div>
   );
 }
 
@@ -328,10 +319,14 @@ function DeviationPickList({
   inputs,
   setInputs,
   lockedSide,
+  handoffRound,
+  currentAuthor,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
   lockedSide: HandoffSide | null;
+  handoffRound: number;
+  currentAuthor: HandoffAttorney | null;
 }) {
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && !!inputs.deviationsB;
@@ -377,6 +372,8 @@ function DeviationPickList({
             buildContextInputs={() => inputs}
             obligorLocked={lockedSide === "A"}
             obligeeLocked={lockedSide === "B"}
+            handoffRound={handoffRound}
+            currentAuthor={currentAuthor}
           />
         );
       })}

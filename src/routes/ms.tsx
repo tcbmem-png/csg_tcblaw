@@ -205,6 +205,12 @@ function MSCalculatorPage() {
                     ? handoff.originatingSide
                     : null
                 }
+                handoffRound={handoff.handoffRound ?? 0}
+                currentAuthor={
+                  isReceivingSession
+                    ? handoff.receivingAttorney
+                    : handoff.originatingAttorney
+                }
               />
               <HandoffActionWiring
                 handoff={handoff}

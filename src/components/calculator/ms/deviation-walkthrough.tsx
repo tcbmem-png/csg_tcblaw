@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { MSDeviation, MSInputs } from "@/lib/calc/ms/types";
+import type { MSDeviation, MSInputs, HandoffAttorney } from "@/lib/calc/ms/types";
 import { Radio } from "./form-primitives";
 import { MSPartyFactorBlock } from "./party-factor-block";
 import { FACTOR_TITLES as FACTOR_TITLES_FROM_RECONCILIATION } from "@/lib/calc/ms/reconciliation";
@@ -11,10 +11,14 @@ export function MSDeviationWalkthrough({
   inputs,
   setInputs,
   onFinish,
+  handoffRound = 0,
+  currentAuthor = null,
 }: {
   inputs: MSInputs;
   setInputs: (n: MSInputs) => void;
   onFinish: () => void;
+  handoffRound?: number;
+  currentAuthor?: HandoffAttorney | null;
 }) {
   const [idx, setIdx] = useState(0);
   const slateA = inputs.deviationsA;
@@ -69,6 +73,8 @@ export function MSDeviationWalkthrough({
           obligeeLabel={inputs.obligeeLabel || "Obligee"}
           sideBySide={sideBySide}
           buildContextInputs={() => inputs}
+          handoffRound={handoffRound}
+          currentAuthor={currentAuthor}
         />
       </div>
 
