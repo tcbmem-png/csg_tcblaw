@@ -160,19 +160,34 @@ export function MSWorksheetPreview({
             (deviation criteria). Guidelines: {outputs.guidelinesEffectiveDate}.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            void import("@/lib/html/ms-behind-the-scenes-html").then((m) =>
-              m.downloadMSBehindTheScenesHtml({ inputs, outputs, caption }),
-            );
-          }}
-          className="shrink-0 rounded-md border border-primary/40 bg-primary/5 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10"
-          data-testid="download-behind-the-scenes-html"
-        >
-          Download Behind the Scenes (HTML)
-        </button>
+        <div className="flex shrink-0 flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              void import("@/lib/html/ms-behind-the-scenes-html").then((m) =>
+                m.downloadMSBehindTheScenesHtml({ inputs, outputs, caption }),
+              );
+            }}
+            className="rounded-md border border-primary/40 bg-primary/5 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10"
+            data-testid="download-behind-the-scenes-html"
+          >
+            Download Behind the Scenes (HTML)
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              void import("@/lib/pdf/ms-deviation-memo-pdf").then((m) =>
+                m.downloadMSDeviationMemoPdf({ inputs, outputs, caption }),
+              );
+            }}
+            className="rounded-md border border-accent/40 bg-accent/5 px-3 py-2 text-sm font-medium text-accent-foreground hover:bg-accent/10"
+            data-testid="download-deviation-memo-pdf"
+          >
+            Download Deviation Memorandum (PDF)
+          </button>
+        </div>
       </div>
+
 
       <CaptionBlock caption={caption} inputs={inputs} />
 
