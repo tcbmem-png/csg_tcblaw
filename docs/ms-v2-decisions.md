@@ -686,3 +686,128 @@ Type A), D-016 (mount-gate on `.applicable`, Type C). The pattern's
 durability across six instances justifies the three-subtype
 diagnostic above as the standing first check for any "renderer
 absent" report from the test agent.
+
+---
+
+## D-017 — Attribution rendering scope-shifted to Phase 4 acceptance criteria
+
+**Posture.** Phase 3.5 closes with an InputView attribution carve-out.
+The data layer (`authoredByName`, `handoffRound`, `authoredAt` on
+`MSPartyEntry`, per Appendix A.5) is verified correct end-to-end:
+URL-state round-trip lands the fields at canonical paths; engine math
+reads them when computing chancellor totals (confirmed by the round-2
+amendment to factor (e) flowing +$400 → +$500 through to the
+reconciled $2,900 final order); D-016's Type-C mount-gate prerequisite
+(`.applicable = true` on the relevant slate) was satisfied on the
+final probe. Despite all canonical and Appendix A.6 prerequisites
+being met, the render surface at
+`src/components/calculator/ms/party-factor-block.tsx:321–326` does not
+appear in any tested view's `outerHTML` (zero matches for attorney
+names, "Amended", or `round\s*\d`). Three rounds of progressively
+careful payload construction plus three diagnostic subtypes (Type A
+field-shape, Type B action-gate, Type C mount-gate) did not localize
+the failure. Diagnostic ROI is bottoming out on the InputView surface.
+
+**Decision.** Absorb per-position attribution rendering into Phase 4
+scope as an acceptance criterion of the **Behind the Scenes HTML
+generator** and the **MS Deviation Worksheet PDF generator**. The
+chancery-filing-grade artifact — not the InputView — is where
+"Per counsel for Obligor — [attorneyName], [authoredByFirm]"
+attribution per-position matters under the article's framing. Phase 4
+exercises the same verified data layer through a fresh renderer; it
+will either reproduce the bug in fresh code (easier to diagnose) or
+render correctly (moves the project forward and demotes the InputView
+gap to documented polish).
+
+**Acceptance criteria for Phase 4 output renderers.**
+1. Behind the Scenes HTML and MS Deviation Memorandum PDF MUST render
+   per-position attribution as **"Per counsel for Obligor —
+   [authoredByName], [authoredByFirm]"** (and symmetrically for
+   Obligee) on each populated party slate where `authoredByName` is
+   non-empty.
+2. Round labeling: when `handoffRound >= 2`, attribution line is
+   prefixed with **"Amended (round N)"**.
+3. End-to-end acceptance test: load Williams case via canonical URL
+   payload → render Behind the Scenes HTML → assert attribution chain
+   appears for both positions with correct round labeling.
+
+**Branching outcomes.**
+- **Phase 4 export renders attribution correctly** → D-017 converts to
+  *verified-shipped*; InputView surface absence demoted to **Slice 6
+  polish task** (low priority backlog; ship when convenient).
+- **Phase 4 export also fails to render attribution despite correct
+  data** → escalates to a real bug investigation with the data path
+  between `stampPartyEdit` and any consuming renderer as the focus
+  (not the legacy `party-factor-block` surface, which has absorbed
+  three diagnostic rounds without yield).
+
+**Phase 3.5 closes.** Five slices' substantive work complete
+(mode-switch reconciliation, enum normalization, chancellor-decisions
+wiring, handoff-round bump call sites, attribution data layer).
+InputView attribution rendering is the smallest user-facing item and
+is absorbed naturally into Phase 4 output rendering.
+
+---
+
+## D-007 — PDF generation strategy: hybrid jsPDF + @react-pdf/renderer
+
+**Posture (locked).** First flagged in §"PDF tool choice deferral"
+above (line 249) during Phase 1; deferred pending the MS deviation
+memo's structural requirements becoming concrete. Phase 4 opens with
+those requirements now specified (vector layout, multi-column factor
+comparison, per-position attribution chain, narrative paragraph blocks
+of unbounded length, optional sensitivity appendix). Decision locks
+here.
+
+**Decision: hybrid.**
+1. **jsPDF stays for TN AOC worksheet fill.** The TN deliverable
+   overlays text onto fixed-position fields on a pre-existing AOC
+   form template. jsPDF's coordinate-based text placement is the
+   correct tool for form-fill against a known template; rewriting in
+   a flow-layout engine would regress the pixel-accurate alignment
+   the AOC form requires. No change to
+   `src/lib/pdf/official-worksheet-pdf.ts` or `worksheet-pdf.ts`.
+2. **`@react-pdf/renderer` adopted for the MS Deviation Memorandum
+   PDF**, dynamic-imported to keep it off the initial bundle. The MS
+   memo is a flow-layout document with narrative paragraphs,
+   multi-column factor reconciliation tables, attribution headers,
+   and conditional appendices — exactly the shape `@react-pdf` was
+   built for, and exactly the shape jsPDF struggles with (manual line
+   wrapping, manual table-cell math, manual page breaks).
+3. **Behind the Scenes HTML generator ships first**, with no new
+   dependencies, as the visual spec the PDF then mirrors. HTML is
+   the canonical context-dictionary consumer; PDF reads the same
+   context dictionary and reproduces the same content in vector form.
+   This sequencing means the PDF work is mechanical layout
+   translation, not design exploration.
+
+**Rationale for hybrid over single-tool.**
+- A pure `@react-pdf` adoption would force a TN AOC rewrite for no
+  user-visible benefit and at the cost of pixel-accurate form
+  alignment.
+- A pure jsPDF approach for the MS memo would reproduce the
+  hand-rolled-layout pain that motivated this deferral in the first
+  place (narrative paragraphs, dynamic table heights, conditional
+  appendices = manual measurement hell).
+- The bundle cost of `@react-pdf/renderer` (~200KB gzipped) is paid
+  only when the user actually clicks "Download MS Deviation Memo,"
+  via dynamic import — zero cost for the TN-only path or for users
+  browsing the MS calculator without exporting.
+
+**Dependency plan.** `bun add @react-pdf/renderer` lands with the
+first MS memo PDF slice (after the Behind the Scenes HTML ships and
+the layout is validated). Behind the Scenes HTML adds no
+dependencies — built with the existing JSX + Tailwind stack and
+served as a standalone HTML download.
+
+**Phase 4 sequence (now opening).**
+1. Behind the Scenes HTML generator (Williams reference HTML
+   bound to live case data; includes per-position attribution chain
+   per D-017 acceptance criterion).
+2. MS Deviation Worksheet PDF generator (same context dictionary as
+   HTML; vector PDF via `@react-pdf/renderer`; includes attribution
+   chain).
+3. (Optional) Sensitivity HTML generator — multi-column for
+   imputation application percentages. Variant of #1.
+
+D-007 locked. Phase 4 opens.
