@@ -461,7 +461,7 @@ export async function renderMSWorksheetPdf(args: {
 
   small(
     ctx,
-    `Miss. Code Ann. § 43-19-101 (presumptive guideline) and § 43-19-103 (deviation criteria). Guidelines effective ${outputs.guidelinesEffectiveDate}.`,
+    `Miss. Code Ann. § 43-19-101 (presumptive guideline) and § 43-19-103 (deviation criteria). Guidelines: ${outputs.guidelinesEffectiveDate}.`,
   );
 
   captionBlock(ctx, inputs, caption);
