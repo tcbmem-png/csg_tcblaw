@@ -73,17 +73,17 @@ export function MSDeviationReconciliation({ inputs, setInputs }: Props) {
     });
   };
 
-  // Subtle color-flash on cumulative change.
+  // Subtle color-flash on headline change.
   const [flash, setFlash] = useState(false);
-  const prevCumulativeRef = useRef<number | null>(chancellorCumulative);
+  const prevHeadlineRef = useRef<number | null>(finalOrderCumulative);
   useEffect(() => {
-    if (prevCumulativeRef.current !== chancellorCumulative) {
-      prevCumulativeRef.current = chancellorCumulative;
+    if (prevHeadlineRef.current !== finalOrderCumulative) {
+      prevHeadlineRef.current = finalOrderCumulative;
       setFlash(true);
       const t = setTimeout(() => setFlash(false), 350);
       return () => clearTimeout(t);
     }
-  }, [chancellorCumulative]);
+  }, [finalOrderCumulative]);
 
   return (
     <section
