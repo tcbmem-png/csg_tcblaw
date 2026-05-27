@@ -8,7 +8,12 @@ import {
   isOriginatorBrowser,
   recordOriginatedHandoff,
   fingerprintShare,
+  encodeMSShare,
+  decodeMSShare,
+  randomToken,
 } from "../share";
+import { defaultHandoffState } from "../types";
+import type { HandoffState } from "../types";
 import { defaultMSInputs } from "../calc";
 import { defaultCaption } from "@/lib/calc/share";
 
