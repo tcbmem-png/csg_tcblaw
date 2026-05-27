@@ -439,7 +439,7 @@ export async function renderMSWorksheetPdf(args: {
   if (outputs.suspensionApplies) {
     small(
       ctx,
-      `Miss. Code Ann. § 43-19-36 (suspension during incarceration). Guidelines effective ${outputs.guidelinesEffectiveDate}.`,
+      `Miss. Code Ann. § 43-19-36 (suspension during incarceration). Guidelines: ${outputs.guidelinesEffectiveDate}.`,
     );
     captionBlock(ctx, inputs, caption);
     renderSuspensionFinding(ctx, outputs);
