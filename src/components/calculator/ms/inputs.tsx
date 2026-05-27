@@ -314,7 +314,7 @@ function MSDeviationsSection({
         projection are the doctrinally important surfaces regardless of
         whether obligee has populated a counter-slate.
       */}
-      <MSDeviationReconciliation inputs={inputs} setInputs={setInputs} />}
+      <MSDeviationReconciliation inputs={inputs} setInputs={setInputs} />
 
       <MSChildrenRoster inputs={inputs} setInputs={setInputs} />
     </Section>
