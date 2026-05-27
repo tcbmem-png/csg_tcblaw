@@ -23,7 +23,7 @@ import type {
 } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import type { MomentContext } from "@/lib/calc/ms/moment";
-import { encodeMSShare, otherSide } from "@/lib/calc/ms/share";
+import { encodeMSShare, otherSide, bumpHandoffRound } from "@/lib/calc/ms/share";
 import { clearReceivingDraft } from "@/lib/calc/ms/resume";
 import { downloadMSDeviationPdf } from "@/lib/pdf/ms-deviation-pdf";
 import { MSHandoffShareDialog } from "./handoff-share-dialog";
