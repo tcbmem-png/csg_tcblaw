@@ -141,14 +141,24 @@ export function decodeMSShare(s: string): MSDecoded | null {
       childAges: Array.isArray(parsed.i.childAges)
         ? (parsed.i.childAges as number[]).filter((n) => Number.isFinite(n))
         : base.childAges,
+      children: Array.isArray((parsed.i as { children?: unknown }).children)
+        ? ((parsed.i as { children?: MSInputs["children"] }).children ?? [])
+        : undefined,
     };
     delete (inputs as unknown as { deviations?: unknown }).deviations;
     delete (inputs as unknown as { positionALabel?: unknown }).positionALabel;
     delete (inputs as unknown as { positionBLabel?: unknown }).positionBLabel;
 
+    // §1.6 back-compat: synthesize a default children roster from childAges
+    // when no structured roster is present. Status defaults to "none".
+    if ((!inputs.children || inputs.children.length === 0) && inputs.childAges.length > 0) {
+      inputs.children = inputs.childAges.map((age) => defaultMSChild(age));
+    }
+
     const caption: CaseCaption = { ...defaultCaption(), ...(parsed.c ?? {}) };
 
-    // v2 → v3 upgrade: synthesize a "none" handoff.
+    // v2 → v3 upgrade: synthesize a "none" handoff. handoffRound defaults to 0
+    // on any payload predating §1.5 attribution.
     const handoff: HandoffState = parsed.h
       ? { ...defaultHandoffState(), ...parsed.h }
       : defaultHandoffState();
