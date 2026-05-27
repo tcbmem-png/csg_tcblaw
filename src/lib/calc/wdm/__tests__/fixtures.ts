@@ -44,11 +44,13 @@ export const FIXTURES: WorksheetFixture[] = [
   },
 
   // -------------------------------------------------------------------
-  // F02 — Equal 50/50 (locked annotations live here)
+  // F02 — Equal parenting cross-credit, 3 children, no deviations
+  //   Dimensions: income tier within-schedule; parenting Equal 50/50;
+  //   deviations none; imputation none.
   // -------------------------------------------------------------------
   {
     slug: "f02-equal-50-50",
-    label: "Equal 50/50, 3 kids",
+    label: "Equal-parenting cross-credit, 3 children, no deviations",
     exercises: [
       "equal parenting",
       "Rule .04(7)(b)(2)(i) cross-credit",
