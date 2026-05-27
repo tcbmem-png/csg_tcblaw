@@ -57,6 +57,35 @@ describe("§1.5 round attribution", () => {
     expect(stamped.authoredByName).toBe("Alice Originator"); // unchanged
   });
 
+  it("negative: open + click around + close without editing → zero stamps", () => {
+    // Simulates an attorney opening a PartyColumn, focusing/blurring fields,
+    // and closing it. Every "save" passes the same content back through
+    // stampSlatesAfterEdit. No party entry should accumulate a stamp.
+    const base = defaultMSInputs();
+    // Pre-seed one party entry so updateParty paths can be exercised.
+    const seeded = {
+      ...base,
+      deviationsA: base.deviationsA.map((d) =>
+        d.letter === "a"
+          ? { ...d, applicable: true, party: { ...basePartyEntry(), factsAsserted: "draft" } }
+          : d,
+      ),
+    };
+    // Simulate 5 successive no-op "saves" (re-renders with identical content).
+    let prev = seeded;
+    let cur = seeded;
+    for (let i = 0; i < 5; i++) {
+      const next = { ...cur, deviationsA: cur.deviationsA.map((d) => ({ ...d })) };
+      cur = stampSlatesAfterEdit(prev, next, { handoffRound: 2, author: BOB });
+      prev = cur;
+    }
+    for (const d of cur.deviationsA) {
+      // No party entry should have acquired round-2 / Bob attribution.
+      expect(d.party?.handoffRound ?? null).toBeNull();
+      expect(d.party?.authoredByName ?? null).toBeNull();
+    }
+  });
+
   it("full round-trip: Alice authors (r1), Bob amends one factor (r2), Alice amends another (r3)", () => {
     // r1: Alice authors A.a and A.f
     const base = defaultMSInputs();
