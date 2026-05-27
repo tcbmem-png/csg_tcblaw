@@ -152,7 +152,23 @@ export function calculateMS(inputs: MSInputs): MSOutputs {
     );
   }
 
-  const totalDeviationsMonthly = sumDeviations(inputs.deviationsA);
+  // §1.9 — final order is driven by the chancellor's per-factor decisions when
+  // the decision map is present (i.e. all current sessions and shared URLs that
+  // include the v2 surface). Pending decisions contribute $0, so a fresh case
+  // returns the presumptive baseline rather than silently adopting either
+  // party's proposal. Legacy URLs lacking `chancellorDecisions` entirely fall
+  // back to summing the obligor's slate to preserve backward compatibility.
+  let totalDeviationsMonthly: number;
+  if (inputs.chancellorDecisions) {
+    const report = buildReconciliation(inputs);
+    const chancellor = computeChancellorTotals(
+      report.rows,
+      inputs.chancellorDecisions,
+    );
+    totalDeviationsMonthly = chancellor.totalMonthly;
+  } else {
+    totalDeviationsMonthly = sumDeviations(inputs.deviationsA);
+  }
 
   const computeFinal = (devTotal: number): number =>
     Math.max(0, presumptiveMonthly + healthInsuranceAddOnMonthly + devTotal);
