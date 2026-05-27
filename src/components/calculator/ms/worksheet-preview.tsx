@@ -7,6 +7,56 @@ import type {
 } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import { MSDeviationComparison } from "./deviation-comparison";
+import { assertedImputationFactors } from "@/lib/calc/ms/imputation-labels";
+
+function ImputationCallout({
+  inputs,
+  outputs,
+}: {
+  inputs: MSInputs;
+  outputs: MSOutputs;
+}) {
+  const basis = inputs.imputationBasis;
+  const factors = assertedImputationFactors(basis);
+  const asserter =
+    basis.assertedBy === "obligor"
+      ? inputs.obligorLabel || "Obligor"
+      : basis.assertedBy === "obligee"
+        ? inputs.obligeeLabel || "Obligee"
+        : null;
+  return (
+    <div className="mt-3 rounded border-l-4 border-accent bg-accent/10 p-3 text-sm">
+      <strong>Imputed income — § 43-19-101(5).</strong>{" "}
+      {asserter ? `Asserted by ${asserter}. ` : ""}
+      {outputs.imputationActive && (
+        <span className="text-xs text-muted-foreground">
+          Scenario: actual ${Math.round(outputs.actualAnnualGross).toLocaleString("en-US")}/yr blended with imputed ${Math.round(outputs.imputedAnnualGross).toLocaleString("en-US")}/yr at {outputs.imputationApplicationPct}%.
+        </span>
+      )}
+      {factors.length > 0 && (
+        <>
+          <div className="mt-2 text-xs font-medium text-ink">Twelve-factor basis:</div>
+          <ul className="mt-1 list-disc pl-6 text-xs">
+            {factors.map((f) => (
+              <li key={f.key}>
+                <span className="text-ink">{f.label}:</span>{" "}
+                <span className="text-muted-foreground">{f.value}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {basis.note && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          <span className="font-medium text-ink">Additional context:</span> {basis.note}
+        </p>
+      )}
+      <p className="mt-2 text-[11px] italic text-muted-foreground">
+        Scenario modeling — not a court determination.
+      </p>
+    </div>
+  );
+}
 
 const FACTOR_TITLES: Record<MSFactorLetter, string> = {
   a: "Extraordinary medical, psychological, educational, or dental expenses",
