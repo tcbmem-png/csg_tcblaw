@@ -962,11 +962,11 @@ const partVI: AocField[] = [
         const capDollars = cap.statutoryMax.toLocaleString("en-US");
         if (cap.engaged) {
           parts.push(
-            `Calculation exceeds the $${capDollars}/mo statutory cap for ${cap.numChildren} ${childWord} (Tenn. Code Ann. § 36-5-101(e)(1)(B)); rebuttable presumption.`,
+            `Calculation exceeds the $${capDollars}/mo presumptive cap for ${cap.numChildren} ${childWord}; rebuttable presumption.`,
           );
         } else {
           parts.push(
-            `Calculation falls below the $${capDollars}/mo statutory cap for ${cap.numChildren} ${childWord} (Tenn. Code Ann. § 36-5-101(e)(1)(B)).`,
+            `Calculation falls below the $${capDollars}/mo presumptive cap for ${cap.numChildren} ${childWord}.`,
           );
         }
       }
