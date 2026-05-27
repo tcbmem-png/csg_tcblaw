@@ -290,6 +290,8 @@ function MSDeviationsSection({
         <MSDeviationWalkthrough
           inputs={inputs}
           setInputs={setInputs}
+          handoffRound={handoffRound}
+          currentAuthor={currentAuthor}
           onFinish={() => {
             /* no-op: walkthrough flips itself; user can scroll on */
           }}
@@ -299,6 +301,8 @@ function MSDeviationsSection({
           inputs={inputs}
           setInputs={setInputs}
           lockedSide={lockedSide}
+          handoffRound={handoffRound}
+          currentAuthor={currentAuthor}
         />
       )}
 
@@ -306,38 +310,8 @@ function MSDeviationsSection({
         <MSDeviationReconciliation inputs={inputs} />
       )}
 
-      <ChildAgesInput inputs={inputs} setInputs={setInputs} />
+      <MSChildrenRoster inputs={inputs} setInputs={setInputs} />
     </Section>
-  );
-}
-
-function ChildAgesInput({
-  inputs,
-  setInputs,
-}: {
-  inputs: MSInputs;
-  setInputs: Setter;
-}) {
-  const value = (inputs.childAges ?? []).join(", ");
-  return (
-    <div className="rounded-md border border-rule bg-background p-4">
-      <Field
-        label="Children's ages (optional)"
-        help="Comma-separated, e.g. 8, 11. Powers the reconciliation view's cumulative-impact estimate. Leave blank to skip."
-      >
-        <TextInput
-          value={value}
-          onChange={(s) => {
-            const parsed = s
-              .split(/[,\s]+/)
-              .map((t) => parseInt(t, 10))
-              .filter((n) => Number.isFinite(n) && n >= 0 && n <= 21);
-            setInputs({ ...inputs, childAges: parsed });
-          }}
-          placeholder="8, 11"
-        />
-      </Field>
-    </div>
   );
 }
 
