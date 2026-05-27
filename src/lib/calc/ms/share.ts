@@ -357,3 +357,94 @@ export async function isOriginatorBrowser(
   const fpKey = `fp:${await fingerprintShare(inputs, caption)}`;
   return Boolean(store[fpKey]);
 }
+
+// =================================================================
+// §1.5 author + handoff_round attribution
+//
+// The audit trail attaches author/round metadata to a MSPartyEntry the
+// first time its material content (position, factsAsserted,
+// documentationReferenced, proposedMonthly, legalAuthority) is set or
+// changed in a given round. Re-rendering or no-op writes do not bump
+// the stamp.
+// =================================================================
+
+export function bumpHandoffRound(h: HandoffState): HandoffState {
+  // First send: 0 -> 1. Each subsequent edit cycle increments.
+  return { ...h, handoffRound: Math.max(1, (h.handoffRound ?? 0) + 1) };
+}
+
+export function currentHandoffRound(h: HandoffState | null | undefined): number {
+  if (!h) return 0;
+  return Math.max(0, h.handoffRound ?? 0);
+}
+
+function partyContentEqual(
+  a: MSPartyEntry | undefined,
+  b: MSPartyEntry | undefined,
+): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.position === b.position &&
+    a.factsAsserted === b.factsAsserted &&
+    a.documentationReferenced === b.documentationReferenced &&
+    Number(a.proposedMonthly) === Number(b.proposedMonthly) &&
+    a.legalAuthority === b.legalAuthority
+  );
+}
+
+export interface PartyEditContext {
+  handoffRound: number;
+  author: HandoffAttorney | null;
+  now?: Date;
+}
+
+/**
+ * Returns `next` with attribution stamped iff material content changed
+ * relative to `prev`. Pure; safe to call on every keystroke.
+ */
+export function stampPartyEdit(
+  prev: MSPartyEntry | undefined,
+  next: MSPartyEntry,
+  ctx: PartyEditContext,
+): MSPartyEntry {
+  if (partyContentEqual(prev, next)) return next;
+  const now = ctx.now ?? new Date();
+  return {
+    ...next,
+    handoffRound: ctx.handoffRound,
+    authoredAt: now.toISOString(),
+    authoredByName: ctx.author?.name ?? null,
+    authoredByFirm: ctx.author?.firm ?? null,
+  };
+}
+
+/**
+ * Walks both slates and stamps any party entry whose content changed
+ * between `prev` and `next`. Used as a single chokepoint when a receiving
+ * attorney saves a batch of edits; the per-field stamp helper handles
+ * the interactive editing path.
+ */
+export function stampSlatesAfterEdit(
+  prev: MSInputs,
+  next: MSInputs,
+  ctx: PartyEditContext,
+): MSInputs {
+  const walk = (
+    prevSlate: MSDeviation[] | undefined,
+    nextSlate: MSDeviation[] | undefined,
+  ): MSDeviation[] | undefined => {
+    if (!nextSlate) return nextSlate;
+    return nextSlate.map((d, i) => {
+      const prevD = prevSlate?.[i];
+      if (!d.party) return d;
+      const stamped = stampPartyEdit(prevD?.party, d.party, ctx);
+      return stamped === d.party ? d : { ...d, party: stamped };
+    });
+  };
+  return {
+    ...next,
+    deviationsA: walk(prev.deviationsA, next.deviationsA) ?? next.deviationsA,
+    deviationsB: walk(prev.deviationsB, next.deviationsB),
+  };
+}
