@@ -393,3 +393,62 @@ mo). No gate fix needed; the conditional is doing its job.
 **Source.** This decision; no code change in this slice. Canonical
 spec patch lives in `docs/ms-canonical-spec.md` §1.9 enum table
 (follow-up edit).
+
+---
+
+## D-011 — Three-line cumulative-through-emancipation treatment
+
+**Question.** Does "Cumulative through emancipation" mean (a) the
+total order the obligor will pay over the projected period — i.e.
+`finalOrderMonthly × avgMonthsRemaining` — or (b) the deviation
+impact alone — i.e. `chancellorNetMonthly × avgMonthsRemaining`?
+Slice 1 shipped (b) under the label "Cumulative through emancipation".
+The Williams reference doc names (a) as the canonical anchor
+($2,800 × 108 mo = $302,400). Both are useful; they answer
+different questions.
+
+**Decision.** Render all three readings, with (a) as the headline
+and (b)+(c) as supporting context, under an unambiguous label:
+
+```
+Total order through emancipation     $302,400   ← headline (final × 108)
+  Presumptive baseline                $496,800   ← doctrinal anchor
+  Chancellor's deviation impact      (−$194,400) ← negotiation anchor
+```
+
+- **Headline** (`finalOrderMonthly × months`) answers a chancellor's
+  bench question: "what am I ordering."
+- **Presumptive baseline** (`presumptiveMonthly × months`) shows the
+  doctrinal anchor the chancellor's deviations move from.
+- **Deviation impact** (`chancellorNetMonthly × months`) answers a
+  mediator's question: "what are we fighting over."
+
+The previous label "Cumulative through emancipation" was too
+ambiguous for either reading to be self-evident — a self-rep user
+reading "−$194,400" plausibly interprets it as "owe negative money
+over the period." Renamed to "Total order through emancipation"
+regardless of which version ships.
+
+**Source.** Phase 3.5 review (this loop); implemented in
+`deviation-reconciliation.tsx`. Canonical Williams anchor confirmed:
+ages 14/10 → 108 mo average → $2,800/mo final order × 108 = $302,400.
+
+---
+
+## D-012 — InPlayBadge consistency (verification, no code change)
+
+**Question.** Does the §1.4 four-state classifier render
+identically across every surface (factor card header pill,
+reconciliation table row, party-block summary background)?
+
+**Decision.** Yes — verified. All three surfaces consume
+`inPlayPresentation()` from `src/lib/calc/ms/in-play-labels.ts`,
+which is the single source of truth for label string, chip class,
+border class, and background class per state. No drift possible by
+construction: any rename or color change propagates everywhere
+from one table. `result-sidebar.tsx` and `worksheet-preview.tsx`
+do not render the badge (intentional — they show monetary results,
+not factor-classification chips), so the consistency contract is
+satisfied across all surfaces that currently render the state.
+
+**Source.** Slice 5 verification pass.

@@ -21,6 +21,7 @@ import {
   defaultChancellorDecisions,
   type MSChancellorDecision,
 } from "@/lib/calc/ms/chancellor-decisions";
+import { calculateMS } from "@/lib/calc/ms/calc";
 import { MSChancellorDecisionRow } from "./chancellor-decision-row";
 
 function fmt(n: number): string {
@@ -51,10 +52,18 @@ export function MSDeviationReconciliation({ inputs, setInputs }: Props) {
 
   const decisions = inputs.chancellorDecisions ?? defaultChancellorDecisions();
   const chancellor = computeChancellorTotals(report.rows, decisions);
+  // §1.9 / D-011 — three readings of the period:
+  //   • final order × months  (headline — canonical Williams $302,400 framing)
+  //   • presumptive baseline × months  (doctrinal anchor the rulings deviate from)
+  //   • chancellor's deviation impact × months  (mediation negotiation anchor)
+  const outputs = calculateMS(inputs);
+  const months = totals.avgMonthsRemaining;
+  const finalOrderCumulative =
+    months === null ? null : outputs.proposedFinalMonthly * months;
+  const presumptiveCumulative =
+    months === null ? null : outputs.presumptiveMonthly * months;
   const chancellorCumulative =
-    totals.avgMonthsRemaining === null
-      ? null
-      : chancellor.totalMonthly * totals.avgMonthsRemaining;
+    months === null ? null : chancellor.totalMonthly * months;
 
   const setDecision = (next: MSChancellorDecision) => {
     if (!setInputs) return;
@@ -64,17 +73,17 @@ export function MSDeviationReconciliation({ inputs, setInputs }: Props) {
     });
   };
 
-  // Subtle color-flash on cumulative change.
+  // Subtle color-flash on headline change.
   const [flash, setFlash] = useState(false);
-  const prevCumulativeRef = useRef<number | null>(chancellorCumulative);
+  const prevHeadlineRef = useRef<number | null>(finalOrderCumulative);
   useEffect(() => {
-    if (prevCumulativeRef.current !== chancellorCumulative) {
-      prevCumulativeRef.current = chancellorCumulative;
+    if (prevHeadlineRef.current !== finalOrderCumulative) {
+      prevHeadlineRef.current = finalOrderCumulative;
       setFlash(true);
       const t = setTimeout(() => setFlash(false), 350);
       return () => clearTimeout(t);
     }
-  }, [chancellorCumulative]);
+  }, [finalOrderCumulative]);
 
   return (
     <section
@@ -266,17 +275,34 @@ export function MSDeviationReconciliation({ inputs, setInputs }: Props) {
               {fmt(chancellor.totalMonthly)}
             </span>
           </div>
-          {chancellorCumulative !== null && (
-            <div className="mt-2 flex items-baseline justify-between border-t border-rule pt-2 font-medium">
-              <span>Cumulative through emancipation</span>
-              <span
-                className={
-                  "font-mono transition-colors duration-300 " +
-                  (flash ? "text-primary" : "text-ink")
-                }
-              >
-                {fmt(chancellorCumulative)}
-              </span>
+          {finalOrderCumulative !== null && months !== null && (
+            <div className="mt-2 border-t border-rule pt-2">
+              {/* §1.9 / D-011 — three-line treatment. Headline answers
+                  "what am I ordering" (canonical Williams $302,400 framing);
+                  supporting lines show the doctrinal anchor and the
+                  mediation negotiation anchor. */}
+              <div className="flex items-baseline justify-between font-medium">
+                <span>Total order through emancipation</span>
+                <span
+                  className={
+                    "font-mono transition-colors duration-300 " +
+                    (flash ? "text-primary" : "text-ink")
+                  }
+                  title={`${fmt(outputs.proposedFinalMonthly)}/mo × ${months} mo`}
+                >
+                  {fmt(finalOrderCumulative)}
+                </span>
+              </div>
+              <div className="mt-1 flex items-baseline justify-between text-xs text-muted-foreground">
+                <span>Presumptive baseline</span>
+                <span className="font-mono">
+                  {presumptiveCumulative !== null ? fmt(presumptiveCumulative) : "—"}
+                </span>
+              </div>
+              <div className="mt-0.5 flex items-baseline justify-between text-xs text-muted-foreground">
+                <span>Chancellor's deviation impact</span>
+                <span className="font-mono">{fmt(chancellorCumulative ?? 0)}</span>
+              </div>
             </div>
           )}
           {totals.avgMonthsRemaining === null && (
