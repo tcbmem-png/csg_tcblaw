@@ -117,10 +117,9 @@ export function flattenForCommentsBlock(
  * annotated worksheet for the full breakdown. Designed to fit on a
  * single underline row of the AOC Comments block.
  *
- * Shape:
- *   "Deviations allocated pro rata per Rule .07(2)(d), net Line 14
- *    transfer $X/mo {payer} → {payee}. Full methodology in annotated
- *    worksheet."
+ * AOC boundary: numbers + structural cells only — no rule citations.
+ * The pointer "See annotated worksheet for methodology." is permitted
+ * (a pointer, not a citation).
  *
  * When no deviations are in play, returns null (caller drops the line).
  */
@@ -135,9 +134,9 @@ export function flattenForCommentsBriefAOC(
   const b = parentBLabel || "Father";
   const abs = Math.abs(netDeviationFromA);
   if (!(abs > 0)) {
-    return `Deviations allocated pro rata per Rule .07(2)(d). Full methodology in annotated worksheet.`;
+    return `Deviations applied. See annotated worksheet for methodology.`;
   }
   const direction = netDeviationFromA > 0 ? `${a} → ${b}` : `${b} → ${a}`;
   const dollars = abs.toLocaleString("en-US", { maximumFractionDigits: 0 });
-  return `Deviations allocated pro rata per Rule .07(2)(d), net Line 14 transfer $${dollars}/mo (${direction}). Full methodology in annotated worksheet.`;
+  return `Deviations applied, net Line 14 transfer $${dollars}/mo (${direction}). See annotated worksheet for methodology.`;
 }
