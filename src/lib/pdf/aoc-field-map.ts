@@ -35,7 +35,7 @@
 import type { CalcInputs, CalcOutputs } from "../calc/types";
 import type { WDM } from "../calc/wdm/types";
 import { findLineByScreenNo } from "../calc/wdm/build";
-import { flattenForCommentsBlock } from "../calc/deviations-narrative";
+import { flattenForCommentsBriefAOC } from "../calc/deviations-narrative";
 
 export type FontStyle = "regular" | "bold";
 export type Align = "left" | "right" | "center";
