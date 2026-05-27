@@ -61,6 +61,7 @@ export function defaultMSInputs(): MSInputs {
     deviationsB: undefined,
     childAges: [],
     children: [],
+    chancellorDecisions: defaultChancellorDecisions(),
   };
 }
 
