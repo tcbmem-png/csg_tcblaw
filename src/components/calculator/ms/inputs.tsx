@@ -319,10 +319,14 @@ function DeviationPickList({
   inputs,
   setInputs,
   lockedSide,
+  handoffRound,
+  currentAuthor,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
   lockedSide: HandoffSide | null;
+  handoffRound: number;
+  currentAuthor: HandoffAttorney | null;
 }) {
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && !!inputs.deviationsB;
