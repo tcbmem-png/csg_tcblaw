@@ -849,7 +849,7 @@ const partVI: AocField[] = [
       const b = inputs.parentBLabel || "Father";
       if (
         outputs.netPresumptiveSupport > 0 &&
-        outputs.presumptiveDirection !== "neutral"
+        outputs.presumptiveDirection !== "none"
       ) {
         const dir =
           outputs.presumptiveDirection === "parent_a_to_b"
