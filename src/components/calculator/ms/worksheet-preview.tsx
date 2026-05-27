@@ -8,6 +8,11 @@ import type {
 import type { CaseCaption } from "@/lib/calc/share";
 import { MSDeviationComparison } from "./deviation-comparison";
 import { assertedImputationFactors } from "@/lib/calc/ms/imputation-labels";
+import { buildReconciliation } from "@/lib/calc/ms/reconciliation";
+import {
+  computeChancellorTotals,
+  defaultChancellorDecisions,
+} from "@/lib/calc/ms/chancellor-decisions";
 
 function ImputationCallout({
   inputs,
