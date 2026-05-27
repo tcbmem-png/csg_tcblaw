@@ -152,11 +152,27 @@ export function MSWorksheetPreview({
 
   return (
     <div className="rounded-lg border border-rule bg-background p-6 font-serif text-ink">
-      <h2 className="text-xl font-bold">Mississippi Child Support Worksheet</h2>
-      <p className="mt-1 text-xs text-muted-foreground">
-        Miss. Code Ann. § 43-19-101 (presumptive guideline) and § 43-19-103
-        (deviation criteria). Guidelines: {outputs.guidelinesEffectiveDate}.
-      </p>
+      <div className="flex items-start justify-between gap-4 no-print">
+        <div>
+          <h2 className="text-xl font-bold">Mississippi Child Support Worksheet</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Miss. Code Ann. § 43-19-101 (presumptive guideline) and § 43-19-103
+            (deviation criteria). Guidelines: {outputs.guidelinesEffectiveDate}.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            void import("@/lib/html/ms-behind-the-scenes-html").then((m) =>
+              m.downloadMSBehindTheScenesHtml({ inputs, outputs, caption }),
+            );
+          }}
+          className="shrink-0 rounded-md border border-primary/40 bg-primary/5 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10"
+          data-testid="download-behind-the-scenes-html"
+        >
+          Download Behind the Scenes (HTML)
+        </button>
+      </div>
 
       <CaptionBlock caption={caption} inputs={inputs} />
 
