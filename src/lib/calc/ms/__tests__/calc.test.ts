@@ -86,7 +86,7 @@ describe("MS calc — additional invariants", () => {
     expect(out.statutoryPercentage).toBe(0.26);
   });
 
-  it("applicable deviations sum and apply (signed)", () => {
+  it("applicable deviations sum and apply (signed) when chancellor adopts them", () => {
     const base = defaultMSInputs();
     const inputs: MSInputs = {
       ...base,
@@ -99,13 +99,56 @@ describe("MS calc — additional invariants", () => {
         if (d.letter === "g") return { ...d, applicable: true, description: "50/50 schedule", proposedMonthly: -200 };
         return d;
       }),
+      chancellorDecisions: adoptObligor(["a", "g"]),
     };
     const out = calculateMS(inputs);
     expect(out.totalDeviationsMonthly).toBe(-50);
     expect(out.proposedFinalMonthly).toBeCloseTo(out.presumptiveMonthly - 50, 2);
   });
 
-  it("never produces a negative final award", () => {
+  it("pending chancellor decisions contribute $0 — fresh case returns presumptive baseline", () => {
+    const base = defaultMSInputs();
+    const inputs: MSInputs = {
+      ...base,
+      numChildren: 2,
+      obligorAnnualGross: 60000,
+      obligorAnnualTaxes: 10000,
+      obligorAnnualSocialSecurity: 3720,
+      deviationsA: base.deviationsA.map((d) =>
+        d.letter === "a"
+          ? { ...d, applicable: true, description: "Orthodontia", proposedMonthly: 150 }
+          : d,
+      ),
+      // chancellorDecisions defaults to all "none" — Option C semantics.
+    };
+    const out = calculateMS(inputs);
+    expect(out.totalDeviationsMonthly).toBe(0);
+    expect(out.proposedFinalMonthly).toBeCloseTo(out.presumptiveMonthly, 2);
+  });
+
+  it("never produces a negative final award (chancellor-adopted custom −10000)", () => {
+    const base = defaultMSInputs();
+    const decisions = defaultChancellorDecisions();
+    decisions.j = recordDecision(decisions.j, {
+      decision: "custom",
+      customAmount: -10000,
+    });
+    const inputs: MSInputs = {
+      ...base,
+      numChildren: 1,
+      obligorAnnualGross: 20000,
+      obligorAnnualTaxes: 2000,
+      obligorAnnualSocialSecurity: 1240,
+      deviationsA: base.deviationsA.map((d) =>
+        d.letter === "j"
+          ? { ...d, applicable: true, description: "Massive offset", proposedMonthly: -10000 }
+          : d,
+      ),
+      chancellorDecisions: decisions,
+    };
+    const out = calculateMS(inputs);
+    expect(out.proposedFinalMonthly).toBe(0);
+  });
     const base = defaultMSInputs();
     const inputs: MSInputs = {
       ...base,
