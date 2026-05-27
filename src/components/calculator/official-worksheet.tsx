@@ -1,37 +1,45 @@
-import type {
-  CalcInputs,
-  CalcOutputs,
-  Direction,
-  IncomeMethodology,
-} from "@/lib/calc/types";
+/**
+ * Phase B — WDM-driven worksheet renderer.
+ *
+ * This component is now a pure projection of the Worksheet Data Model
+ * (WDM) built by `src/lib/calc/wdm/build.ts`. All formatting, line
+ * ordering, citation tagging, judgment-call metadata, and panel shaping
+ * live in `buildWDM`. The component only walks the model and emits JSX.
+ *
+ * The B0 baselines under `src/lib/calc/wdm/__baselines__/` lock the
+ * exact HTML output across all 6 fixtures. Any visible regression
+ * during the rewire fails the regression gate.
+ *
+ * The single piece not yet carried by the WDM is the special-expenses
+ * threshold sub-line (a one-line cream-tinted note under Line 14a). It
+ * is still derived from `inputs`/`outputs` here; promotion into the WDM
+ * is tracked for Phase D.
+ */
+import type { CalcInputs, CalcOutputs } from "@/lib/calc/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import { defaultCaption } from "@/lib/calc/share";
 import {
   CITATIONS,
-  DEVIATION_METHODOLOGY_NOTE,
   specialExpensesThresholdLine,
   type CitationKey,
 } from "@/lib/calc/citations";
-import {
-  citationForBcso,
-  citationForIncomePath,
-  citationForParentingMode,
-} from "@/lib/calc/citation-resolvers";
+import { buildWDM } from "@/lib/calc/wdm/build";
+import type {
+  WDMLine,
+  WDMSection,
+  WDMStatutoryCapPanel,
+  WDMValue,
+} from "@/lib/calc/wdm/types";
 import { RuleInfo } from "./rule-info";
 
+function fmt(n: number) {
+  const abs = Math.abs(n);
+  const s = abs.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  return n < 0 ? `(${s})` : s;
+}
 
-function incomeSourceLabel(m: IncomeMethodology | undefined): string {
-  if (!m) return "Source: entered directly";
-  if (m.path === "simple") {
-    if (m.source === "w2_box5_annual") return "Source: W-2 Box 5 (annual ÷ 12)";
-    return "Source: monthly gross (Income Helper)";
-  }
-  if (m.path === "variable") return "Source: variable income, multi-year averaging";
-  if (m.path === "self_employed") return "Source: self-employment net + add-backs";
-  if (m.path === "multi_source") return "Source: multiple income sources";
-  if (m.path === "imputed") return "Source: imputed income (see appendix)";
-  if (m.path === "special") return "Source: special situation (see appendix)";
-  return "Source: entered directly";
+function cellDisplay(v: WDMValue | undefined): string {
+  return v?.display ?? "";
 }
 
 function SourceLine({ a, b }: { a: string; b: string }) {
@@ -46,52 +54,24 @@ function SourceLine({ a, b }: { a: string; b: string }) {
   );
 }
 
-
-function fmt(n: number) {
-  const abs = Math.abs(n);
-  const s = abs.toLocaleString("en-US", { maximumFractionDigits: 0 });
-  return n < 0 ? `(${s})` : s;
-}
-
-function dirLabel(d: Direction, a: string, b: string) {
-  if (d === "parent_a_to_b") return `${a} → ${b}`;
-  if (d === "parent_b_to_a") return `${b} → ${a}`;
-  return "—";
-}
-
-function Line({
-  n,
-  label,
-  cite,
-  citation,
-  a,
-  b,
-  total,
-  emphasis,
-}: {
-  n?: string;
-  label: string;
-  cite?: string;
-  citation?: CitationKey;
-  a?: string;
-  b?: string;
-  total?: string;
-  emphasis?: boolean;
-}) {
+function LineRow({ line }: { line: WDMLine }) {
   const base =
     "grid grid-cols-[2.5rem_1fr_8rem_8rem_8rem] gap-2 border-b border-rule px-3 py-2 text-[12px]";
-  const emph = emphasis ? "bg-cream font-semibold text-ink" : "text-ink";
+  const emph = line.emphasis ? "bg-cream font-semibold text-ink" : "text-ink";
   // Citation-driven label/cite takes precedence: derived from a CitationKey,
   // it stays in lockstep with citations.ts so paragraph upgrades propagate
   // without per-line edits.
+  const citation: CitationKey | undefined = line.citation;
   const resolvedCite =
-    citation !== undefined ? `Rule ${CITATIONS[citation].rule.replace(/^1240-02-04-/, "")}` : cite;
+    citation !== undefined
+      ? `Rule ${CITATIONS[citation].rule.replace(/^1240-02-04-/, "")}`
+      : line.cite;
   return (
     <div className={`${base} ${emph}`}>
-      <div className="font-mono text-muted-foreground">{n}</div>
+      <div className="font-mono text-muted-foreground">{line.screenLineNo ?? ""}</div>
       <div>
         <div className="flex items-center gap-1.5">
-          <span>{label}</span>
+          <span>{line.label}</span>
           {citation && <RuleInfo citation={citation} />}
         </div>
         {resolvedCite && (
@@ -100,9 +80,9 @@ function Line({
           </div>
         )}
       </div>
-      <div className="text-right font-mono">{a ?? ""}</div>
-      <div className="text-right font-mono">{b ?? ""}</div>
-      <div className="text-right font-mono">{total ?? ""}</div>
+      <div className="text-right font-mono">{cellDisplay(line.a)}</div>
+      <div className="text-right font-mono">{cellDisplay(line.b)}</div>
+      <div className="text-right font-mono">{cellDisplay(line.total)}</div>
     </div>
   );
 }
@@ -119,6 +99,39 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
+function StatutoryCapPanel({ panel }: { panel: WDMStatutoryCapPanel }) {
+  return (
+    <div className="border-t border-rule bg-cream px-6 py-4 text-[11px] leading-relaxed text-ink">
+      <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        Statutory Presumptive Cap · Tenn. Code Ann. §36-5-101(e)(1)(B)
+      </div>
+      <div className="grid grid-cols-2 gap-x-6 gap-y-1 font-mono text-[11px] sm:max-w-md">
+        <div>Calculated PCSO</div>
+        <div className="text-right">${fmt(panel.calculatedPCSO)}/mo</div>
+        <div>
+          Statutory cap ({panel.numChildren}{" "}
+          {panel.numChildren === 1 ? "child" : "children"})
+        </div>
+        <div className="text-right">${fmt(panel.statutoryMax)}/mo</div>
+        <div className="border-t border-rule pt-1 font-semibold">
+          Excess subject to recipient's burden
+        </div>
+        <div className="border-t border-rule pt-1 text-right font-semibold">
+          ${fmt(panel.excessOverCap)}/mo · ${fmt(panel.excessOverCap * 12)}/yr
+        </div>
+      </div>
+      {panel.capNote && (
+        <p className="mt-3 text-[11px] leading-relaxed">{panel.capNote}</p>
+      )}
+      {panel.caseLaw && (
+        <p className="mt-3 border-t border-rule pt-3 text-[11px] italic leading-relaxed text-muted-foreground">
+          {panel.caseLaw}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function OfficialWorksheet({
   inputs,
   outputs,
@@ -128,15 +141,8 @@ export function OfficialWorksheet({
   outputs: CalcOutputs;
   caption?: CaseCaption;
 }) {
-  const a = inputs.parentALabel;
-  const b = inputs.parentBLabel;
-  
-  const hasCaption =
-    caption.matterName ||
-    caption.docketNumber ||
-    caption.court ||
-    caption.preparedBy ||
-    caption.client;
+  const wdm = buildWDM(inputs, outputs, caption);
+  const { header, caption: cap, hasCaption, panels } = wdm;
 
   return (
     <div className="print-page">
@@ -145,18 +151,16 @@ export function OfficialWorksheet({
         <div className="flex items-start justify-between border-b border-rule px-6 py-5">
           <div>
             <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              State of Tennessee · Department of Human Services
+              {header.jurisdiction}
             </div>
-            <h2 className="mt-1 font-serif text-xl text-ink">
-              Child Support Worksheet — Income Shares Model
-            </h2>
+            <h2 className="mt-1 font-serif text-xl text-ink">{header.formTitle}</h2>
             <div className="mt-1 text-[11px] text-muted-foreground">
               Tenn. Comp. R. & Regs. 1240-02-04 · Schedule effective{" "}
-              {outputs.scheduleEffectiveDate}
+              {header.scheduleEffectiveDate}
             </div>
           </div>
           <div className="text-right text-[11px] text-muted-foreground">
-            <div>Prepared {new Date().toLocaleDateString("en-US")}</div>
+            <div>Prepared {header.preparedOnDisplay}</div>
             <div>via TCB Law TN Child Support Calculator</div>
           </div>
         </div>
@@ -164,281 +168,128 @@ export function OfficialWorksheet({
         {/* Case caption */}
         {hasCaption && (
           <div className="grid grid-cols-1 gap-x-6 gap-y-1 border-b border-rule bg-cream px-6 py-4 text-[11px] text-ink sm:grid-cols-2">
-            {caption.matterName && (
+            {cap.matterName && (
               <div>
                 <span className="font-mono uppercase tracking-widest text-muted-foreground">
                   Matter ·{" "}
                 </span>
-                {caption.matterName}
+                {cap.matterName}
               </div>
             )}
-            {caption.docketNumber && (
+            {cap.docketNumber && (
               <div>
                 <span className="font-mono uppercase tracking-widest text-muted-foreground">
                   Docket ·{" "}
                 </span>
-                {caption.docketNumber}
+                {cap.docketNumber}
               </div>
             )}
-            {caption.court && (
+            {cap.court && (
               <div className="sm:col-span-2">
                 <span className="font-mono uppercase tracking-widest text-muted-foreground">
                   Court ·{" "}
                 </span>
-                {caption.court}
+                {cap.court}
               </div>
             )}
-            {caption.client && (
+            {cap.client && (
               <div>
                 <span className="font-mono uppercase tracking-widest text-muted-foreground">
                   Client ·{" "}
                 </span>
-                {caption.client}
+                {cap.client}
               </div>
             )}
-            {caption.preparedBy && (
+            {cap.preparedBy && (
               <div>
                 <span className="font-mono uppercase tracking-widest text-muted-foreground">
                   Prepared by ·{" "}
                 </span>
-                {caption.preparedBy}
+                {cap.preparedBy}
               </div>
             )}
           </div>
         )}
 
-        {/* Identification */}
-        <SectionHeader title="I · Identification" />
-        <Line
-          n="1"
-          label="Parent labels"
-          a={a}
-          b={b}
-          total={`${inputs.numChildren} child${inputs.numChildren > 1 ? "ren" : ""}`}
-        />
-        <Line
-          n="2"
-          label="Parenting time"
-          citation={citationForParentingMode(outputs)}
-          total={
-            inputs.parentingType === "equal"
-              ? "Equal (182.5 / 182.5)"
-              : inputs.parentingType === "standard"
-                ? `Standard (ARP = ${inputs.arpForStandard === "parent_a" ? a : b}, 80 days)`
-                : `Custom (${inputs.parentADays} / ${inputs.parentBDays})`
-          }
-        />
-
-        {/* AGI */}
-        <SectionHeader title="II · Adjusted Gross Income" />
-        <Line
-          n="3"
-          label="Gross monthly income"
-          citation="gross_income"
-          a={`$${fmt(inputs.parentAGrossMonthly)}`}
-          b={`$${fmt(inputs.parentBGrossMonthly)}`}
-        />
-        <SourceLine
-          a={incomeSourceLabel(inputs.parentAIncomeMethodology)}
-          b={incomeSourceLabel(inputs.parentBIncomeMethodology)}
-        />
-        <Line
-          n="3a"
-          label="Less: self-employment tax credit"
-          citation="se_tax_credit"
-          a={`$${fmt(inputs.parentASECredit)}`}
-          b={`$${fmt(inputs.parentBSECredit)}`}
-        />
-        <Line
-          n="3b"
-          label="Less: pre-existing child support paid"
-          citation="credit_not_in_home_children"
-          a={`$${fmt(inputs.parentAPriorSupport)}`}
-          b={`$${fmt(inputs.parentBPriorSupport)}`}
-        />
-        <Line
-          n="3c"
-          label="Less: in-home children credit"
-          citation="credit_other_in_home_children"
-          a={`$${fmt(inputs.parentAInhomeCredit)}`}
-          b={`$${fmt(inputs.parentBInhomeCredit)}`}
-        />
-        <Line
-          n="4"
-          label="Adjusted Gross Income (AGI)"
-          citation="agi"
-          a={`$${fmt(outputs.parentAAGI)}`}
-          b={`$${fmt(outputs.parentBAGI)}`}
-          total={`$${fmt(outputs.combinedAGI)}`}
-          emphasis
-        />
-        <Line
-          n="5"
-          label="Percentage of income (PI)"
-          citation="pro_rata"
-          a={`${(outputs.piA * 100).toFixed(2)}%`}
-          b={`${(outputs.piB * 100).toFixed(2)}%`}
-          total="100.00%"
-        />
-
-        {/* BCSO */}
-        <SectionHeader title="III · Basic Child Support Obligation" />
-        <Line
-          n="6"
-          label={
-            outputs.bcsoSource === "above_cap"
-              ? "BCSO (above-cap formula)"
-              : "BCSO (schedule lookup, rounded up)"
-          }
-          citation={citationForBcso(outputs)}
-          total={`$${fmt(outputs.bcso)}`}
-          emphasis
-        />
-        {outputs.scheduleAgiUsed !== null && (
-          <Line
-            label={`Schedule row used: $${fmt(outputs.scheduleAgiUsed)} combined AGI / ${inputs.numChildren} children`}
-            citation="bcso_schedule_table"
+        {/* Sections */}
+        {wdm.sections.map((section: WDMSection) => (
+          <SectionBlock
+            key={section.id}
+            section={section}
+            inputs={inputs}
+            outputs={outputs}
           />
-        )}
-        {outputs.bcsoAboveCapBreakdown && (
-          <>
-            <Line
-              label={`Top of schedule (${inputs.numChildren} ${inputs.numChildren === 1 ? "child" : "children"} at $28,250 combined AGI)`}
-              total={`$${fmt(outputs.bcsoAboveCapBreakdown.topOfSchedule)}`}
-            />
-            <Line
-              label="Combined AGI in excess of schedule cap"
-              total={`$${fmt(outputs.bcsoAboveCapBreakdown.excessAGI)}`}
-            />
-            <Line
-              label={`Above-cap rate × excess (${(outputs.bcsoAboveCapBreakdown.rate * 100).toFixed(2)}%)`}
-              citation="above_cap"
-              total={`+ $${fmt(outputs.bcsoAboveCapBreakdown.addition)}`}
-            />
-          </>
-        )}
-        {(() => {
-          // Mirror PDF Line 7: under equal parenting the variable
-          // multiplier collapses pro-rata shares into a single net
-          // cross-credit. Render the post-multiplier "Adjusted BCSO"
-          // so the line 7 → line 12 path is mechanical on the form.
-          let adjA = outputs.parentABcsoShare;
-          let adjB = outputs.parentBBcsoShare;
-          let label = "Pro-rata share of BCSO";
-          if (outputs.parentingTimeBand === "equal") {
-            label = "Adjusted BCSO (post-multiplier, Rule .04(7)(b)(2)(i))";
-            const netAbs = Math.abs(outputs.netPresumptiveSupport);
-            if (outputs.presumptiveDirection === "parent_a_to_b") {
-              adjA = netAbs;
-              adjB = 0;
-            } else if (outputs.presumptiveDirection === "parent_b_to_a") {
-              adjA = 0;
-              adjB = netAbs;
-            } else {
-              adjA = 0;
-              adjB = 0;
-            }
-          }
-          return (
-            <Line
-              n="7"
-              label={label}
-              citation="pro_rata"
-              a={`$${fmt(adjA)}`}
-              b={`$${fmt(adjB)}`}
-            />
-          );
-        })()}
+        ))}
 
-        {/* Parenting time */}
-        <SectionHeader title="IV · Parenting Time Adjustment" />
-        <Line
-          n="8"
-          label={`Band: ${outputs.parentingTimeBand}`}
-          citation={citationForParentingMode(outputs)}
-          total={
-            outputs.variableMultiplier !== null
-              ? `multiplier ${outputs.variableMultiplier.toFixed(4)}`
-              : "—"
-          }
-        />
-        <Line
-          n="9"
-          label="Net presumptive child support"
-          citation="pro_rata"
-          a=""
-          b=""
-          total={`$${fmt(outputs.netPresumptiveSupport)} ${dirLabel(outputs.presumptiveDirection, a, b)}`}
-          emphasis
-        />
-        {outputs.ssrApplied && outputs.ssrNote && (
-          <Line label={outputs.ssrNote} citation="ssr" />
+        {/* Statutory cap panel — side-by-side display per §36-5-101(e)(1)(B) */}
+        {panels.statutoryCap.engaged && (
+          <StatutoryCapPanel panel={panels.statutoryCap} />
         )}
 
-        {/* Add-ons */}
-        <SectionHeader title="V · Mandatory Add-Ons (pro-rata)" />
-        <Line
-          n="10"
-          label={`Health insurance — paid by ${inputs.healthPaidBy === "parent_a" ? a : b}`}
-          citation="addon_health"
-          total={
-            inputs.healthPremiumMonthly > 0
-              ? `$${fmt(inputs.healthPremiumMonthly)}/mo · ${a} net ${fmt(outputs.addOnHealthFromA)}`
-              : "—"
-          }
-        />
-        <Line
-          n="11"
-          label="Recurring uninsured medical (pro-rata)"
-          citation="addon_medical"
-          a={`$${fmt(inputs.uninsuredMedicalMonthly * outputs.piA)}`}
-          b={`$${fmt(inputs.uninsuredMedicalMonthly * outputs.piB)}`}
-          total={`$${fmt(inputs.uninsuredMedicalMonthly)}/mo`}
-        />
-        <Line
-          n="12"
-          label={`Work-related childcare — paid by ${inputs.childcarePaidBy === "parent_a" ? a : b}`}
-          citation="addon_childcare"
-          total={
-            inputs.childcareMonthly > 0
-              ? `$${fmt(inputs.childcareMonthly)}/mo · ${a} net ${fmt(outputs.addOnChildcareFromA)}`
-              : "—"
-          }
-        />
+        {!panels.statutoryCap.engaged && panels.statutoryCap.capNote && (
+          <div className="border-t border-rule bg-cream px-6 py-3 text-[11px] leading-relaxed text-muted-foreground">
+            {panels.statutoryCap.capNote}
+          </div>
+        )}
 
-        {/* Deviations */}
-        {(inputs.includePrivateSchool || inputs.includeSpecialExpenses) && (
-          <>
-            <SectionHeader title="VI · Discretionary Deviations" />
-            {inputs.includePrivateSchool && (
-              <Line
-                n="13"
-                label="Private school tuition (deviation, pro-rata)"
-                citation="private_school"
-                total={`$${fmt(outputs.privateSchoolMonthlyTotal)}/mo · ${a} net ${fmt(outputs.privateSchoolDeviationFromA)}`}
-              />
+        {panels.equalParentingLowSupportNote && (
+          <div className="border-t border-rule bg-primary/5 px-6 py-4 text-[11px] leading-relaxed text-ink">
+            <div className="mb-1 font-semibold">Why is this support amount so low?</div>
+            {panels.equalParentingLowSupportNote}
+          </div>
+        )}
+
+        {/* Methodology footnote — mirrors the AOC PDF page-2 footnote so
+            the on-screen worksheet explains itself the same way. */}
+        {panels.deviationMethodologyNote && (
+          <div className="border-t border-rule bg-cream/60 px-6 py-3 text-[10px] leading-relaxed text-muted-foreground">
+            {panels.deviationMethodologyNote}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="border-t border-rule bg-cream px-6 py-4 text-[10px] text-muted-foreground">
+          Calculated using the Tennessee Child Support Guidelines under Rule
+          1240-02-04, schedule effective {header.scheduleEffectiveDate}. This
+          worksheet is an estimate and not legal advice. Consult a licensed
+          Tennessee attorney for your specific case.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Renders a WDM section: section header, each line, plus the inline
+ * sub-rows that aren't yet promoted into the WDM (income SourceLine
+ * under Line 3, special-expenses threshold note under Line 14a).
+ */
+function SectionBlock({
+  section,
+  inputs,
+  outputs,
+}: {
+  section: WDMSection;
+  inputs: CalcInputs;
+  outputs: CalcOutputs;
+}) {
+  return (
+    <>
+      <SectionHeader title={section.title} />
+      {section.lines.map((line, idx) => {
+        const key = `${section.id}-${line.screenLineNo ?? "x"}-${idx}`;
+        return (
+          <Fragment key={key}>
+            <LineRow line={line} />
+            {line.subSource && (
+              <SourceLine a={line.subSource.a} b={line.subSource.b} />
             )}
-            {inputs.includeSpecialExpenses && (
-              <>
-                <Line
-                  n="14"
-                  label="Special expenses — 7% of BCSO threshold"
-                  citation="special_expenses"
-                  total={`Threshold $${fmt(outputs.specialExpensesThresholdAmount)}/mo`}
-                />
-                <Line
-                  n="14a"
-                  label={
-                    outputs.specialExpensesIncludedAsDeviation > 0
-                      ? "Amount counted as deviation (excess of threshold)"
-                      : "Within presumed coverage — no deviation"
-                  }
-                  total={
-                    outputs.specialExpensesIncludedAsDeviation > 0
-                      ? `$${fmt(outputs.specialExpensesIncludedAsDeviation)}/mo · ${a} net ${fmt(outputs.specialExpensesDeviationFromA)}`
-                      : "—"
-                  }
-                />
+            {/* Special-expenses threshold sub-note: appears once, right
+                after Line 14a. Not yet carried in the WDM — derived from
+                inputs/outputs here. Promotion tracked for Phase D. */}
+            {section.id === "deviations" &&
+              line.screenLineNo === "14a" &&
+              inputs.includeSpecialExpenses && (
                 <div className="border-b border-rule bg-cream/40 px-3 py-2 text-[11px] leading-snug text-muted-foreground">
                   {specialExpensesThresholdLine({
                     monthly: (inputs.specialExpensesAnnual || 0) / 12,
@@ -446,85 +297,13 @@ export function OfficialWorksheet({
                     basis: outputs.specialExpensesIncludedAsDeviation,
                   })}
                 </div>
-              </>
-            )}
-          </>
-        )}
-
-
-        {/* Final */}
-        <SectionHeader title="VII · Final Order" />
-        <Line
-          n="15"
-          label="All-in monthly obligation"
-          citation="fcso"
-          total={`$${fmt(outputs.allInMonthly)} ${dirLabel(outputs.allInDirection, a, b)}`}
-          emphasis
-        />
-        <Line
-          n="16"
-          label="Annual"
-          total={`$${fmt(outputs.allInAnnual)}`}
-        />
-
-        {/* Statutory cap panel — side-by-side display per §36-5-101(e)(1)(B) */}
-        {outputs.pcsoExceedsStatutoryMax && (
-          <div className="border-t border-rule bg-cream px-6 py-4 text-[11px] leading-relaxed text-ink">
-            <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Statutory Presumptive Cap · Tenn. Code Ann. §36-5-101(e)(1)(B)
-            </div>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-1 font-mono text-[11px] sm:max-w-md">
-              <div>Calculated PCSO</div>
-              <div className="text-right">${fmt(Math.abs(outputs.allInMonthlyFromA) + Math.abs(outputs.federalBenefitOffsetFromA))}/mo</div>
-              <div>Statutory cap ({inputs.numChildren} {inputs.numChildren === 1 ? "child" : "children"})</div>
-              <div className="text-right">${fmt(outputs.pcsoStatutoryMax)}/mo</div>
-              <div className="border-t border-rule pt-1 font-semibold">Excess subject to recipient's burden</div>
-              <div className="border-t border-rule pt-1 text-right font-semibold">${fmt(outputs.pcsoExcessOverCap)}/mo · ${fmt(outputs.pcsoExcessOverCap * 12)}/yr</div>
-            </div>
-            {outputs.pcsoCapNote && (
-              <p className="mt-3 text-[11px] leading-relaxed">{outputs.pcsoCapNote}</p>
-            )}
-            {CITATIONS.pcso_max.caseNote && (
-              <p className="mt-3 border-t border-rule pt-3 text-[11px] italic leading-relaxed text-muted-foreground">
-                {CITATIONS.pcso_max.caseNote}
-              </p>
-            )}
-          </div>
-        )}
-
-        {!outputs.pcsoExceedsStatutoryMax && outputs.pcsoBelowCapNote && (
-          <div className="border-t border-rule bg-cream px-6 py-3 text-[11px] leading-relaxed text-muted-foreground">
-            {outputs.pcsoBelowCapNote}
-          </div>
-        )}
-
-        {outputs.equalParentingLowSupportNote && (
-          <div className="border-t border-rule bg-primary/5 px-6 py-4 text-[11px] leading-relaxed text-ink">
-            <div className="mb-1 font-semibold">Why is this support amount so low?</div>
-            {outputs.equalParentingLowSupportNote}
-          </div>
-        )}
-
-        {/* Methodology footnote — mirrors the AOC PDF page-2 footnote so
-            the on-screen worksheet explains itself the same way. */}
-        {(inputs.includePrivateSchool || inputs.includeSpecialExpenses) && (
-          <div className="border-t border-rule bg-cream/60 px-6 py-3 text-[10px] leading-relaxed text-muted-foreground">
-            {DEVIATION_METHODOLOGY_NOTE}
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="border-t border-rule bg-cream px-6 py-4 text-[10px] text-muted-foreground">
-          Calculated using the Tennessee Child Support Guidelines under Rule
-          1240-02-04, schedule effective{" "}
-          {outputs.scheduleEffectiveDate}. This worksheet is an estimate and
-          not legal advice. Consult a licensed Tennessee attorney for your
-          specific case.
-        </div>
-      </div>
-
-      {/* Download buttons live at the top of the worksheet view; the
-          footer-level button is redundant with the dual-mode controls. */}
-    </div>
+              )}
+          </Fragment>
+        );
+      })}
+    </>
   );
 }
+
+// Local Fragment import to keep the JSX above clean.
+import { Fragment } from "react";
