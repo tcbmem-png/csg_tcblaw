@@ -486,20 +486,21 @@ export async function renderMSWorksheetPdf(args: {
   row(ctx, { n: "8", label: "Monthly Adjusted Gross Income", total: fmt2(outputs.monthlyAGI), emphasis: true });
 
   if (inputs.agiBasis === "imputed") {
-    const basis: string[] = [];
-    if (inputs.imputationBasis.pastEarnings) basis.push("past earnings and employment history");
-    if (inputs.imputationBasis.jobSkills) basis.push("job skills and educational attainment");
-    if (inputs.imputationBasis.localMarket) basis.push("local job market & prevailing earnings");
-    if (inputs.imputationBasis.availableEmployers) basis.push("available employers willing to hire");
-    if (inputs.imputationBasis.other)
-      basis.push(`other factors${inputs.imputationBasis.note ? ` (${inputs.imputationBasis.note})` : ""}`);
-    calloutBox(
-      ctx,
-      "Imputed income — § 43-19-101(5)",
-      basis.length
-        ? `Basis: ${basis.join("; ")}.`
-        : "Basis not specified; § 43-19-101(5) requires fact-specific findings rather than a standard amount.",
-    );
+    const factors = assertedImputationFactors(inputs.imputationBasis);
+    const asserter =
+      inputs.imputationBasis.assertedBy === "obligor"
+        ? inputs.obligorLabel || "Obligor"
+        : inputs.imputationBasis.assertedBy === "obligee"
+          ? inputs.obligeeLabel || "Obligee"
+          : null;
+    const lead = asserter ? `Asserted by ${asserter}. ` : "";
+    const scenario = outputs.imputationActive
+      ? ` Scenario: actual $${Math.round(outputs.actualAnnualGross).toLocaleString("en-US")}/yr blended with imputed $${Math.round(outputs.imputedAnnualGross).toLocaleString("en-US")}/yr at ${outputs.imputationApplicationPct}% (scenario modeling — not a court determination).`
+      : "";
+    const body = factors.length
+      ? `${lead}Twelve-factor basis: ${factors.map((f) => `${f.label} — ${f.value}`).join("; ")}.${scenario}`
+      : `${lead}Basis not yet documented; § 43-19-101(5) requires fact-specific findings rather than a standard amount.${scenario}`;
+    calloutBox(ctx, "Imputed income — § 43-19-101(5)", body);
   }
 
   // Threshold callouts
