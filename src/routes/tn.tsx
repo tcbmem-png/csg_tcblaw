@@ -165,6 +165,11 @@ function TNCalculatorPage() {
               />
               <IncomeHelperPanel inputs={inputs} setInputs={setInputs} />
               <CalculatorInputs inputs={inputs} setInputs={setInputs} />
+              <NarrativeOverridePanel
+                inputs={inputs}
+                caption={caption}
+                setCaption={setCaption}
+              />
             </>
           )}
           {tab === "comparison" && <ComparisonView inputs={inputs} />}
