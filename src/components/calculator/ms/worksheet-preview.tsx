@@ -8,6 +8,11 @@ import type {
 import type { CaseCaption } from "@/lib/calc/share";
 import { MSDeviationComparison } from "./deviation-comparison";
 import { assertedImputationFactors } from "@/lib/calc/ms/imputation-labels";
+import { buildReconciliation } from "@/lib/calc/ms/reconciliation";
+import {
+  computeChancellorTotals,
+  defaultChancellorDecisions,
+} from "@/lib/calc/ms/chancellor-decisions";
 
 function ImputationCallout({
   inputs,
@@ -221,14 +226,33 @@ export function MSWorksheetPreview({
           stands.
         </p>
       ) : (
-        <div className="mt-2 space-y-3">
-          {applicable.map((d) => (
-            <StructuredDeviationSummary key={d.letter} d={d} />
-          ))}
-          <Table>
-            <Row label="Total proposed deviations" total={fmt(outputs.totalDeviationsMonthly, 2)} emphasis />
-          </Table>
-        </div>
+        (() => {
+          // Per-row chancellor-reconciled contributions so the per-factor
+          // amounts walk to the bottom-line "Total proposed deviations".
+          // Without this, the section listed obligor's-proposed per row but
+          // summed to the chancellor-reconciled total — a drift bug.
+          const report = buildReconciliation(inputs);
+          const decisions =
+            inputs.chancellorDecisions ?? defaultChancellorDecisions();
+          const chancellor = computeChancellorTotals(report.rows, decisions);
+          return (
+            <div className="mt-2 space-y-3">
+              {applicable.map((d) => (
+                <StructuredDeviationSummary
+                  key={d.letter}
+                  d={d}
+                  reconciledMonthly={chancellor.perFactor[d.letter] ?? 0}
+                  pending={
+                    (decisions[d.letter]?.decision ?? "none") === "none"
+                  }
+                />
+              ))}
+              <Table>
+                <Row label="Total proposed deviations" total={fmt(outputs.totalDeviationsMonthly, 2)} emphasis />
+              </Table>
+            </div>
+          );
+        })()
       )}
 
       <SectionTitle>V. Proposed Final Monthly Award</SectionTitle>
@@ -309,15 +333,30 @@ function CaptionBlock({
   );
 }
 
-function StructuredDeviationSummary({ d }: { d: MSDeviation }) {
+function StructuredDeviationSummary({
+  d,
+  reconciledMonthly,
+  pending,
+}: {
+  d: MSDeviation;
+  reconciledMonthly: number;
+  pending: boolean;
+}) {
   return (
     <div className="rounded-md border border-rule bg-background p-3">
       <div className="flex items-baseline justify-between">
         <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           Factor ({d.letter})
         </div>
-        <div className="font-mono text-sm text-ink">
-          {fmt(d.proposedMonthly, 2)} / mo
+        <div className="text-right">
+          <div className="font-mono text-sm text-ink">
+            {fmt(reconciledMonthly, 2)} / mo
+          </div>
+          <div className="font-mono text-[10px] text-muted-foreground">
+            {pending
+              ? `proposed ${fmt(d.proposedMonthly, 2)} · chancellor pending`
+              : `proposed ${fmt(d.proposedMonthly, 2)} · chancellor reconciled`}
+          </div>
         </div>
       </div>
       <div className="mt-1 text-sm font-medium">{FACTOR_TITLES[d.letter]}</div>
