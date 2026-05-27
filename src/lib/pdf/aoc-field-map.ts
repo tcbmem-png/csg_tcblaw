@@ -576,7 +576,7 @@ const partIV: AocField[] = [
     source: (_w, inputs, o) => {
       const split = lineAaSplit(inputs, o, "parent_a", inputs.healthPaidBy, inputs.healthPremiumMonthly);
       void split;
-      const { a } = lineAaSplit(inputs, o, 0, inputs.healthPaidBy, inputs.healthPremiumMonthly);
+      const { a } = lineAaSplit(o, inputs.healthPaidBy, inputs.healthPremiumMonthly);
       return a > 0 ? fmtMoney(a) : null;
     },
   },
@@ -587,7 +587,7 @@ const partIV: AocField[] = [
     rect: { x: COL.fatherP2Money.x + VALUE_X_OFFSET, y: row(129).y, w: COL.fatherP2Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
     source: (_w, inputs, o) => {
-      const { b } = lineAaSplit(inputs, o, 0, inputs.healthPaidBy, inputs.healthPremiumMonthly);
+      const { b } = lineAaSplit(o, inputs.healthPaidBy, inputs.healthPremiumMonthly);
       return b > 0 ? fmtMoney(b) : null;
     },
   },
@@ -600,9 +600,7 @@ const partIV: AocField[] = [
     fit: moneyFit,
     source: (_w, inputs, o) => {
       if (inputs.uninsuredMedicalMonthly <= 0) return null;
-      const { a } = lineAaSplit(
-        inputs, o, 0,
-        inputs.uninsuredMedicalPaidBy === "split_pro_rata"
+      const { a } = lineAaSplit(o, inputs.uninsuredMedicalPaidBy === "split_pro_rata"
           ? "split_pro_rata"
           : inputs.uninsuredMedicalPaidBy,
         inputs.uninsuredMedicalMonthly,
@@ -618,9 +616,7 @@ const partIV: AocField[] = [
     fit: moneyFit,
     source: (_w, inputs, o) => {
       if (inputs.uninsuredMedicalMonthly <= 0) return null;
-      const { b } = lineAaSplit(
-        inputs, o, 0,
-        inputs.uninsuredMedicalPaidBy === "split_pro_rata"
+      const { b } = lineAaSplit(o, inputs.uninsuredMedicalPaidBy === "split_pro_rata"
           ? "split_pro_rata"
           : inputs.uninsuredMedicalPaidBy,
         inputs.uninsuredMedicalMonthly,
@@ -636,7 +632,7 @@ const partIV: AocField[] = [
     rect: { x: COL.motherP2Money.x + VALUE_X_OFFSET, y: row(147).y, w: COL.motherP2Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
     source: (_w, inputs, o) => {
-      const { a } = lineAaSplit(inputs, o, 0, inputs.childcarePaidBy, inputs.childcareMonthly);
+      const { a } = lineAaSplit(o, inputs.childcarePaidBy, inputs.childcareMonthly);
       return a > 0 ? fmtMoney(a) : null;
     },
   },
@@ -647,7 +643,7 @@ const partIV: AocField[] = [
     rect: { x: COL.fatherP2Money.x + VALUE_X_OFFSET, y: row(147).y, w: COL.fatherP2Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
     source: (_w, inputs, o) => {
-      const { b } = lineAaSplit(inputs, o, 0, inputs.childcarePaidBy, inputs.childcareMonthly);
+      const { b } = lineAaSplit(o, inputs.childcarePaidBy, inputs.childcareMonthly);
       return b > 0 ? fmtMoney(b) : null;
     },
   },
@@ -659,13 +655,12 @@ const partIV: AocField[] = [
     rect: { x: COL.motherP2Money.x + VALUE_X_OFFSET, y: row(156).y, w: COL.motherP2Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
     source: (_w, inputs, o) => {
-      const h = lineAaSplit(inputs, o, 0, inputs.healthPaidBy, inputs.healthPremiumMonthly).a;
+      const h = lineAaSplit(o, inputs.healthPaidBy, inputs.healthPremiumMonthly).a;
       const m = inputs.uninsuredMedicalMonthly > 0
-        ? lineAaSplit(inputs, o, 0,
-            inputs.uninsuredMedicalPaidBy === "split_pro_rata" ? "split_pro_rata" : inputs.uninsuredMedicalPaidBy,
+        ? lineAaSplit(o, inputs.uninsuredMedicalPaidBy === "split_pro_rata" ? "split_pro_rata" : inputs.uninsuredMedicalPaidBy,
             inputs.uninsuredMedicalMonthly).a
         : 0;
-      const c = lineAaSplit(inputs, o, 0, inputs.childcarePaidBy, inputs.childcareMonthly).a;
+      const c = lineAaSplit(o, inputs.childcarePaidBy, inputs.childcareMonthly).a;
       const t = h + m + c;
       return t > 0 ? fmtMoney(t) : null;
     },
@@ -677,13 +672,12 @@ const partIV: AocField[] = [
     rect: { x: COL.fatherP2Money.x + VALUE_X_OFFSET, y: row(156).y, w: COL.fatherP2Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
     source: (_w, inputs, o) => {
-      const h = lineAaSplit(inputs, o, 0, inputs.healthPaidBy, inputs.healthPremiumMonthly).b;
+      const h = lineAaSplit(o, inputs.healthPaidBy, inputs.healthPremiumMonthly).b;
       const m = inputs.uninsuredMedicalMonthly > 0
-        ? lineAaSplit(inputs, o, 0,
-            inputs.uninsuredMedicalPaidBy === "split_pro_rata" ? "split_pro_rata" : inputs.uninsuredMedicalPaidBy,
+        ? lineAaSplit(o, inputs.uninsuredMedicalPaidBy === "split_pro_rata" ? "split_pro_rata" : inputs.uninsuredMedicalPaidBy,
             inputs.uninsuredMedicalMonthly).b
         : 0;
-      const c = lineAaSplit(inputs, o, 0, inputs.childcarePaidBy, inputs.childcareMonthly).b;
+      const c = lineAaSplit(o, inputs.childcarePaidBy, inputs.childcareMonthly).b;
       const t = h + m + c;
       return t > 0 ? fmtMoney(t) : null;
     },
