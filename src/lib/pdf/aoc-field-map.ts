@@ -100,23 +100,14 @@ const prpIs = (outputs: CalcOutputs): "parent_a" | "parent_b" | "equal" => {
   return outputs.arpIdentity === "parent_a" ? "parent_b" : "parent_a";
 };
 
-/** Sum across both parents for a per-column dollar field; signed for direction. */
+/** Gross contribution split per parent for an add-on cell. */
 const lineAaSplit = (
-  inputs: CalcInputs,
   outputs: CalcOutputs,
-  /** field that signs from parent A's perspective (>0 means A owes / pays). */
-  fromA: number,
   paidBy: "parent_a" | "parent_b" | "split_pro_rata",
   totalMonthly: number,
 ): { a: number; b: number } => {
-  // The convention used by the WDM for add-ons: total monthly is the gross
-  // expense; fromA is the *net* signed transfer from A toward B (or vice-versa).
-  // For the AOC Line 8 columns we want each parent's gross contribution.
-  if (paidBy === "parent_a")
-    return { a: totalMonthly, b: 0 };
-  if (paidBy === "parent_b")
-    return { a: 0, b: totalMonthly };
-  // split_pro_rata
+  if (paidBy === "parent_a") return { a: totalMonthly, b: 0 };
+  if (paidBy === "parent_b") return { a: 0, b: totalMonthly };
   return {
     a: totalMonthly * outputs.piA,
     b: totalMonthly * outputs.piB,
