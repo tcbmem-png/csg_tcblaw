@@ -206,12 +206,8 @@ export async function renderBlocksToPdf(
   meta: AnnotatedPdfMeta,
   assets: AnnotatedPdfAssets,
 ): Promise<Uint8Array> {
-  const vfs = new VirtualFileSystem();
-  vfs.writeFileSync(FONT_DEF_FILE_NAMES.regular, Buffer.from(assets.regularFont));
-  vfs.writeFileSync(FONT_DEF_FILE_NAMES.bold, Buffer.from(assets.boldFont));
-  const printer = new PdfPrinter(buildFonts(assets), vfs);
-  // buildVfs retained for potential debug introspection; unused at runtime
-  void buildVfs;
+  const { regularPath, boldPath } = await materializeFonts(assets);
+  const printer = new PdfPrinter(buildFonts(regularPath, boldPath));
 
   const footerTpl =
     meta.footerTemplate ??
