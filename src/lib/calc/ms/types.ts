@@ -98,8 +98,7 @@ export interface MSStructuredF {
   evidence: { receipts: boolean; photos: boolean; testimony: boolean; other: boolean; otherNote: string };
 }
 
-// Factor (g) per statute: The particular shared parental arrangement.
-export interface MSStructuredParental {
+export interface MSStructuredG {
   letter: "g";
   arrangement: "standard" | "substantially_shared" | "equal" | "other" | "";
   arrangementOther: string;
@@ -120,8 +119,7 @@ export interface MSStructuredParental {
   approachOther: string;
 }
 
-// Factor (h) per statute: Total available assets of obligee, obligor, and child.
-export interface MSStructuredAssets {
+export interface MSStructuredH {
   letter: "h";
   obligor: { realEstate: number; equity: number; investments: number; retirement: number; business: number; other: number; otherNote: string };
   obligee: { realEstate: number; equity: number; investments: number; retirement: number; business: number; other: number; otherNote: string };
@@ -131,9 +129,7 @@ export interface MSStructuredAssets {
   description: string;
 }
 
-// Factor (i) per statute: Payment by obligee of child care expenses
-// (employment or disability).
-export interface MSStructuredChildcare {
+export interface MSStructuredI {
   letter: "i";
   reason: "employment" | "disability" | "no" | "";
   provider: string;
@@ -145,12 +141,6 @@ export interface MSStructuredChildcare {
   allocation: "full" | "pro_rata" | "other" | "";
   allocationOther: string;
 }
-
-// Back-compat aliases (kept so existing imports don't break, but the
-// interface NAMES above describe the actual statutory content).
-export type MSStructuredG = MSStructuredParental;
-export type MSStructuredH = MSStructuredAssets;
-export type MSStructuredI = MSStructuredChildcare;
 
 export interface MSStructuredJ {
   letter: "j";
@@ -171,9 +161,9 @@ export type MSDeviationStructured =
   | MSStructuredD
   | MSStructuredE
   | MSStructuredF
-  | MSStructuredAssets
-  | MSStructuredChildcare
-  | MSStructuredParental
+  | MSStructuredG
+  | MSStructuredH
+  | MSStructuredI
   | MSStructuredJ;
 
 /**
@@ -324,54 +314,4 @@ export interface MSOutputs {
   requiresFindingLowIncome: boolean;
   warnings: string[];
   guidelinesEffectiveDate: string;
-}
-
-// =================================================================
-// Two-attorney handoff (frontend + URL only — no auth, no server
-// storage). Lives on the share payload, not on MSInputs, so calc /
-// reconciliation stay untouched. Slate A/B carry NO obligor/obligee
-// semantics: caption.obligorLabel/obligeeLabel plus
-// HandoffState.originatingSide drive every label and PDF attribution.
-// =================================================================
-
-export type HandoffStatus = "none" | "originated" | "in_progress" | "completed";
-export type HandoffSide = "A" | "B";
-
-export interface HandoffAttorney {
-  name: string;
-  firm: string;
-}
-
-export interface HandoffState {
-  status: HandoffStatus;
-  /** Which slate (A or B) the originating attorney filled in. */
-  originatingSide: HandoffSide;
-  originatingAttorney: HandoffAttorney | null;
-  receivingAttorney: HandoffAttorney | null;
-  /** ISO timestamp set when the originator generates the handoff URL. */
-  createdAt: string | null;
-  /** ISO timestamp bumped on each receiving-side edit. */
-  lastReceivingEditAt: string | null;
-  /** ISO timestamp set when status flips to completed (incl. PDF auto-flip). */
-  completedAt: string | null;
-  /**
-   * Stable case identity for round-trip origin detection. 16-byte / 128-bit
-   * hex token generated once at first Send and preserved verbatim on every
-   * subsequent re-generate. Null on legacy URLs predating this field; in
-   * that case origin detection falls back to fingerprint(inputs+caption).
-   */
-  caseId: string | null;
-}
-
-export function defaultHandoffState(): HandoffState {
-  return {
-    status: "none",
-    originatingSide: "A",
-    originatingAttorney: null,
-    receivingAttorney: null,
-    createdAt: null,
-    lastReceivingEditAt: null,
-    completedAt: null,
-    caseId: null,
-  };
 }

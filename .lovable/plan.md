@@ -1,128 +1,116 @@
+## Goal
 
-# Phase D + E — Approved Plan (build-ready)
+Bring the MS deviation worksheet in line with the new build brief: lighter two-party per-factor input, real-time agreement/disagreement readout, a reconciliation view with monthly + cumulative dollars, and a dedicated chancellor-ready PDF. Existing FormA–FormJ structured forms remain available as Position-A-only optional detail (per your choice).
 
-All six investigation approvals received. Plan below incorporates the calibrations from the approvals message; on "Implement plan" I will execute steps 0→8 in order with a hard stop at step 3 (sample-prose checkpoint) per §3 ack.
+## What's already there (keep)
 
-## 0. Commit canonical plan doc
+- Walkthrough (`deviation-walkthrough.tsx`), entry-mode picker, single vs. side-by-side toggle.
+- Structured per-factor sub-forms (`deviation-factor-form.tsx`) and their types.
+- Light comparison view (`deviation-comparison.tsx`) — will be replaced by the new reconciliation table.
+- Existing MS worksheet PDF (`src/lib/pdf/ms-worksheet-pdf.ts`) — untouched.
 
-- Commit `docs/TN_PDF_Architecture_Plan_v1.0.md` verbatim from the attachment. No edits during commit. Future cycles cite by section number from this committed copy.
-- Operative authority order: committed plan § wins; cycle prompt §A is supplementary; this investigation §2 supersedes plan §7 until plan is updated post-cycle.
+## What changes
 
-## 1. Library + CITATIONS additions
+### 1. Per-party schema (brief §"Per-party input")
 
-- Add `pdfmake` (pure JS, Worker-safe). DejaVu Sans embedded via base64 VFS for § / → / ↑ glyph parity with the AOC. AOC pipeline untouched.
-- Cycle report will include annotated-PDF bundle-size delta (cold-start budget note only; no premature optimization).
-- Extend `CitationKey` and `CITATIONS` in `src/lib/calc/citations.ts` (additive only — `pcso_max.caseNote` left intact for now):
-  - `case.nash_v_mulle` — *Nash v. Mulle*, 846 S.W.2d 803 (Tenn. 1993)
-  - `case.richardson_v_spanos` — *Richardson v. Spanos*, 189 S.W.3d 720 (Tenn. Ct. App. 2005)
-  - `case.smallman_v_smallman` — *Smallman v. Smallman*, 689 S.W.3d 845 (Tenn. Ct. App. 2023)
-  - `case.massey_v_casals` — *Massey v. Casals*, 315 S.W.3d 788 (Tenn. Ct. App. 2009), perm. app. denied (Tenn. May 17, 2010)
-- Builders consume these by key; no string-literal citations anywhere downstream.
-- Any further authority needs surface in the cycle report under drift-prevention rule #10; no silent additions.
+Add a new shared shape used on both sides:
 
-## 2. Builder file layout
-
-```
-src/lib/pdf/annotated/
-  index.ts                      // renderAnnotatedPdf(primary, alternative?)
-  registry.ts                   // ordered Section[] + gates + dispatch
-  layout/
-    document.ts                 // pdfmake docDef shell, header/footer, fonts
-    flow.ts                     // heading | paragraph | citation | table | bullet | spacer | unbreakable
-  builders/
-    case-background.ts
-    01-income-determination.ts
-    02-agi.ts
-    03-combined-agi.ts
-    04-bcso.ts
-    05-parenting-time.ts
-    06-add-ons.ts
-    07-deviations.ts
-    08-statutory-cap.ts
-    09-final-order.ts
-    appendix-a-imputed.ts       // (primary, alternative) signature
-    appendix-b-income-method.ts
-    authority-block.ts
-  __tests__/                    // per-builder pure-function tests
-    *.test.ts
-```
-
-Registry uses a union type:
 ```ts
-type Section =
-  | { id; title; gate: (w: WDM) => boolean; build: (w: WDM) => Block[] }
-  | { id; title; gate: (p: WDM, a: WDM|null) => boolean;
-      build: (p: WDM, a: WDM|null) => Block[]; mode: 'compare' };
-```
-The compare-mode shape is the only deviation from the uniform signature, isolated to scenario-comparison appendices per plan §1.5.
+// src/lib/calc/ms/types.ts
+export type MSPartyPosition =
+  | "" | "downward" | "upward" | "apply_no_amount" | "oppose";
 
-Per-builder unit tests live under `src/lib/pdf/annotated/__tests__/` and assert: pure-function determinism, structural response to varying WDM content, no fixture identity awareness. Rendered-PDF assertions live with the six-family tests in step 6.
-
-## 3. Sample-prose checkpoint (HARD STOP)
-
-Build only:
-- `layout/document.ts` + `layout/flow.ts`
-- `registry.ts` (with entries for the three sections below registered)
-- `builders/05-parenting-time.ts`, `07-deviations.ts`, `08-statutory-cap.ts`
-- Per-builder unit tests for those three
-
-Render four sample PDFs (each builder × {F02 WDM, F04 WDM}) packaged as one review bundle in `/mnt/documents/annotated-sample/`, plus source diff. **Stop. Wait for sign-off.** No further sections built until checkpoint passes.
-
-Reinforcement: builders are fixture-agnostic; F02/F04 are just two WDM inputs we render to expose structural responsiveness.
-
-## 4. Remaining builder set (post-checkpoint)
-
-Build the rest of §§I–IX + Appendix A (compare-mode) + Appendix B + Authority Block per the registry. All builders pure, all citations via `CITATIONS[key]`, all factor lists from WDM verbatim, no editorial voice (§9 rule 9), no silent inference (§9 rule 10).
-
-## 5. Rule coverage matrix v1
-
-`src/lib/calc/__tests__/rule-coverage-matrix.ts` — one `RuleCoverageEntry` per `CitationKey` (~34 including the four new case keys), plus deferred entries:
-- SPLIT custody — `deferred: { reason: 'v1.1 — TBJ Editorial Note 111' }`
-- Non-parent caretaker — same reason
-
-## 6. Six-family test scaffolding
-
-```
-src/lib/calc/__tests__/
-  rule-coverage-matrix.ts
-  family-1-consistency.test.ts
-  family-2-citation-completeness.test.ts
-  family-3-aoc-purity.test.ts
-  family-4-advocacy-audit.test.ts
-  family-5-branch-roundtrip.test.ts
-  family-6-rule-traceability.test.ts        // forward + reverse; SKIPS deferred rows
-  fixtures/
-    loader.ts
-    index.ts
-    f01..fNN/inputs.ts
-  utils/
-    pdf-text.ts
-    advocacy-lexicon.ts
+export interface MSPartyEntry {
+  position: MSPartyPosition;
+  factsAsserted: string;
+  documentationReferenced: string;
+  proposedMonthly: number;     // signed; blank = 0
+  legalAuthority: string;
+}
 ```
 
-Family-6 reverse coverage explicitly skips matrix entries flagged `deferred` (confirmed per §4 calibration).
+Extend `MSDeviation`:
+```ts
+party?: MSPartyEntry;          // populated for whichever side this slate represents
+```
 
-## 7. Fixture set (~14–18)
+Position A's slate may still hold `structured` (the elaborate FormA–FormJ). Position B's slate carries `party` only.
 
-Sampling matrix per investigation §2 across the eight dimensions. Per-fixture `inputs.ts` headers name dimension coordinates only — no Berger/TBJ identity tagging. Mandatory cap-engagement coverage:
-- ≥1 above-cap fixture where user elects **"schedule cap controls"** (PCSO held at statutory max)
-- ≥1 above-cap fixture where user elects **"additional support warranted"** (PCSO at calculated above-cap figure)
-Both exercise the burden-shift Category-C judgment branches in §VIII.
+### 2. "Is this factor in play?" selector
 
-## 8. Sign-off run
+Above the per-party block, a 4-state radio: *not asserted / asserted by obligor / asserted by obligee / asserted by both*. Drives `applicable` on each side and collapses the form when "not asserted by either."
 
-- All six test families green across full fixture set.
-- Rule coverage matrix forward + reverse green (deferred rows excluded from reverse).
-- Cycle report:
-  - Test output summary.
-  - Gap-additions ledger (only items already approved: the four `case.*` keys; any further additions stopped the cycle for explicit ack per §5).
-  - pdfmake bundle-size delta + cold-start note.
-  - Drift-prevention checklist (cycle prompt §F) signed off line by line.
-  - Updated `docs/TN_PDF_Architecture_Plan_v1.0.md` if any edits proposed (none planned; plan §7 update deferred to post-cycle).
+### 3. New per-factor two-column block
 
-## Out of scope
-- Pressure / boundary / random-input testing (Phase F).
-- Engine refactors; bugs surface as separate issues.
-- New CITATIONS keys beyond the four approved without explicit ack.
-- Fixture-targeting anywhere.
-- Touching `pcso_max.caseNote` or any existing AOC pipeline behavior.
+Component `MSPartyFactorBlock` rendering two `MSPartyEntry` editors side by side with the brief's five fields + factor-specific help text (medical/asset/seasonal/etc. prompts pulled from the brief's per-factor "Help text" lines).
+
+Existing structured FormA–FormJ rendered below Position A's column as an `<details>` "Detailed evidence (optional)" disclosure — preserved for users who want the deeper capture.
+
+### 4. Real-time comparison row
+
+Computes per-factor state from both `party` entries and renders one of:
+- Both agree, same amount → "Parties agree: factor applies, $X/mo. Net: [up/down]."
+- Both apply, different amounts → "Both apply; differ on amount. Obligor $X; obligee $Y. Gap: $|X−Y|/mo."
+- One asserts, other opposes → "Asserted by [side]; opposed by [other]. Magnitude if granted: $X/mo."
+- Neither → collapsed (just the header).
+
+Lives at the bottom of each factor card; pure presentational helper in `deviation-factor-form.tsx`.
+
+### 5. Reconciliation view
+
+Replaces `deviation-comparison.tsx` with `MSDeviationReconciliation`:
+
+- Table: factor letter | in play? | obligor position | obligee position | obligor $ | obligee $ | gap $.
+- Totals row: obligor total / obligee total / net difference (monthly).
+- Cumulative row: net difference × `avgMonthsRemaining`, where:
+  ```
+  avgMonthsRemaining = clamp( mean( max(0, 21 - age_i) ) * 12, 0, 21*12 )
+  ```
+  Uses a new optional `childAges: number[]` input. When empty, the cumulative row shows "Enter child ages to see cumulative impact" rather than guessing.
+- "See full comparison" link from the result sidebar already exists for TN; mirror it on MS.
+
+### 6. Child ages input
+
+Add `childAges: number[]` to `MSInputs` (defaulted to `[]` so existing state is forward-compatible). Surface in `ms/inputs.tsx` near `numChildren` as a comma-separated list with the existing monthly-hint pattern (keeps Option-2 minimalism).
+
+### 7. Dedicated Deviation Worksheet PDF
+
+New file `src/lib/pdf/ms-deviation-pdf.ts`, generated alongside the existing MS worksheet PDF. Sections:
+
+1. **Case Information** — parties, attorneys, children + ages, statutory %, presumptive monthly (pulled from existing MS outputs).
+2. **Deviation Analysis by Factor** — for each factor, full statutory text, in-play state, two-column per-party content (position, facts verbatim, docs, authority, $), gap line. Non-asserted factors collapse to a single line.
+3. **Reconciliation Summary** — same table as on-screen + monthly + cumulative totals.
+4. **Proposed Final Order** — presumptive ± deviation = proposed final monthly; blank findings block; signature line.
+5. Footer — disclaimer, citation to https://csg.tcblaw.org/ms, repo URL.
+
+Wired into MS result sidebar as a second download button: "Download deviation worksheet (PDF)" next to the existing worksheet download.
+
+### 8. Persistence + sharing
+
+`MSPartyEntry` and `childAges` are plain serializable data; they ride along on the existing localStorage save and shareable-URL encode in `src/lib/calc/ms/share.ts` without schema-version bump — just additive fields with safe defaults during decode.
+
+### 9. Acceptance checks
+
+- Walkthrough still works; "Yes, this factor applies" now opens the two-party block (not just the structured form).
+- Side-by-side mode replaced by the new always-two-party layout; the `comparisonMode` toggle becomes "Show opposing party column" (kept for users who don't have the other side's position).
+- `ms/calc.ts` total still derives from `deviationsA[*].proposedMonthly` for the obligor-side worksheet math; obligee totals are display-only.
+- All existing MS calc tests pass (no engine changes).
+- New unit tests for the reconciliation aggregator (gap math, cumulative when ages missing/present).
+
+## Files touched
+
+- **Types:** `src/lib/calc/ms/types.ts` (add `MSPartyEntry`, `MSPartyPosition`, `childAges`).
+- **Inputs UI:** `src/components/calculator/ms/inputs.tsx` (child ages field).
+- **Factor UI:** `src/components/calculator/ms/deviation-factor-form.tsx` (new `MSPartyFactorBlock`, in-play selector, real-time row; existing FormA–FormJ wrapped in disclosure).
+- **Walkthrough:** `src/components/calculator/ms/deviation-walkthrough.tsx` (use new block; widen "applies?" to 4-state).
+- **Reconciliation:** replace `deviation-comparison.tsx` with `deviation-reconciliation.tsx`; keep export alias for now.
+- **Sidebar:** `src/components/calculator/ms/result-sidebar.tsx` (deviation PDF button + reconciliation link).
+- **PDF:** new `src/lib/pdf/ms-deviation-pdf.ts` + wire-up in MS route.
+- **Share:** `src/lib/calc/ms/share.ts` (decode defaults for new fields).
+- **Tests:** new `src/lib/calc/ms/__tests__/reconciliation.test.ts`.
+
+## Out of scope (per brief §"What Should NOT Be in This Module")
+
+- No new calc math beyond reconciliation aggregation; the chancellor decides.
+- No Option-1 MS monthly engine refactor (still queued separately).
+- No DB persistence — same localStorage + URL share story as today.

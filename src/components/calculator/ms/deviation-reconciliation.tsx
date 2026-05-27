@@ -3,7 +3,6 @@
  * "The Reconciliation View". Always renders both sides; in single-position
  * mode the obligee column is suppressed.
  */
-import { useState } from "react";
 import type { MSInputs } from "@/lib/calc/ms/types";
 import {
   buildReconciliation,
@@ -35,7 +34,6 @@ export function MSDeviationReconciliation({ inputs }: { inputs: MSInputs }) {
     inputs.comparisonMode === "side_by_side" && !!inputs.deviationsB;
   const report = buildReconciliation(inputs);
   const { activeRows, totals } = report;
-  const [showEmancipation, setShowEmancipation] = useState(false);
 
   return (
     <section
@@ -52,50 +50,11 @@ export function MSDeviationReconciliation({ inputs }: { inputs: MSInputs }) {
             : inputs.obligorLabel}
         </span>
       </header>
-      <p className="mb-2 text-xs text-muted-foreground">
+      <p className="mb-4 text-xs text-muted-foreground">
         Both positions are proposals; the chancellor retains discretion under
         § 43-19-103. Cumulative figures assume support continues through age 21
-        (Miss. Code Ann. § 93-11-65) averaged across the listed children.{" "}
-        <button
-          type="button"
-          onClick={() => setShowEmancipation((v) => !v)}
-          aria-expanded={showEmancipation}
-          aria-controls="ms-emancipation-triggers"
-          className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-rule text-[10px] font-medium text-muted-foreground hover:bg-accent/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 no-print"
-          title="Earlier-emancipation triggers per § 93-11-65(8)"
-        >
-          i
-        </button>
+        (Miss. Code Ann. § 93-11-65) averaged across the listed children.
       </p>
-      {showEmancipation && (
-        <div
-          id="ms-emancipation-triggers"
-          className="mb-4 rounded-md border border-rule bg-cream p-3 text-xs text-ink no-print"
-        >
-          <div className="font-medium">
-            Earlier-emancipation triggers — Miss. Code Ann. § 93-11-65(8)
-          </div>
-          <p className="mt-1 text-muted-foreground">
-            The age-21 assumption above does not hold if any of the following
-            occur first as to a given child:
-          </p>
-          <ul className="mt-2 list-disc space-y-0.5 pl-5">
-            <li>Marriage</li>
-            <li>Military service</li>
-            <li>
-              Felony conviction with a sentence of two (2) or more years
-            </li>
-            <li>
-              Discontinuance of full-time school enrollment (absent disability)
-            </li>
-          </ul>
-          <p className="mt-2 text-[11px] text-muted-foreground">
-            Cumulative figures here are projections, not adjudications;
-            confirm against the child's actual circumstances.
-          </p>
-        </div>
-      )}
-
 
       {activeRows.length === 0 ? (
         <p className="text-sm text-muted-foreground">

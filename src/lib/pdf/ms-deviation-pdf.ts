@@ -13,7 +13,7 @@
  *   4. Proposed Final Order (blank findings + signature line)
  *   5. Footer (disclaimer, authority, repo)
  */
-import type { MSInputs, MSOutputs, MSFactorLetter, HandoffState } from "@/lib/calc/ms/types";
+import type { MSInputs, MSOutputs, MSFactorLetter } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import {
   buildReconciliation,
@@ -193,45 +193,9 @@ const POSITION_LABEL: Record<string, string> = {
   "": "(no position recorded)",
 };
 
-/**
- * Per-row attribution string for one side of the deviation worksheet.
- *
- * Role-led format: chancellor reads "Per counsel for {role} — {name}
- * ({firm})" rather than a slate letter. The role label ("Obligor" /
- * "Obligee") comes from the inputs, which derive from the case caption
- * and are the terms a court cares about. Slate ("A"/"B") is only used
- * internally to look up which attorney filled in this column.
- *
- * Returns `null` when there is no handoff (single-attorney workflow);
- * the column header is then just the party label, unchanged from the
- * pre-handoff PDF.
- */
-function attributionFor(
-  handoff: HandoffState | undefined,
-  slate: "A" | "B",
-  roleLabel: string,
-): string | null {
-  if (!handoff || handoff.status === "none") return null;
-  const isOriginating = slate === handoff.originatingSide;
-  const prefix = isOriginating
-    ? `Per counsel for ${roleLabel}`
-    : `Per opposing counsel for ${roleLabel}`;
-  const att = isOriginating
-    ? handoff.originatingAttorney
-    : handoff.receivingAttorney;
-  const name = att?.name?.trim();
-  const firm = att?.firm?.trim();
-  if (!name && !firm) {
-    return isOriginating ? prefix : `${prefix} (name not provided)`;
-  }
-  if (name && firm) return `${prefix} — ${name} (${firm})`;
-  return `${prefix} — ${name || firm}`;
-}
-
 function partyColumn(
   ctx: Ctx,
   sideLabel: string,
-  attribution: string | null,
   d: { applicable: boolean; amount: number; entry?: { party?: { position?: string; factsAsserted?: string; documentationReferenced?: string; legalAuthority?: string }; description?: string } },
   x: number,
   width: number,
@@ -246,15 +210,6 @@ function partyColumn(
   const startY = ctx.y;
   drawText(ctx, sideLabel, x + padding, startY - 10, { size: 9, bold: true });
   let y = startY - 10 - labelLh;
-
-  // Attribution sub-line — present only when a handoff is in effect.
-  if (attribution) {
-    drawText(ctx, attribution, x + padding, y - lineSize, {
-      size: lineSize,
-      color: MUTED,
-    });
-    y -= lh;
-  }
 
   if (!d.applicable) {
     drawText(ctx, "Not asserted by this party.", x + padding, y - lineSize, {
@@ -333,7 +288,6 @@ function factorBlock(
   row: ReconciliationRow,
   inputs: MSInputs,
   sideBySide: boolean,
-  handoff: HandoffState | undefined,
 ) {
   ensure(ctx, 80);
 
@@ -365,9 +319,6 @@ function factorBlock(
     return;
   }
 
-  const obligorAttribution = attributionFor(handoff, "A", inputs.obligorLabel || "Obligor");
-  const obligeeAttribution = attributionFor(handoff, "B", inputs.obligeeLabel || "Obligee");
-
   // Per-party columns
   if (sideBySide) {
     const gap = 8;
@@ -376,7 +327,6 @@ function factorBlock(
     const leftEndY = partyColumn(
       ctx,
       inputs.obligorLabel,
-      obligorAttribution,
       row.obligor,
       MARGIN,
       colW,
@@ -386,7 +336,6 @@ function factorBlock(
     const rightEndY = partyColumn(
       ctx,
       inputs.obligeeLabel,
-      obligeeAttribution,
       row.obligee,
       MARGIN + colW + gap,
       colW,
@@ -408,7 +357,6 @@ function factorBlock(
     const endY = partyColumn(
       ctx,
       inputs.obligorLabel,
-      obligorAttribution,
       row.obligor,
       MARGIN,
       ROW_W,
@@ -642,26 +590,12 @@ function proposedFinalOrder(ctx: Ctx, inputs: MSInputs, outputs: MSOutputs) {
   ctx.y -= 20;
 }
 
-function fmtDate(iso: string | null): string {
-  if (!iso) return "";
-  try {
-    return new Date(iso).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
-
 export function renderMSDeviationPdf(args: {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
-  handoff?: HandoffState;
 }): Uint8Array {
-  const { inputs, outputs, caption, handoff } = args;
+  const { inputs, outputs, caption } = args;
   const report = buildReconciliation(inputs);
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && !!inputs.deviationsB;
@@ -679,9 +613,11 @@ export function renderMSDeviationPdf(args: {
     `Miss. Code Ann. § 43-19-103 (criteria for overcoming the presumption). Guidelines effective ${outputs.guidelinesEffectiveDate}.`,
   );
 
+  // I. Case Information
   h2(ctx, "I. Case Information");
   captionBlock(ctx, inputs, caption);
 
+  // II. Deviation Analysis by Factor
   h2(ctx, "II. Deviation Analysis by Factor");
   paragraph(
     ctx,
@@ -694,33 +630,21 @@ export function renderMSDeviationPdf(args: {
   for (const letter of letters) {
     const row = report.rows.find((r) => r.letter === letter);
     if (!row) continue;
-    factorBlock(ctx, row, inputs, sideBySide, handoff);
+    factorBlock(ctx, row, inputs, sideBySide);
   }
 
+  // III. Reconciliation Summary
   newPage(ctx);
   h2(ctx, "III. Reconciliation Summary");
   reconciliationTable(ctx, report, inputs, sideBySide);
 
+  // IV. Proposed Final Order
   ctx.y -= 8;
   proposedFinalOrder(ctx, inputs, outputs);
 
+  // Footer
   ctx.y -= 4;
   rule(ctx);
-
-  // Handoff completion footer (addition #3 — labeled to avoid being
-  // misread as filing or signature date).
-  if (handoff && handoff.status === "completed") {
-    const origName = handoff.originatingAttorney?.name || "originating counsel";
-    const recvName =
-      handoff.receivingAttorney?.name ||
-      "opposing counsel (name not provided)";
-    paragraph(
-      ctx,
-      `Two-attorney handoff. Originating counsel: ${origName}${handoff.originatingAttorney?.firm ? ` (${handoff.originatingAttorney.firm})` : ""}. Receiving counsel: ${recvName}${handoff.receivingAttorney?.firm ? ` (${handoff.receivingAttorney.firm})` : ""}. Worksheet completed in calculator: ${fmtDate(handoff.completedAt)}.`,
-      { size: 8, color: MUTED },
-    );
-  }
-
   paragraph(
     ctx,
     "This deviation worksheet is a calculation and presentation aid produced by TCB Law's Mississippi child support calculator. It is not legal advice and is not an official MDHS form. Authority: Miss. Code Ann. § 43-19-103. Source: https://csg.tcblaw.org/ms — repository: https://github.com/tcbmem-png/csg_tcblaw.",
@@ -735,7 +659,6 @@ export function downloadMSDeviationPdf(args: {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
-  handoff?: HandoffState;
   filename?: string;
 }) {
   const bytes = renderMSDeviationPdf(args);

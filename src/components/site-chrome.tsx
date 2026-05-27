@@ -9,18 +9,9 @@ function detectState(pathname: string): StateCode {
   return null;
 }
 
-const GITHUB_URL = "https://github.com/tcbmem-png/csg_tcblaw";
-const FIRM_URL = "https://tcblaw.org";
-
 export function SiteHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const state = detectState(pathname);
-
-  const stateLinkClass = (active: boolean) =>
-    "transition-colors " +
-    (active
-      ? "text-primary font-medium"
-      : "text-muted-foreground hover:text-primary");
 
   return (
     <header className="border-b border-rule bg-background no-print">
@@ -32,44 +23,104 @@ export function SiteHeader() {
           <span className="font-serif text-xl text-ink">
             Child Support Calculator
           </span>
+          {state && (
+            <span className="ml-1 rounded border border-rule px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {state}
+            </span>
+          )}
         </Link>
-        <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          <Link to="/tn" className={stateLinkClass(state === "TN")}>
-            {state === "TN" ? "[Tennessee]" : "Tennessee"}
-          </Link>
-          <Link to="/ms" className={stateLinkClass(state === "MS")}>
-            {state === "MS" ? "[Mississippi]" : "Mississippi"}
-          </Link>
-          <Link
-            to="/about"
-            className="text-muted-foreground transition-colors hover:text-primary"
-            activeProps={{ className: "text-primary font-medium" }}
-          >
-            About
-          </Link>
-          <a
-            href={GITHUB_URL}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="text-muted-foreground transition-colors hover:text-primary"
-          >
-            Open source
-          </a>
-          <a
-            href={FIRM_URL}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="text-muted-foreground/80 transition-colors hover:text-primary"
-          >
-            TCB.Law <span aria-hidden>→</span>
-          </a>
+        <nav className="flex items-center gap-5 text-sm">
+          {state === "MS" ? (
+            <>
+              <Link
+                to="/ms"
+                className="text-muted-foreground transition-colors hover:text-primary"
+                activeProps={{ className: "text-primary font-medium" }}
+                activeOptions={{ exact: true }}
+              >
+                Calculator
+              </Link>
+              <Link
+                to="/ms/how-it-works"
+                className="text-muted-foreground transition-colors hover:text-primary"
+                activeProps={{ className: "text-primary font-medium" }}
+              >
+                How it works
+              </Link>
+              <Link
+                to="/ms/about"
+                className="text-muted-foreground transition-colors hover:text-primary"
+                activeProps={{ className: "text-primary font-medium" }}
+              >
+                About
+              </Link>
+            </>
+          ) : state === "TN" ? (
+            <>
+              <Link
+                to="/tn"
+                className="text-muted-foreground transition-colors hover:text-primary"
+                activeProps={{ className: "text-primary font-medium" }}
+                activeOptions={{ exact: true }}
+              >
+                Calculator
+              </Link>
+              <Link
+                to="/tn/how-it-works"
+                className="text-muted-foreground transition-colors hover:text-primary"
+                activeProps={{ className: "text-primary font-medium" }}
+              >
+                How it works
+              </Link>
+              <Link
+                to="/tn/why-we-built-this"
+                className="text-muted-foreground transition-colors hover:text-primary"
+                activeProps={{ className: "text-primary font-medium" }}
+              >
+                Why we built this
+              </Link>
+              <Link
+                to="/tn/about"
+                className="text-muted-foreground transition-colors hover:text-primary"
+                activeProps={{ className: "text-primary font-medium" }}
+              >
+                About
+              </Link>
+
+            </>
+          ) : (
+            <>
+              <Link
+                to="/tn"
+                className="text-muted-foreground transition-colors hover:text-primary"
+              >
+                Tennessee
+              </Link>
+              <Link
+                to="/ms"
+                className="text-muted-foreground transition-colors hover:text-primary"
+              >
+                Mississippi
+              </Link>
+            </>
+          )}
+          {state && (
+            <Link
+              to="/"
+              className="rounded border border-rule px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            >
+              Switch state
+            </Link>
+          )}
         </nav>
       </div>
     </header>
   );
 }
 
+
 const APP_VERSION = "v1.0.0";
+const GITHUB_URL = "https://github.com/tcbmem-png/csg_tcblaw";
 
 export function SiteFooter() {
   return (
@@ -112,31 +163,11 @@ export function SiteFooter() {
               </a>
             </div>
           </div>
-          <div className="max-w-xs text-xs">
+          <div className="text-xs">
+            <div>Not legal advice. For estimates only.</div>
             <div>
-              Maintained by{" "}
-              <a
-                href={FIRM_URL}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="underline decoration-rule underline-offset-2 hover:text-primary hover:decoration-primary"
-              >
-                TCB Law, PLLC
-              </a>{" "}
-              &mdash; Memphis &amp; Oxford, Mississippi.
-            </div>
-            <div className="mt-1">
-              Issues, corrections, contributions:{" "}
-              <a
-                href="mailto:taylor@tcblaw.org"
-                className="underline decoration-rule underline-offset-2 hover:text-primary hover:decoration-primary"
-              >
-                taylor@tcblaw.org
-              </a>
-            </div>
-            <div className="mt-3 text-muted-foreground">
-              Not legal advice. For estimates only. Consult a licensed
-              attorney in your state for guidance on your specific case.
+              Consult a licensed attorney in your state for guidance on your
+              specific case.
             </div>
           </div>
         </div>

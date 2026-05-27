@@ -1,10 +1,6 @@
 import { useState } from "react";
 import type { CalcInputs, CalcOutputs, Direction } from "@/lib/calc/types";
-import type { CaseCaption } from "@/lib/calc/share";
-import { defaultCaption } from "@/lib/calc/share";
 import { computeScenarioPair, hasImputation } from "@/lib/calc/scenarios";
-import { citationForBcso } from "@/lib/calc/citation-resolvers";
-import { RuleInfo } from "./rule-info";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -19,48 +15,20 @@ function directionLabel(d: Direction, a: string, b: string) {
 export function ResultSidebar({
   inputs,
   outputs,
-  caption = defaultCaption(),
   onViewWorksheet,
   onViewComparison,
 }: {
   inputs: CalcInputs;
   outputs: CalcOutputs;
-  caption?: CaseCaption;
   onViewWorksheet: () => void;
   onViewComparison?: () => void;
 }) {
-  const [printing, setPrinting] = useState(false);
-  async function downloadAnnotated() {
-    if (printing) return;
-    setPrinting(true);
-    try {
-      const { renderWorksheetPdf } = await import("@/lib/pdf/worksheet-pdf");
-      const bytes = await renderWorksheetPdf({ inputs, outputs, caption });
-      const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      const base = (caption.matterName || caption.docketNumber || "tn-child-support-worksheet")
-        .replace(/[^A-Za-z0-9_-]+/g, "-")
-        .replace(/^-+|-+$/g, "") || "tn-child-support-worksheet";
-      a.download = `${base}-annotated.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } finally {
-      setPrinting(false);
-    }
-  }
   return (
     <div className="rounded-lg border border-rule bg-card p-5 shadow-sm">
       <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         Live result
       </div>
-      <div className="mt-1 flex items-center gap-1.5 font-serif text-sm text-ink">
-        Net presumptive support
-        <RuleInfo citation="pro_rata" />
-      </div>
+      <div className="mt-1 font-serif text-sm text-ink">Net presumptive support</div>
       <div className="mt-2 font-serif text-4xl text-primary">
         ${fmt(outputs.netPresumptiveSupport)}
         <span className="text-base text-muted-foreground"> /mo</span>
@@ -74,25 +42,22 @@ export function ResultSidebar({
       </div>
 
       <div className="mt-6 space-y-2 border-t border-rule pt-4 text-sm">
-        <Row label="Combined AGI" value={`$${fmt(outputs.combinedAGI)}/mo`} citation="agi" />
-        <Row label="BCSO" value={`$${fmt(outputs.bcso)}`} citation={citationForBcso(outputs)} />
+        <Row label="Combined AGI" value={`$${fmt(outputs.combinedAGI)}/mo`} />
+        <Row label="BCSO" value={`$${fmt(outputs.bcso)}`} />
         <Row
           label={`${inputs.parentALabel} PI`}
           value={`${(outputs.piA * 100).toFixed(2)}%`}
-          citation="pro_rata"
         />
         <Row
           label={`${inputs.parentBLabel} PI`}
           value={`${(outputs.piB * 100).toFixed(2)}%`}
-          citation="pro_rata"
         />
       </div>
 
       <div className="mt-4 rounded-md bg-cream p-3">
         <div className="text-xs text-muted-foreground">All-in monthly</div>
-        <div className="flex items-center gap-1.5 font-serif text-2xl text-ink">
+        <div className="font-serif text-2xl text-ink">
           ${fmt(outputs.allInMonthly)}
-          <RuleInfo citation="fcso" />
         </div>
         <div className="text-xs text-muted-foreground">
           {directionLabel(
@@ -115,9 +80,8 @@ export function ResultSidebar({
 
       {outputs.pcsoExceedsStatutoryMax && (
         <div className="mt-4 rounded-md border border-accent/60 bg-accent/10 p-3 text-xs leading-relaxed text-ink">
-          <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             Statutory cap check · §36-5-101(e)(1)(B)
-            <RuleInfo citation="pcso_max" />
           </div>
           <div className="space-y-1">
             <div className="flex items-baseline justify-between">
@@ -152,30 +116,21 @@ export function ResultSidebar({
 
       {outputs.equalParentingLowSupportNote && (
         <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
-          <div className="mb-1 flex items-center gap-1.5 font-semibold">
-            Why is this support amount so low?
-            <RuleInfo citation="parenting_time_5050" />
-          </div>
+          <div className="mb-1 font-semibold">Why is this support amount so low?</div>
           {outputs.equalParentingLowSupportNote}
         </div>
       )}
 
       {outputs.nonEarnerArpNote && (
         <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
-          <div className="mb-1 flex items-center gap-1.5 font-semibold">
-            Why is presumptive support $0?
-            <RuleInfo citation="parenting_time_arp_reduction" />
-          </div>
+          <div className="mb-1 font-semibold">Why is presumptive support $0?</div>
           {outputs.nonEarnerArpNote}
         </div>
       )}
 
       {outputs.zeroPresumptiveNote && (
         <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed text-ink">
-          <div className="mb-1 flex items-center gap-1.5 font-semibold">
-            Why doesn't the $100 minimum apply?
-            <RuleInfo citation="minimum" />
-          </div>
+          <div className="mb-1 font-semibold">Why doesn't the $100 minimum apply?</div>
           {outputs.zeroPresumptiveNote}
         </div>
       )}
@@ -198,12 +153,13 @@ export function ResultSidebar({
         </button>
         <button
           type="button"
-          onClick={downloadAnnotated}
-          disabled={printing}
-          className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40 disabled:opacity-60"
-          title="Downloads the annotated PDF. The worksheet view also offers the AOC-format (filing-ready) replica."
+          onClick={() => {
+            onViewWorksheet();
+            setTimeout(() => window.print(), 100);
+          }}
+          className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40"
         >
-          {printing ? "Generating…" : "Download annotated PDF"}
+          Print / Save PDF
         </button>
         <CopyLinkButton />
       </div>
@@ -215,14 +171,11 @@ export function ResultSidebar({
   );
 }
 
-function Row({ label, value, citation }: { label: string; value: string; citation?: import("@/lib/calc/citations").CitationKey }) {
+function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between">
       <span className="text-muted-foreground">{label}</span>
-      <span className="inline-flex items-center gap-1.5 font-mono text-ink">
-        {value}
-        {citation && <RuleInfo citation={citation} />}
-      </span>
+      <span className="font-mono text-ink">{value}</span>
     </div>
   );
 }

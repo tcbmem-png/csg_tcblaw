@@ -51,7 +51,7 @@ const FACTOR_HELP: Record<MSFactorLetter, string> = {
   d: "Describe the seasonal pattern. What months are high-earning vs. low-earning? Annual vs. monthly pattern?",
   e: "What ages are the children? What specific age-related expenses justify deviation?",
   f: "Describe the special need. How has the family historically met it? What is the monthly cost?",
-  g: "Describe the parenting arrangement. Number of overnights, direct expenses each parent covers, any duplicated expenses.",
+  g: "Describe the parenting arrangement. Real estate, investment accounts, business interests, inheritances. What's the approximate asset picture?",
   h: "Describe the asset picture for both parties and the child. Real estate, investments, retirement, business interests.",
   i: "What is the monthly childcare cost? Is the obligee employed, seeking employment, or disabled?",
   j: "Describe the circumstance and explain why it justifies a deviation. Equitable adjustments require specific findings.",
@@ -78,17 +78,21 @@ function defaultParty(): MSPartyEntry {
 
 interface BlockProps {
   letter: MSFactorLetter;
+  /** Position A (obligor side) deviation entry. */
   obligor: MSDeviation;
   setObligor: (next: MSDeviation) => void;
+  /** Position B (obligee side) — optional when sideBySide is false. */
   obligee?: MSDeviation;
   setObligee?: (next: MSDeviation) => void;
   obligorLabel: string;
   obligeeLabel: string;
   sideBySide: boolean;
+  /**
+   * Used by summarizeRow to compute the real-time row. When sideBySide is
+   * false we still synthesize a single-party slate so the live summary
+   * still renders.
+   */
   buildContextInputs: () => Parameters<typeof buildReconciliation>[0];
-  /** Two-attorney handoff lock — read-only slate for the originating side. */
-  obligorLocked?: boolean;
-  obligeeLocked?: boolean;
 }
 
 export function MSPartyFactorBlock({
@@ -101,8 +105,6 @@ export function MSPartyFactorBlock({
   obligeeLabel,
   sideBySide,
   buildContextInputs,
-  obligorLocked = false,
-  obligeeLocked = false,
 }: BlockProps) {
   const inPlay = inPlayFrom(obligor, obligee);
 
@@ -172,40 +174,26 @@ export function MSPartyFactorBlock({
           }
         >
           {(inPlay === "obligor" || inPlay === "both") && (
-            <div className={obligorLocked ? "pointer-events-none opacity-60" : ""}>
-              {obligorLocked && (
-                <div className="mb-1 text-[11px] text-muted-foreground">
-                  Locked — from originating counsel
-                </div>
-              )}
-              <PartyColumn
-                header={obligorLabel}
-                accent="obligor"
-                factorLetter={letter}
-                deviation={obligor}
-                onChange={setObligor}
-                showDetailDisclosure
-              />
-            </div>
+            <PartyColumn
+              header={obligorLabel}
+              accent="obligor"
+              factorLetter={letter}
+              deviation={obligor}
+              onChange={setObligor}
+              showDetailDisclosure
+            />
           )}
           {sideBySide &&
             setObligee &&
             obligee &&
             (inPlay === "obligee" || inPlay === "both") && (
-              <div className={obligeeLocked ? "pointer-events-none opacity-60" : ""}>
-                {obligeeLocked && (
-                  <div className="mb-1 text-[11px] text-muted-foreground">
-                    Locked — from originating counsel
-                  </div>
-                )}
-                <PartyColumn
-                  header={obligeeLabel}
-                  accent="obligee"
-                  factorLetter={letter}
-                  deviation={obligee}
-                  onChange={setObligee}
-                />
-              </div>
+              <PartyColumn
+                header={obligeeLabel}
+                accent="obligee"
+                factorLetter={letter}
+                deviation={obligee}
+                onChange={setObligee}
+              />
             )}
         </div>
       )}

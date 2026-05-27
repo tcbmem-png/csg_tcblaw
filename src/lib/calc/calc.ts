@@ -235,8 +235,6 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
   let ssrNote: string | null = null;
   let minimumOrderApplied = false;
   let presumptiveAfterSsr = presumptiveFromA;
-  let ssrCollapsedToZero = false;
-  let ssrObligorIsA = false;
   if (Math.abs(presumptiveFromA) > 0) {
     // Identify obligor (the parent with positive outflow).
     const obligorIsA = presumptiveFromA > 0;
@@ -254,10 +252,6 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
           presumptiveAfterSsr = obligorIsA ? final : -final;
           ssrApplied = true;
           ssrNote = `Self-Support Reserve applied (Rule .02(25)): obligor-only BCSO ($${alt}) used in place of pro-rata BCSO so the obligor retains the $${SSR_AMOUNT}/mo reserve.`;
-          if (final < 1) {
-            ssrCollapsedToZero = true;
-            ssrObligorIsA = obligorIsA;
-          }
         }
       }
     }
@@ -347,21 +341,20 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
             : "very substantial — detailed evidentiary record of the children's actual needs is typically required";
     const annualExcess = pcsoExcessOverCap * 12;
     const privSchoolDev = Math.abs(r$(privateSchoolDeviationFromA));
-    const $$ = (n: number) => n.toLocaleString("en-US");
     const base =
       `Above the statutory presumptive cap (Tenn. Code Ann. §36-5-101(e)(1)(B)). ` +
-      `Calculated PCSO is $${$$(r$(pcsoMagnitude))}/mo; the cap for ${inputs.numChildren} ${childWord} is $${$$(pcsoStatutoryMax)}/mo — an excess of $${$$(pcsoExcessOverCap)}/mo ($${$$(annualExcess)}/yr). ` +
+      `Calculated PCSO is $${r$(pcsoMagnitude)}/mo; the cap for ${inputs.numChildren} ${childWord} is $${pcsoStatutoryMax}/mo — an excess of $${pcsoExcessOverCap}/mo ($${annualExcess.toLocaleString("en-US")}/yr). ` +
       `This is a rebuttable presumption, not a hard cap: the parent receiving support has the burden to prove by a preponderance of the evidence that the additional amount is reasonably necessary for the children's actual needs (Hugger v. Hugger, Tenn. Ct. App. 1999; Smith v. Smith, Tenn. Ct. App. 2007; Nash v. Mulle, 846 S.W.2d 803 (Tenn. 1993)). ` +
-      `If that burden is not met, the order would be capped at $${$$(pcsoStatutoryMax)}/mo. ` +
+      `If that burden is not met, the order would be capped at $${pcsoStatutoryMax}/mo. ` +
       `The size of this excess is ${magnitudeLabel}.`;
     const privLine =
       inputs.includePrivateSchool && privSchoolDev > 0
-        ? ` Your private-school deviation of $${$$(privSchoolDev)}/mo is included in this total and is a common basis for findings above the cap.`
+        ? ` Your private-school deviation of $${privSchoolDev}/mo is included in this total and is a common basis for findings above the cap.`
         : "";
     pcsoCapNote = base + privLine;
   } else if (pcsoMagnitude > 0 && pcsoStatutoryMax > 0) {
     pcsoBelowCapNote =
-      `This calculation falls below the statutory presumptive cap of $${pcsoStatutoryMax.toLocaleString("en-US")}/mo for ${inputs.numChildren} ${childWord} (Tenn. Code Ann. §36-5-101(e)(1)(B)). The guideline amount is presumed appropriate.`;
+      `This calculation falls below the statutory presumptive cap of $${pcsoStatutoryMax}/mo for ${inputs.numChildren} ${childWord} (Tenn. Code Ann. §36-5-101(e)(1)(B)). The guideline amount is presumed appropriate.`;
   }
 
   // === Above-schedule-cap BCSO breakdown (Rule .09(2)(d)) ===
@@ -417,18 +410,15 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
   }
 
   // === Zero-presumptive / floor-does-not-apply explainer (Rule .04(12)) ===
-  // Floor does not apply only when there is no identifiable obligor (ARP has
-  // no income). When SSR collapsed the obligor's pro-rata BCSO to $0, the
-  // floor DOES apply — none of the .04(12)(b) exceptions (SSI-only income,
-  // federal benefit, PTA-driven reduction) is triggered.
-  // See docs/TN_Floor_SSR_Resolution.md.
+  // The $100 minimum-order floor applies to an obligor who already has a
+  // presumptive obligation. When presumptive support is $0, there is no
+  // obligor and no obligation for the floor to lift.
   let zeroPresumptiveNote: string | null = null;
   if (
     !meansTestedOnly &&
     combinedAGI > 0 &&
     Math.abs(presumptiveAfterSsr) < 1 &&
-    nonEarnerArpNote === null &&
-    !ssrCollapsedToZero
+    nonEarnerArpNote === null
   ) {
     zeroPresumptiveNote =
       `Presumptive support is $0, so the $100/month minimum-order floor under Rule 1240-02-04-.04(12) does not apply. ` +
@@ -481,15 +471,6 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
       minimumOrderApplied = true;
       warnings.push(
         `Minimum support floor of $${MIN_SUPPORT_MONTHLY}/month applied per Rule .04(12).`,
-      );
-    } else if (ssrCollapsedToZero) {
-      // SSR drove the obligor's pro-rata BCSO to $0. The .04(12) $100 floor
-      // still applies because none of the (b) exceptions is triggered. The
-      // floor flows ARP→PRP (i.e., from the original obligor).
-      allInMonthlyFromA += ssrObligorIsA ? MIN_SUPPORT_MONTHLY : -MIN_SUPPORT_MONTHLY;
-      minimumOrderApplied = true;
-      warnings.push(
-        `SSR collapsed the obligor's pro-rata BCSO to $0, but the $${MIN_SUPPORT_MONTHLY}/month minimum order under Rule .04(12) still applies — none of the (b) exceptions (SSI-only income, federal benefit, or parenting-time reduction) is triggered. See docs/TN_Floor_SSR_Resolution.md.`,
       );
     }
   }

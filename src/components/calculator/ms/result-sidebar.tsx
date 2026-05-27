@@ -1,11 +1,7 @@
 import { useState } from "react";
-import type {
-  HandoffSide,
-  HandoffState,
-  MSInputs,
-  MSOutputs,
-} from "@/lib/calc/ms/types";
+import type { MSInputs, MSOutputs } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
+import { downloadMSDeviationPdf } from "@/lib/pdf/ms-deviation-pdf";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -15,49 +11,20 @@ function fmt2(n: number) {
   return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-interface Props {
-  inputs: MSInputs;
-  outputs: MSOutputs;
-  caption: CaseCaption;
-  handoff: HandoffState;
-  setHandoff: (next: HandoffState) => void;
-  activeSide: HandoffSide | null;
-  isReceivingSession: boolean;
-  onViewWorksheet: () => void;
-}
-
 export function MSResultSidebar({
   inputs,
   outputs,
-  handoff,
-  setHandoff,
-  isReceivingSession,
+  caption,
   onViewWorksheet,
-}: Props) {
+}: {
+  inputs: MSInputs;
+  outputs: MSOutputs;
+  caption: CaseCaption;
+  onViewWorksheet: () => void;
+}) {
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && outputs.positionB;
-
-  /**
-   * PDF auto-completion (addition #1): if this is the receiving session
-   * and the worksheet is still in_progress, flip status → completed and
-   * stamp completedAt before rendering. The originator generating a PDF
-   * pre-handoff is unchanged (status stays "none").
-   */
-  const maybeCompleteForPdf = (): HandoffState => {
-    if (
-      isReceivingSession &&
-      handoff.status === "in_progress"
-    ) {
-      const next: HandoffState = {
-        ...handoff,
-        status: "completed",
-        completedAt: new Date().toISOString(),
-      };
-      setHandoff(next);
-      return next;
-    }
-    return handoff;
-  };
+  const anyDeviations = inputs.deviationsA.some((d) => d.applicable);
 
   return (
     <div className="rounded-lg border border-rule bg-card p-5 shadow-sm">
@@ -67,8 +34,12 @@ export function MSResultSidebar({
 
       {outputs.suspensionApplies ? (
         <>
-          <div className="mt-1 font-serif text-sm text-ink">§ 43-19-36 finding</div>
-          <div className="mt-2 font-serif text-2xl text-primary">Obligation suspended</div>
+          <div className="mt-1 font-serif text-sm text-ink">
+            § 43-19-36 finding
+          </div>
+          <div className="mt-2 font-serif text-2xl text-primary">
+            Obligation suspended
+          </div>
           <p className="mt-2 text-xs text-muted-foreground">
             By operation of law during incarceration exceeding 180 days.
             Resumes the first day of the month following 60 days after release.
@@ -76,19 +47,32 @@ export function MSResultSidebar({
         </>
       ) : sideBySide ? (
         <>
-          <div className="mt-1 font-serif text-sm text-ink">Side-by-side comparison</div>
+          <div className="mt-1 font-serif text-sm text-ink">
+            Side-by-side comparison
+          </div>
           <div className="mt-3 space-y-1 text-sm">
-            <Row label={`${inputs.obligorLabel} / mo`} value={`$${fmt(outputs.proposedFinalMonthly)}`} />
-            <Row label={`${inputs.obligeeLabel} / mo`} value={`$${fmt(outputs.positionB!.proposedFinalMonthly)}`} />
+            <Row
+              label={`${inputs.obligorLabel} / mo`}
+              value={`$${fmt(outputs.proposedFinalMonthly)}`}
+            />
+            <Row
+              label={`${inputs.obligeeLabel} / mo`}
+              value={`$${fmt(outputs.positionB!.proposedFinalMonthly)}`}
+            />
             <Row
               label="Gap / mo"
-              value={`$${fmt(outputs.proposedFinalMonthly - outputs.positionB!.proposedFinalMonthly)}`}
+              value={`$${fmt(
+                outputs.proposedFinalMonthly -
+                  outputs.positionB!.proposedFinalMonthly,
+              )}`}
             />
           </div>
         </>
       ) : (
         <>
-          <div className="mt-1 font-serif text-sm text-ink">Proposed monthly support</div>
+          <div className="mt-1 font-serif text-sm text-ink">
+            Proposed monthly support
+          </div>
           <div className="mt-2 font-serif text-4xl text-primary">
             ${fmt(outputs.proposedFinalMonthly)}
             <span className="text-base text-muted-foreground"> /mo</span>
@@ -111,7 +95,10 @@ export function MSResultSidebar({
         />
         <Row label="Presumptive / mo" value={`$${fmt2(outputs.presumptiveMonthly)}`} />
         {outputs.healthInsuranceAddOnMonthly > 0 && (
-          <Row label="Health insurance add-on" value={`+$${fmt2(outputs.healthInsuranceAddOnMonthly)}`} />
+          <Row
+            label="Health insurance add-on"
+            value={`+$${fmt2(outputs.healthInsuranceAddOnMonthly)}`}
+          />
         )}
         {!outputs.suspensionApplies && outputs.totalDeviationsMonthly !== 0 && (
           <Row
@@ -150,7 +137,6 @@ export function MSResultSidebar({
         <button
           type="button"
           onClick={() => {
-            maybeCompleteForPdf();
             onViewWorksheet();
             setTimeout(() => window.print(), 100);
           }}
@@ -158,6 +144,15 @@ export function MSResultSidebar({
         >
           Print / Save PDF
         </button>
+        {anyDeviations && (
+          <button
+            type="button"
+            onClick={() => downloadMSDeviationPdf({ inputs, outputs, caption })}
+            className="w-full rounded-md border border-primary/40 bg-primary/5 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+          >
+            Download deviation worksheet (PDF)
+          </button>
+        )}
         <CopyLinkButton />
       </div>
 

@@ -15,7 +15,6 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as MsRouteImport } from './routes/ms'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as CalculatorRouteImport } from './routes/calculator'
-import { Route as ArRouteImport } from './routes/ar'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TnWhyWeBuiltThisRouteImport } from './routes/tn_.why-we-built-this'
@@ -59,11 +58,6 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
 const CalculatorRoute = CalculatorRouteImport.update({
   id: '/calculator',
   path: '/calculator',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ArRoute = ArRouteImport.update({
-  id: '/ar',
-  path: '/ar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -143,7 +137,6 @@ const LovableEmailQueueProcessRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/ar': typeof ArRoute
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
   '/ms': typeof MsRoute
@@ -166,7 +159,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/ar': typeof ArRoute
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
   '/ms': typeof MsRoute
@@ -190,7 +182,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/ar': typeof ArRoute
   '/calculator': typeof CalculatorRoute
   '/how-it-works': typeof HowItWorksRoute
   '/ms': typeof MsRoute
@@ -215,7 +206,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
-    | '/ar'
     | '/calculator'
     | '/how-it-works'
     | '/ms'
@@ -238,7 +228,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
-    | '/ar'
     | '/calculator'
     | '/how-it-works'
     | '/ms'
@@ -261,7 +250,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
-    | '/ar'
     | '/calculator'
     | '/how-it-works'
     | '/ms'
@@ -285,7 +273,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  ArRoute: typeof ArRoute
   CalculatorRoute: typeof CalculatorRoute
   HowItWorksRoute: typeof HowItWorksRoute
   MsRoute: typeof MsRoute
@@ -346,13 +333,6 @@ declare module '@tanstack/react-router' {
       path: '/calculator'
       fullPath: '/calculator'
       preLoaderRoute: typeof CalculatorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ar': {
-      id: '/ar'
-      path: '/ar'
-      fullPath: '/ar'
-      preLoaderRoute: typeof ArRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -483,7 +463,6 @@ const TnHowItWorksRouteWithChildren = TnHowItWorksRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  ArRoute: ArRoute,
   CalculatorRoute: CalculatorRoute,
   HowItWorksRoute: HowItWorksRoute,
   MsRoute: MsRoute,
