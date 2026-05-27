@@ -492,3 +492,131 @@ The fifth instance in that catalog.
 **Source.** Slice 5.5 — attribution rendering gap surfaced by Phase 3.5
 test agent after Slice 5 verification confirmed stamping helpers without
 exercising the round-bump call site.
+
+---
+
+## D-014 — Gate-pattern instance #6: attribution render-gate field-shape contract
+
+**Symptom.** Phase 3.5 test agent constructed a URL payload modeling
+the "Maria Lopez amends factor (e)" scenario, hydrated cleanly, but
+the "Amended in round N by …" line in `PartyColumn` never rendered.
+Sixth instance of the gate-disguised-as-mismatch family (D-009 enum
+mismatch; D-010 `split_difference`→`split`; Slice 1 `comparisonMode`;
+Slice 3 `status: "long"`→`over_180`; D-013 missing round-bump call
+sites; this one).
+
+**Diagnosis posture (now standardized).** When URL state round-trips
+correctly but a render surface does not fire, the diagnosis sequence is:
+
+  (a) Open the render surface and identify the conditional gate verbatim.
+  (b) Compare the gate's read predicates against the URL-state field
+      shape the test agent constructed.
+  (c) Classify the mismatch as one of:
+      - **Field-shape mismatch** — gate reads `foo.bar`, payload sets
+        `foo.baz` or `foo.bar` is a nested object where runtime expects
+        a flat string. Fix: align payload to runtime, OR rename runtime
+        to canonical (D-010 style) when call-site cost permits.
+      - **Mode-switch gate** — gate hidden behind a feature-flag-as-mode
+        switch (Slice 1 `comparisonMode === "side_by_side"`). Fix: remove
+        the gate or expose the mode in the test setup.
+      - **Action-gated by design** — gate reads a sentinel only a reducer
+        sets (round-bump, signed token, etc.). Not a bug: URL injection
+        is doctrinally insufficient and the test must exercise the full
+        action flow.
+
+**Resolution of this instance.** The gate in
+`src/components/calculator/ms/party-factor-block.tsx` line 286 is:
+
+```tsx
+{party.handoffRound && party.handoffRound > 1 ? (
+  <div>Amended in round {party.handoffRound}
+       {party.authoredByName ? ` by ${party.authoredByName}` : ""}</div>
+) : null}
+```
+
+Two requirements for the line to render via URL injection:
+
+1. `party.handoffRound > 1` (strictly greater — round 1 = originator's
+   authored draft, implicit from the column header).
+2. `party.authoredByName` populated as a **flat string** at
+   `deviationsA[i].party.authoredByName` (or `deviationsB[i].party.…`).
+   The runtime field shape is NOT `lastEditedBy.name` or `amendedBy.name`;
+   the canonical-prose phrases "amended by" / "last edited by" map to
+   the flat `authoredByName: string | null` field on `MSPartyEntry`.
+
+The render gate does not check any sentinel, localStorage token, or
+side-detection probe. URL-state injection is structurally sufficient
+once the field shape matches — this is a Type A (field-shape) mismatch,
+not Type C (action-gated). The doctrinal forgeability question that
+naturally arises here is logged separately as D-015.
+
+**Source-of-truth.** The runtime field-shape contract for URL-state
+test injection now lives in `docs/ms-canonical-spec.md` Appendix A
+("URL-state payload schema and test-injection contract"). Future test
+agents construct payloads from that table; future runtime refactors
+that rename a field must update the appendix in the same commit.
+
+**Future guardrail (carries D-010's proposal forward).** A typegen
+step that emits the `MSPartyEntry` flat-string field roster and the
+`MSChancellorDecisionKind` enum table directly from `src/lib/calc/ms/types.ts`
+and `src/lib/calc/ms/chancellor-decisions.ts` into the canonical
+appendix would close field-shape drift at the source. Mode-switch
+gates and action-gated renders are orthogonal categories and remain
+caught by the (a)–(c) diagnosis posture above.
+
+---
+
+## D-015 — URL-state is unsigned (integrity model: attorney signature, not crypto)
+
+**Posture.** The MS calculator does NOT cryptographically guarantee
+the provenance of any field carried in a share URL. The render layer
+displays whatever the URL hydrates: if a payload sets
+`party.handoffRound = 2` and `party.authoredByName = "Maria Lopez"`,
+the worksheet renders "Amended in round 2 by Maria Lopez" regardless
+of whether Maria Lopez ever touched the case. The hydrator could
+enforce integrity (signed tokens, HMAC over the payload, server-side
+round-bump) but deliberately does not.
+
+**Why this is the right posture.** The calculator is a negotiation
+aid, not a system of record. The integrity model for documents
+leaving the tool is the same model that governs every other document
+attorneys exchange — NDAs, position papers, mediation briefs,
+settlement proposals: **counsel signs the preparer's-use-only block
+on the worksheet, and that signature vouches for the contents,
+including attribution metadata.** The chancellor reads the signed
+worksheet; the signing attorney is on the hook for accuracy. URL
+crypto would not add integrity that attorney signature does not
+already provide, and would add operational complexity (key
+management, token rotation, server-side state) that contradicts the
+"frontend + URL only, no auth, no server storage" design premise
+documented at `MSInputs`-adjacent types.
+
+**Three useful effects of making this explicit.**
+
+  1. **Honest framing** of what the tool is and is not. It is a math
+     calculator with a deviation-worksheet narrative layer, not a
+     tamper-evident notary.
+  2. **Points users at the correct integrity layer.** If counsel has
+     concerns about a received worksheet's attribution, the question
+     is "who signed this?" — not "is the URL signed?".
+  3. **Preempts future scope creep.** The "why doesn't it have signed
+     tokens?" question gets a settled answer rather than re-litigation.
+     If a future jurisdiction (or a future MS rule change) requires
+     cryptographically-verifiable attribution, that becomes a Phase-N
+     policy change with explicit canonical revision, not a quiet
+     hydrator patch.
+
+**Operational consequence for testing.** Phase 3.5 test agents (and
+all future test agents) construct URL payloads directly per the
+Appendix A field-shape contract. Exercising the full
+originator → send → receiver → amend → send-back flow via the actual
+UI buttons remains the appropriate test for the round-bump call sites
+(D-013), but the **render surfaces** themselves (attribution line,
+in-play badge, chancellor decision pills, pending-count badge,
+cumulative-through-emancipation block) are all URL-injection-testable
+by construction, because none of them gate on a reducer-only sentinel.
+
+**Out of scope (explicitly deferred).** Signed handoff tokens.
+Server-side round-bump enforcement. Tamper-evident audit log. Any
+of these can be added later as a Phase-N feature with explicit
+policy rationale; none are required for the Phase 3.5 / Phase 4 scope.
