@@ -333,15 +333,30 @@ function CaptionBlock({
   );
 }
 
-function StructuredDeviationSummary({ d }: { d: MSDeviation }) {
+function StructuredDeviationSummary({
+  d,
+  reconciledMonthly,
+  pending,
+}: {
+  d: MSDeviation;
+  reconciledMonthly: number;
+  pending: boolean;
+}) {
   return (
     <div className="rounded-md border border-rule bg-background p-3">
       <div className="flex items-baseline justify-between">
         <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           Factor ({d.letter})
         </div>
-        <div className="font-mono text-sm text-ink">
-          {fmt(d.proposedMonthly, 2)} / mo
+        <div className="text-right">
+          <div className="font-mono text-sm text-ink">
+            {fmt(reconciledMonthly, 2)} / mo
+          </div>
+          <div className="font-mono text-[10px] text-muted-foreground">
+            {pending
+              ? `proposed ${fmt(d.proposedMonthly, 2)} · chancellor pending`
+              : `proposed ${fmt(d.proposedMonthly, 2)} · chancellor reconciled`}
+          </div>
         </div>
       </div>
       <div className="mt-1 text-sm font-medium">{FACTOR_TITLES[d.letter]}</div>
