@@ -173,9 +173,11 @@ const identification: AocField[] = [
     description: "Margin note: Equal parenting (Rule .04(7)(b)(2)(i))",
     source: (wdm) => {
       // AOC boundary: numbers + structural cells only — no rule cites.
-      // Pointer to annotated worksheet is permitted (not a citation).
+      // Kept to a single line to fit cleanly in the annotation rect
+      // (151×26pt at 10pt DejaVu). Methodology pointer lives in the
+      // page-2 Comments block ("See annotated worksheet for methodology").
       const note = wdm.panels.parentRoleCheckboxes.marginNote;
-      return note ? `↑ Equal parenting — see annotated worksheet.` : null;
+      return note ? `↑ Equal parenting.` : null;
     },
   },
 ];
