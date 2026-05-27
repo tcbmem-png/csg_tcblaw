@@ -116,3 +116,135 @@ Code matched the statute pre-v2 (see D-004); only the spec text needs
 updating. No code or test changes required.
 
 **Source.** Miss. Code Ann. § 43-19-36(3) text.
+
+---
+
+## D-006: Phase 4 PDF rendering library — options framed, decision pending
+
+**Date:** 2026-05-27
+**Status:** open (trade-offs documented; selection deferred to Phase 4 kickoff)
+
+**Context.** Phase 4 ships the MS output pipeline: (a) the official MDHS
+worksheet fill (formulaic, tabular, single-page) and (b) the § 43-19-103
+deviation memorandum (narrative, multi-page, headed for chancery filing
+as a potential exhibit). The TN v2 baseline uses client-side rendering
+(`jsPDF` for the AOC form fill, `html2canvas` for the worksheet preview)
+to sidestep the Workers / Chromium gap — there is no server-side
+headless-browser option on this runtime, so all PDF generation must run
+in the browser or be built from a pure-JS renderer that runs in either.
+
+The Phase 4 question is whether to extend the TN approach to MS or
+split the toolchain so the deviation memo gets filing-grade typography
+while the worksheet fill stays mechanical. Three options on the table,
+evaluated against the four axes that matter here.
+
+### Evaluation axes
+
+1. **Rasterization quality** — does output look crisp at print scale
+   (300 DPI), or does it betray screenshot origin (anti-aliasing
+   artifacts, scaled raster, soft type edges)?
+2. **Selectable-text requirement** — is the PDF a real text document
+   (copy/paste, search, screen-reader, OCR-friendly for opposing
+   counsel) or a flattened image-of-text?
+3. **Template-rewrite surface** — how much of the existing MS
+   worksheet-preview / deviation-preview React tree has to be ported
+   into the renderer's primitives? Lower is better.
+4. **Bundle weight** — gzipped JS shipped to the browser. Matters
+   because the calculator's value proposition includes "loads on a
+   chancellor's courtroom laptop without ceremony."
+
+### Option A — jsPDF + html2canvas (TN baseline, extended to MS)
+
+- **Quality.** Acceptable for the AOC fill (mechanical form layout).
+  Marginal for the deviation memo: html2canvas rasterizes the React
+  tree, so type renders as a flattened image. At 2× scale on a
+  300-DPI print path the artifacts are perceptible — visible kerning
+  inconsistency, soft anti-aliased edges, lossy on the small caps
+  used in column headers.
+- **Selectable text.** No. Output is an image embedded in PDF
+  chrome. Opposing counsel can't text-search, the screen-reader path
+  is broken, and OCR is the only fallback for digital intake.
+- **Template surface.** Zero. The existing
+  `worksheet-preview.tsx` / deviation preview render as-is; the PDF
+  is literally a screenshot of the React tree.
+- **Bundle weight.** ~150 KB gzipped (jsPDF ~85 KB + html2canvas
+  ~65 KB). Already in the bundle for TN, so MS adds nothing
+  incremental.
+
+### Option B — @react-pdf/renderer (filing-grade, separate template)
+
+- **Quality.** Filing-grade. Native PDF text rendering, real font
+  embedding, vector primitives. Indistinguishable from a Word-
+  exported PDF at print scale. The right ceiling for a document
+  that may land in a chancery exhibit binder.
+- **Selectable text.** Yes. Real PDF text objects. Search,
+  copy/paste, screen-reader, and OCR-free digital intake all work.
+- **Template surface.** High. `<View>` / `<Text>` / `<StyleSheet>`
+  primitives — Tailwind classes do not carry over. The deviation
+  memo template (~600 LOC of preview JSX, plus the reconciliation
+  table) has to be rewritten against the @react-pdf component set,
+  with its own stylesheet. The worksheet-preview React tree stays
+  as the on-screen rendering; the PDF becomes a parallel template.
+- **Bundle weight.** ~440 KB gzipped (renderer + embedded font
+  subsetter + PDF primitives). This is the cost line item — roughly
+  3× the TN baseline, and the largest single dependency in the
+  bundle by a meaningful margin. Code-splitting via dynamic
+  `import()` on the deviation-PDF button is feasible and would keep
+  the initial route bundle clean (load on intent, not on calculator
+  open). With splitting, first-paint cost is zero; the chancellor
+  pays the 440 KB only when they click "Download deviation memo,"
+  which is acceptable.
+
+### Option C — pdfmake (declarative middle ground)
+
+- **Quality.** Native PDF text (no rasterization), so substantially
+  better than Option A. Below Option B on typographic control —
+  layout primitives are document-flow oriented (tables, columns,
+  stacks) rather than the box-model React shape of the existing
+  preview. Good enough for filing in most chancery contexts;
+  perceptibly less polished than @react-pdf at the small-caps /
+  rule-line detail.
+- **Selectable text.** Yes. Same advantages as Option B.
+- **Template surface.** High, and differently shaped from Option B.
+  pdfmake uses a JSON document-definition format, not React
+  primitives — the deviation memo has to be rewritten as a content
+  array with style aliases, not as a component tree. Less idiomatic
+  for this codebase; the rewrite is comparable in size to Option B
+  but discards more of the React-native mental model.
+- **Bundle weight.** ~260 KB gzipped (with default Roboto font
+  subset; ~180 KB without fonts but then we ship our own).
+  Lighter than @react-pdf, heavier than the TN baseline.
+
+### Side-by-side
+
+```text
+                       │ Option A          │ Option B           │ Option C
+                       │ jsPDF+html2canvas │ @react-pdf/renderer│ pdfmake
+─────────────────────────┼───────────────────┼────────────────────┼──────────────
+Rasterization quality  │ marginal          │ filing-grade       │ good
+Selectable text         │ no                │ yes                │ yes
+Template-rewrite surface│ zero              │ high               │ high
+Bundle weight (gzipped) │ ~150 KB (sunk)    │ ~440 KB            │ ~260 KB
+Code-split friendly     │ n/a               │ yes (dynamic import)│ yes
+```
+
+### Lean (not a decision)
+
+User lean: **Option B for the deviation memorandum**, on the basis
+that chancery-filing-grade typography matters for a document headed
+for an exhibit binder and the selectable-text requirement is binding
+(opposing counsel digital intake). Open question is bundle weight.
+Recommendation to be resolved at Phase 4 kickoff:
+
+- **Hybrid: A for the worksheet fill, B for the deviation memo,
+  code-split.** Keeps the AOC form on the TN-proven path (zero
+  incremental cost, mechanical layout where rasterization is
+  acceptable), routes the deviation memo through @react-pdf behind
+  a dynamic `import()` so the 440 KB only loads on click. First-
+  paint and calculator-open bundle stay flat; the cost is paid
+  only by users who actually export a memo, which is the right
+  trade for the document that earns the quality.
+
+No code change in this entry. Phase 4 opens with the selection
+recorded as a follow-up D-007 once locked.
+
