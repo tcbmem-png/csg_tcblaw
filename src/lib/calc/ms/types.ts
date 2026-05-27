@@ -451,6 +451,18 @@ export interface MSOutputs {
   requiresFindingLowIncome: boolean;
   warnings: string[];
   guidelinesEffectiveDate: string;
+
+  // ----- § 43-19-101(5) imputation scenario surface -----
+  /** True when AGI basis is "imputed" AND a positive imputed gross is set. */
+  imputationActive: boolean;
+  /** Slider 0..100 actually applied to the blend (clamped). */
+  imputationApplicationPct: number;
+  /** Imputed annual gross used in the blend (0 when inactive). */
+  imputedAnnualGross: number;
+  /** The actual gross figure, surfaced for side-by-side display. */
+  actualAnnualGross: number;
+  /** actualGross × (1 − pct/100) + imputed × (pct/100). Equals actualGross when inactive. */
+  blendedAnnualGross: number;
 }
 
 // =================================================================
