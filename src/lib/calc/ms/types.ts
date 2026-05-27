@@ -327,6 +327,12 @@ export interface MSIncarceration {
     criminalNonpayment: boolean;
   };
   hasMeansToPay: boolean;
+  /**
+   * Free-text rationale for the means-to-pay finding under § 43-19-36(2)(a).
+   * Optional — surfaces only when hasMeansToPay is true. Carried into the
+   * worksheet so the chancellor's reasoning travels with the order.
+   */
+  meansToPayRationale?: string;
 }
 
 // =================================================================
