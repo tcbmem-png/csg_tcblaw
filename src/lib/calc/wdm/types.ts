@@ -41,6 +41,8 @@
 
 import type { CitationKey } from "../citations";
 import type { IncomeMethodology } from "../types";
+import type { WDMDeviationsNarrative } from "../deviations-narrative";
+export type { WDMDeviationBlock, WDMDeviationsNarrative } from "../deviations-narrative";
 
 /** Refinement 1 (approved): drop A_/B_/C_ prefixes. */
 export type WDMValueCategory = "mechanical" | "structural" | "judgment";
