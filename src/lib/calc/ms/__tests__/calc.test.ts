@@ -310,6 +310,7 @@ describe("MS calc — side-by-side comparison (Test C)", () => {
       deviationsB: base.deviationsA.map((d) =>
         d.letter === "a" ? { ...d, applicable: true, proposedMonthly: 100, description: "B's position" } : d,
       ),
+      chancellorDecisions: adoptObligor(["a"]),
     };
     const out = calculateMS(inputs);
     expect(out.totalDeviationsMonthly).toBe(300);
