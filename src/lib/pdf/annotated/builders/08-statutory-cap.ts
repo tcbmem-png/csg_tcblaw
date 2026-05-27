@@ -2,13 +2,15 @@
  * §VIII — Statutory Cap Analysis.
  *
  * Pure: (WDM) => Block[]. Always rendered; text branches on
- * wdm.panels.statutoryCap.engaged. The cap panel is structured
- * Refinement 4 of the WDM — both branches receive the same shape so
- * this builder switches on a single boolean rather than reaching into
- * outputs.
+ * wdm.panels.statutoryCap.engaged. The cap operates on the **PCSO**
+ * (pre-deviation net presumptive support + mandatory add-ons), not on
+ * the FCSO; the panel field `calculatedPCSO` is the PCSO magnitude.
  *
- * Authority block at end recites the rule + the three case-law keys
- * approved in Phase D ack §6.
+ * Citation discipline (Phase D drift-fix A.1): the burden-shift case
+ * lineage (Nash / Richardson / Smallman) is substantively cited ONLY
+ * in the engaged branch. In the below-cap branch no above-cap case
+ * authority is registered, so the global Authority Block does not list
+ * cases the document never relied on (bidirectional citation invariant).
  */
 import type { WDM } from "@/lib/calc/wdm/types";
 import {
@@ -29,11 +31,10 @@ export function build(wdm: WDM): Block[] {
   const panel = wdm.panels.statutoryCap;
   blocks.push(h(1, "VIII. Statutory Cap Analysis"));
 
-  // Identify the threshold the worksheet is measured against.
   blocks.push(
     p(
       t(
-        `The statutory presumptive maximum operates as a cap on the presumptive child support order. For `,
+        `The statutory presumptive maximum operates as a cap on the presumptive child support order (PCSO). For `,
       ),
       t(
         `${panel.numChildren} ${panel.numChildren === 1 ? "child" : "children"}`,
@@ -46,10 +47,9 @@ export function build(wdm: WDM): Block[] {
   );
   blocks.push(authorityLine("pcso_max"));
 
-  // Both branches receive: calculated PCSO, statutoryMax, capNote.
   blocks.push(
     p(
-      t(`Calculated presumptive order on this worksheet: `),
+      t(`Presumptive child support order (PCSO) on this worksheet: `),
       t(money(panel.calculatedPCSO), { bold: true }),
       t(`. `),
       t(
@@ -65,11 +65,13 @@ export function build(wdm: WDM): Block[] {
   }
 
   if (!panel.engaged) {
-    // Below-cap branch — no burden-shift; no further analysis required.
+    // Below-cap branch — no burden-shift; no above-cap case authority
+    // is substantively engaged, so none is registered here. The global
+    // Authority Block walks only what the body actually cited.
     blocks.push(
       p(
         t(
-          `Because the calculated presumptive order falls within the statutory cap, no above-cap burden-shift analysis is engaged. The presumptive order under `,
+          `Because the PCSO falls within the statutory cap, no above-cap burden-shift analysis is engaged. The presumptive order under `,
         ),
         cite("fcso"),
         t(` controls subject to any deviations under `),
@@ -77,37 +79,31 @@ export function build(wdm: WDM): Block[] {
         t(`.`),
       ),
     );
-    blocks.push(spacer(4));
-    blocks.push(h(3, "Authorities"));
-    blocks.push(
-      bullets([
-        [cite("pcso_max")],
-        [cite("case.nash_v_mulle")],
-        [cite("case.richardson_v_spanos")],
-        [cite("case.smallman_v_smallman")],
-      ]),
-    );
     return blocks;
   }
 
-  // Engaged branch — burden-shift framework. Recite the factor list
-  // verbatim from the WDM (sourced from PCSO_BURDEN_SHIFT_FACTORS in
-  // wdm/build.ts; do NOT re-author here).
+  // Engaged branch — burden-shift framework. The case lineage is
+  // substantively cited in-prose so the global Authority Block lists
+  // exactly the cases the analysis relied on.
   blocks.push(
     p(
       t(
-        `Above the statutory presumptive maximum the recipient parent bears the burden of proving by a preponderance of the evidence that additional support beyond the cap is reasonably necessary for the child. The tribunal weighs the rule-derived factors below.`,
+        `Above the statutory presumptive maximum the recipient parent bears the burden of proving by a preponderance of the evidence that additional support beyond the cap is reasonably necessary for the child. The Tennessee Supreme Court established this burden-shift framework in `,
       ),
+      cite("case.nash_v_mulle"),
+      t(`; the Court of Appeals has applied and refined it in `),
+      cite("case.richardson_v_spanos"),
+      t(` and `),
+      cite("case.smallman_v_smallman"),
+      t(`.`),
     ),
   );
-  blocks.push(authorityLine("case.nash_v_mulle"));
 
   if (panel.factors.length > 0) {
     blocks.push(h(3, "Factors weighed under the burden-shift framework"));
     blocks.push(bullets(panel.factors.map((f) => [t(f)])));
   }
 
-  // User election surface: which branch did the user elect?
   blocks.push(h(3, "Election on this worksheet"));
   if (panel.userElectedPCSO === null) {
     blocks.push(
@@ -131,17 +127,6 @@ export function build(wdm: WDM): Block[] {
       );
     }
   }
-
-  blocks.push(spacer(4));
-  blocks.push(h(3, "Authorities"));
-  blocks.push(
-    bullets([
-      [cite("pcso_max")],
-      [cite("case.nash_v_mulle")],
-      [cite("case.richardson_v_spanos")],
-      [cite("case.smallman_v_smallman")],
-    ]),
-  );
 
   return blocks;
 }
