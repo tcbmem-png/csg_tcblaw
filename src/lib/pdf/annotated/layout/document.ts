@@ -11,23 +11,16 @@
  * on the AOC overlay (which uses the same TTFs via @pdf-lib/fontkit).
  */
 
-// pdfmake server-side Printer + VirtualFileSystem. Type declarations
-// don't ship these; the runtime classes are stable.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const PdfPrinter = require("pdfmake/js/Printer").default as new (
+// pdfmake server-side Printer. Loaded via createRequire so this module
+// works in ESM (tsx/node) without bundler interop quirks.
+import { createRequire } from "node:module";
+const nodeRequire = createRequire(import.meta.url);
+const PdfPrinter = nodeRequire("pdfmake/src/printer") as new (
   fontDescriptors: TFontDictionary,
-  virtualfs?: unknown,
 ) => {
   createPdfKitDocument: (
     doc: TDocumentDefinitions,
   ) => NodeJS.ReadableStream & { end: () => void };
-};
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const VirtualFileSystem = require("pdfmake/js/virtual-fs.js")
-  .default as new () => {
-  writeFileSync: (name: string, content: Buffer) => void;
-  readFileSync: (name: string) => Buffer;
-  existsSync: (name: string) => boolean;
 };
 
 import type {
