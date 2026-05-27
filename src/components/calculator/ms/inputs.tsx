@@ -224,6 +224,8 @@ export function MSCalculatorInputs({
         inputs={inputs}
         setInputs={setInputs}
         lockedSide={lockedSide}
+        handoffRound={handoffRound}
+        currentAuthor={currentAuthor}
       />
     </div>
   );
