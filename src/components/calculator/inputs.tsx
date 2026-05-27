@@ -523,6 +523,18 @@ export function CalculatorInputs({
                 />
               </Field>
             </Grid>
+            <Field
+              label="Why is this a deviation?"
+              help="Composed into the AOC Part VI narrative automatically with the Rule .07(2)(d) citation prepended."
+            >
+              <textarea
+                value={inputs.specialExpensesReason}
+                onChange={(e) => u({ specialExpensesReason: e.target.value })}
+                placeholder="e.g. Travel soccer + summer camp; documented across both households; in the child's best interest."
+                rows={3}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs text-ink outline-none focus:ring-2 focus:ring-ring"
+              />
+            </Field>
             <Toggle
               checked={inputs.specialExpensesWaiveThreshold}
               onChange={(b) => u({ specialExpensesWaiveThreshold: b })}
