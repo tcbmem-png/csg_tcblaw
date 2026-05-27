@@ -1,9 +1,12 @@
 import type {
   MSInputs,
   MSDeviation,
+  MSPartyEntry,
   HandoffState,
   HandoffSide,
+  HandoffAttorney,
 } from "./types";
+import { defaultMSChild } from "./types";
 import { defaultMSInputs } from "./calc";
 import { defaultHandoffState } from "./types";
 import type { CaseCaption } from "@/lib/calc/share";
@@ -138,14 +141,24 @@ export function decodeMSShare(s: string): MSDecoded | null {
       childAges: Array.isArray(parsed.i.childAges)
         ? (parsed.i.childAges as number[]).filter((n) => Number.isFinite(n))
         : base.childAges,
+      children: Array.isArray((parsed.i as { children?: unknown }).children)
+        ? ((parsed.i as { children?: MSInputs["children"] }).children ?? [])
+        : undefined,
     };
     delete (inputs as unknown as { deviations?: unknown }).deviations;
     delete (inputs as unknown as { positionALabel?: unknown }).positionALabel;
     delete (inputs as unknown as { positionBLabel?: unknown }).positionBLabel;
 
+    // §1.6 back-compat: synthesize a default children roster from childAges
+    // when no structured roster is present. Status defaults to "none".
+    if ((!inputs.children || inputs.children.length === 0) && inputs.childAges.length > 0) {
+      inputs.children = inputs.childAges.map((age) => defaultMSChild(age));
+    }
+
     const caption: CaseCaption = { ...defaultCaption(), ...(parsed.c ?? {}) };
 
-    // v2 → v3 upgrade: synthesize a "none" handoff.
+    // v2 → v3 upgrade: synthesize a "none" handoff. handoffRound defaults to 0
+    // on any payload predating §1.5 attribution.
     const handoff: HandoffState = parsed.h
       ? { ...defaultHandoffState(), ...parsed.h }
       : defaultHandoffState();
@@ -343,4 +356,95 @@ export async function isOriginatorBrowser(
   // Fallback: legacy fingerprint key (for URLs minted before caseId).
   const fpKey = `fp:${await fingerprintShare(inputs, caption)}`;
   return Boolean(store[fpKey]);
+}
+
+// =================================================================
+// §1.5 author + handoff_round attribution
+//
+// The audit trail attaches author/round metadata to a MSPartyEntry the
+// first time its material content (position, factsAsserted,
+// documentationReferenced, proposedMonthly, legalAuthority) is set or
+// changed in a given round. Re-rendering or no-op writes do not bump
+// the stamp.
+// =================================================================
+
+export function bumpHandoffRound(h: HandoffState): HandoffState {
+  // First send: 0 -> 1. Each subsequent edit cycle increments.
+  return { ...h, handoffRound: Math.max(1, (h.handoffRound ?? 0) + 1) };
+}
+
+export function currentHandoffRound(h: HandoffState | null | undefined): number {
+  if (!h) return 0;
+  return Math.max(0, h.handoffRound ?? 0);
+}
+
+function partyContentEqual(
+  a: MSPartyEntry | undefined,
+  b: MSPartyEntry | undefined,
+): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.position === b.position &&
+    a.factsAsserted === b.factsAsserted &&
+    a.documentationReferenced === b.documentationReferenced &&
+    Number(a.proposedMonthly) === Number(b.proposedMonthly) &&
+    a.legalAuthority === b.legalAuthority
+  );
+}
+
+export interface PartyEditContext {
+  handoffRound: number;
+  author: HandoffAttorney | null;
+  now?: Date;
+}
+
+/**
+ * Returns `next` with attribution stamped iff material content changed
+ * relative to `prev`. Pure; safe to call on every keystroke.
+ */
+export function stampPartyEdit(
+  prev: MSPartyEntry | undefined,
+  next: MSPartyEntry,
+  ctx: PartyEditContext,
+): MSPartyEntry {
+  if (partyContentEqual(prev, next)) return next;
+  const now = ctx.now ?? new Date();
+  return {
+    ...next,
+    handoffRound: ctx.handoffRound,
+    authoredAt: now.toISOString(),
+    authoredByName: ctx.author?.name ?? null,
+    authoredByFirm: ctx.author?.firm ?? null,
+  };
+}
+
+/**
+ * Walks both slates and stamps any party entry whose content changed
+ * between `prev` and `next`. Used as a single chokepoint when a receiving
+ * attorney saves a batch of edits; the per-field stamp helper handles
+ * the interactive editing path.
+ */
+export function stampSlatesAfterEdit(
+  prev: MSInputs,
+  next: MSInputs,
+  ctx: PartyEditContext,
+): MSInputs {
+  const walk = (
+    prevSlate: MSDeviation[] | undefined,
+    nextSlate: MSDeviation[] | undefined,
+  ): MSDeviation[] | undefined => {
+    if (!nextSlate) return nextSlate;
+    return nextSlate.map((d, i) => {
+      const prevD = prevSlate?.[i];
+      if (!d.party) return d;
+      const stamped = stampPartyEdit(prevD?.party, d.party, ctx);
+      return stamped === d.party ? d : { ...d, party: stamped };
+    });
+  };
+  return {
+    ...next,
+    deviationsA: walk(prev.deviationsA, next.deviationsA) ?? next.deviationsA,
+    deviationsB: walk(prev.deviationsB, next.deviationsB),
+  };
 }

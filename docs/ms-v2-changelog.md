@@ -80,11 +80,62 @@ No production code change.
 
 ---
 
-## Phase 2 — Extension Work (steps 4–6) — pending
+## Phase 2 — Extension Work (steps 4–6)
 
-### §1.4 four-state classifier — extended from v1
-### §1.5 verbatim per-party position capture — extended from v1
-### §1.6 cumulative projection + § 93-11-65 carve-outs — extended from v1
+### §1.4 four-state classifier — **verified as-is**
+
+`rowInPlay` in `reconciliation.ts:80-92` already produces the canonical
+five-way classification (`neither` | `obligor_only` | `obligee_only` |
+`both` | `agree`). v2 added a spec-mapped table check in
+`__tests__/attribution.test.ts`; the exhaustive amount-comparison cases
+were already covered in `reconciliation.test.ts`.
+
+### §1.5 verbatim per-party position capture — **extended from v1**
+
+v1 baseline: `MSPartyEntry` already captured `position`, `factsAsserted`,
+`documentationReferenced`, `proposedMonthly`, `legalAuthority`.
+
+v2 extensions (data layer + tests; UI wiring through `PartyColumn`
+deferred to a follow-up — props are threaded but stamping is currently a
+no-op in the component):
+- Added optional `handoffRound`, `authoredAt`, `authoredByName`,
+  `authoredByFirm` on `MSPartyEntry`.
+- Added `HandoffState.handoffRound: number` (default 0) +
+  `bumpHandoffRound` / `currentHandoffRound` helpers.
+- New pure helpers `stampPartyEdit` and `stampSlatesAfterEdit` in
+  `share.ts`: stamp only on material content change; no-op on identical
+  re-saves.
+- New test file `__tests__/attribution.test.ts` includes the round-trip
+  contract test: Alice authors A.a + A.f in r1, Bob amends only A.a in
+  r2, Alice amends only A.f in r3 — per-entry attribution is preserved
+  across amendments (factor A.f keeps Alice's r1 stamp even after Bob's
+  r2 edits to A.a).
+
+### §1.6 cumulative projection + § 93-11-65 carve-outs — **net-new (within an extension shell)**
+
+v1 baseline: flat `childAges: number[]` only; `computeAvgMonthsRemaining`
+honored age-21 default only.
+
+v2 work:
+- New `MSChild` type with `emancipationStatus`
+  (`none` | `marriage` | `military_service` | `qualifying_felony` |
+  `school_discontinuance`) + optional `projectedEmancipationDate`.
+- `MSInputs.children?: MSChild[]` added alongside legacy `childAges`.
+- `monthsRemainingForChild(child, now)` honors all four § 93-11-65(8)
+  carve-outs: occurred = 0 months; future projected date = months until
+  date, capped at age-21 default for that child.
+- `computeAvgMonthsRemainingFromInputs` prefers structured `children`
+  when present; otherwise falls back to `childAges`.
+- Share decoder back-fills `children` from `childAges` for legacy URLs.
+- New `__tests__/emancipation.test.ts` (8 tests): each carve-out path,
+  the age-21 cap, the structured-vs-flat preference, legacy decode.
+
+**UI deferred to Phase 2.5**: per-child carve-out form (status selector
++ projected date + supporting note) is not yet surfaced in
+`inputs.tsx`. Data model and back-end calculation are complete; the UI
+is a thin form pass before the Phase 2/3 check-in.
+
+
 
 ---
 

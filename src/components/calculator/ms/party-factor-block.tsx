@@ -18,6 +18,7 @@ import type {
   MSFactorLetter,
   MSPartyEntry,
   MSPartyPosition,
+  HandoffAttorney,
 } from "@/lib/calc/ms/types";
 import {
   FACTOR_STATUTORY_TEXT,
@@ -25,6 +26,7 @@ import {
   buildReconciliation,
   summarizeRow,
 } from "@/lib/calc/ms/reconciliation";
+// stampPartyEdit is wired by parent component (inputs.tsx) on save; not needed here directly.
 import {
   Field,
   NumInput,
@@ -89,6 +91,9 @@ interface BlockProps {
   /** Two-attorney handoff lock — read-only slate for the originating side. */
   obligorLocked?: boolean;
   obligeeLocked?: boolean;
+  /** §1.5 attribution context for stamping author + handoff round. */
+  handoffRound?: number;
+  currentAuthor?: HandoffAttorney | null;
 }
 
 export function MSPartyFactorBlock({
@@ -103,7 +108,10 @@ export function MSPartyFactorBlock({
   buildContextInputs,
   obligorLocked = false,
   obligeeLocked = false,
+  handoffRound = 0,
+  currentAuthor = null,
 }: BlockProps) {
+  void handoffRound; void currentAuthor; // wired through to PartyColumn in a follow-up; see ms-v2-changelog §1.5
   const inPlay = inPlayFrom(obligor, obligee);
 
   const setInPlay = (next: InPlay) => {

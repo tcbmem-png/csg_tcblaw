@@ -7,7 +7,7 @@
  * The math here is display-only: it does NOT influence calculateMS or any
  * worksheet result. The chancellor weighs the evidence; we only show gaps.
  */
-import type { MSDeviation, MSFactorLetter, MSInputs } from "./types";
+import type { MSChild, MSDeviation, MSFactorLetter, MSInputs } from "./types";
 
 // Letters match Miss. Code Ann. § 43-19-103 verbatim (2024 codification).
 // Verified against MDHS-published statute, Justia 2024, FindLaw, and the
@@ -116,7 +116,7 @@ export function buildReconciliation(inputs: MSInputs): ReconciliationReport {
   const obligorMonthly = rows.reduce((s, r) => s + r.obligor.amount, 0);
   const obligeeMonthly = rows.reduce((s, r) => s + r.obligee.amount, 0);
 
-  const avgMonthsRemaining = computeAvgMonthsRemaining(inputs.childAges ?? []);
+  const avgMonthsRemaining = computeAvgMonthsRemainingFromInputs(inputs);
   const netDifferenceMonthly = obligorMonthly - obligeeMonthly;
 
   return {
@@ -136,6 +136,57 @@ export function buildReconciliation(inputs: MSInputs): ReconciliationReport {
 }
 
 /**
+ * Prefers `inputs.children` (carve-out aware) when present and non-empty;
+ * otherwise falls back to the flat `inputs.childAges` list.
+ */
+export function computeAvgMonthsRemainingFromInputs(
+  inputs: Pick<MSInputs, "children" | "childAges">,
+  now: Date = new Date(),
+): number | null {
+  if (inputs.children && inputs.children.length > 0) {
+    return computeAvgMonthsRemainingForChildren(inputs.children, now);
+  }
+  return computeAvgMonthsRemaining(inputs.childAges ?? []);
+}
+
+/**
+ * Per-child months-remaining honoring § 93-11-65(8) early-emancipation
+ * carve-outs (marriage, military service, qualifying felony 2y+, full-time
+ * school discontinuance):
+ *
+ *  - status === "none"                          → max(0, 21 − age) × 12
+ *  - status !== "none", no projected date       → already emancipated, 0
+ *  - status !== "none", projected date in past  → already emancipated, 0
+ *  - status !== "none", projected date future   → monthsBetween(now, date),
+ *    capped by the age-21 default for that child (never EXCEEDS age-21).
+ */
+export function computeAvgMonthsRemainingForChildren(
+  children: MSChild[],
+  now: Date = new Date(),
+): number | null {
+  if (children.length === 0) return null;
+  const perChild = children.map((c) => monthsRemainingForChild(c, now));
+  const mean = perChild.reduce((s, m) => s + m, 0) / perChild.length;
+  return Math.min(21 * 12, Math.max(0, Math.round(mean)));
+}
+
+export function monthsRemainingForChild(child: MSChild, now: Date = new Date()): number {
+  const ageMonths = Math.max(0, Math.round((21 - Number(child.age || 0)) * 12));
+  if (child.emancipationStatus === "none") return ageMonths;
+  // Carve-out asserted.
+  if (!child.projectedEmancipationDate) return 0; // already occurred
+  const target = new Date(child.projectedEmancipationDate);
+  if (Number.isNaN(target.getTime())) return ageMonths; // unparseable → ignore carve-out
+  const diffMs = target.getTime() - now.getTime();
+  if (diffMs <= 0) return 0;
+  const months = Math.round(diffMs / (1000 * 60 * 60 * 24 * 30.4375));
+  return Math.min(ageMonths, Math.max(0, months));
+}
+
+/**
+ * Legacy flat-list helper. Retained for backward-compatible call sites
+ * (older URLs and tests). Prefer `computeAvgMonthsRemainingFromInputs`.
+ *
  * mean(max(0, 21 − age_i)) × 12, capped at 21 years (252 months).
  * Returns null when there are no ages to average.
  */
