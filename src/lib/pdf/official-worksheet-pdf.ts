@@ -1,5 +1,6 @@
 import type { CalcInputs, CalcOutputs } from "@/lib/calc/types";
 import type { CaseCaption } from "@/lib/calc/share";
+import { composeDeviationNarrative } from "@/lib/calc/share";
 import {
   DEVIATION_METHODOLOGY_NOTE,
   specialExpensesThresholdLine,
@@ -697,9 +698,10 @@ export async function renderOfficialWorksheetPdf(args: {
     b: devFromMother < 0 ? dollar(-devFromMother) : "",
     c: undefined,
   });
-  // Up to 3 narrative rows — populated from caption.deviationNarrative.
-  const narrativeLines = caption.deviationNarrative
-    ? wrapText(caption.deviationNarrative.trim(), 9, END_X - LBL_X - 8)
+  // Up to 3 narrative rows — composed from per-toggle reasons (or override).
+  const narrative = composeDeviationNarrative(inputs, caption);
+  const narrativeLines = narrative
+    ? wrapText(narrative, 9, END_X - LBL_X - 8)
     : [];
   for (let i = 0; i < 3; i += 1) {
     ensure(ctx, 14);
@@ -840,9 +842,7 @@ export async function renderOfficialWorksheetPdf(args: {
     );
   }
 
-  const combinedComments = [devBreakdownLines.join(" "), (caption.comments || "").trim()]
-    .filter((s) => s.length > 0)
-    .join("\n\n");
+  const combinedComments = devBreakdownLines.join(" ").trim();
   const commentsHeight = devBreakdownLines.length > 0 ? 80 : 56;
   blankBox(ctx, "Comments, Calculations, or Rebuttals to Schedule:", commentsHeight, combinedComments);
 
