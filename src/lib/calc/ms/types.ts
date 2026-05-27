@@ -344,6 +344,8 @@ export interface MSChild {
 
 export function defaultMSChild(age = 0): MSChild {
   return { age, emancipationStatus: "none" };
+}
+
 
 export interface MSDeviationComputation {
   totalMonthly: number;
