@@ -47,6 +47,7 @@ export function defaultMSInputs(): MSInputs {
       status: "none",
       reasons: { domesticViolence: false, childAbuse: false, criminalNonpayment: false },
       hasMeansToPay: false,
+      meansToPayRationale: "",
     },
     obligorAnnualGross: 0,
     obligorAnnualTaxes: 0,
