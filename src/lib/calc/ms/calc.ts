@@ -210,6 +210,11 @@ export function calculateMS(inputs: MSInputs): MSOutputs {
     warnings.push(
       "Gross income is marked imputed. Under § 43-19-101(5) (effective 2022-07-01), imputation must be based on specific fact-gathering, not a standard amount.",
     );
+    if (imputationActive) {
+      warnings.push(
+        `Imputation scenario active — actual $${Math.round(actualGross).toLocaleString("en-US")}/yr blended with imputed $${Math.round(imputedGross).toLocaleString("en-US")}/yr at ${imputationApplicationPct}% application. Downstream amounts reflect scenario modeling — not a court determination. § 43-19-101(5).`,
+      );
+    }
   }
 
   return {
@@ -227,6 +232,11 @@ export function calculateMS(inputs: MSInputs): MSOutputs {
     requiresFindingLowIncome,
     warnings,
     guidelinesEffectiveDate: MS_GUIDELINES_EFFECTIVE_DATE,
+    imputationActive,
+    imputationApplicationPct,
+    imputedAnnualGross: imputationActive ? imputedGross : 0,
+    actualAnnualGross: actualGross,
+    blendedAnnualGross: blendedGross,
   };
 }
 
