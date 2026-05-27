@@ -1,16 +1,27 @@
 /**
- * Worksheet Data Model (WDM) — Phase A
+ * Worksheet Data Model (WDM) — Phase A v2
  *
  * A single, normalized, render-agnostic representation of the AOC
  * Income-Shares worksheet. Both the on-screen worksheet
  * (`src/components/calculator/official-worksheet.tsx`) and the AOC PDF
  * generator (Phase B rewire) consume this same model so the two surfaces
- * cannot drift.
+ * cannot drift. Phase D's narrative + advocacy-denylist builder consumes
+ * the same model and relies on the judgment-call metadata defined below.
  *
  * Phase A scope: data model + builder + unit tests. No consumer is
  * rewired in this phase — the screen worksheet and PDF still derive
  * directly from CalcOutputs. Phase B0 will lock screenshot baselines,
  * Phase B will switch the consumers over.
+ *
+ * Value classification (drives narrative routing + advocacy audit):
+ *   - "mechanical"  Pure arithmetic over other WDM values. No judgment.
+ *                   No quoting required.
+ *   - "structural"  Rule-driven categorical or rule-prescribed lookup
+ *                   (parenting band, BCSO schedule cell). Cite the rule;
+ *                   no advocacy risk.
+ *   - "judgment"    User election or court-discretion call. Phase D
+ *                   narrative MUST route the user's contribution through
+ *                   userQuote() — see Refinement 1 of the denylist v2.
  *
  * Conventions
  * -----------
@@ -29,12 +40,58 @@
  */
 
 import type { CitationKey } from "../citations";
+import type { IncomeMethodology } from "../types";
+
+/** Refinement 1 (approved): drop A_/B_/C_ prefixes. */
+export type WDMValueCategory = "mechanical" | "structural" | "judgment";
+
+/**
+ * A user election or judgment call captured against a WDM value.
+ *
+ * Refinement 2 (approved): `value: unknown` is fine for v2. TIGHTEN
+ * this to a discriminated union (likely keyed by `field`) once Phase D
+ * narrative builders settle the shape of judgment-surfaced value types.
+ * The narrative-audit pipeline currently treats `value` opaquely and
+ * routes only the `rationale` string through userQuote().
+ */
+export interface WDMUserElection {
+  /** Dot-path into CalcInputs identifying the elected field
+   *  (e.g. "parentAIncomeMethodology", "includePrivateSchool",
+   *  "specialExpensesWaiveThreshold"). */
+  field: string;
+  /** Raw user-supplied value. TIGHTEN: see note above. */
+  value: unknown;
+  /** Verbatim user-entered rationale, if the input flow captured one. */
+  rationale?: string;
+  /** Sentinel for Phase D userQuote() routing. */
+  source: "user_input";
+}
 
 export interface WDMValue {
   /** Pre-formatted display string (already includes "$" / "%" / "(...)" if applicable). */
   display: string;
   /** Raw numeric value when meaningful (dollars, percent, multiplier). Null for non-numeric cells. */
   amount: number | null;
+  /** Value classification — see file header. */
+  category: WDMValueCategory;
+  /** Controlling rule citation. Required for category === "judgment". */
+  rule?: CitationKey;
+  /** Rule-enumerated factors the court must weigh. Required for category === "judgment". */
+  factors?: string[];
+  /** User election metadata. Required iff category === "judgment". The
+   *  Phase A test suite enforces this invariant in both directions
+   *  (see Refinement 5). */
+  userElection?: WDMUserElection;
+}
+
+/** Above-cap BCSO formula breakdown (Rule .09(2)(d)). Surfaced as a
+ *  structured object on the BCSO section's Line 6 so Phase D narrative
+ *  builders can render the formula without parsing display strings. */
+export interface WDMBcsoAboveCap {
+  topOfSchedule: number;
+  excessAGI: number;
+  rate: number;
+  addition: number;
 }
 
 export interface WDMLine {
@@ -58,6 +115,17 @@ export interface WDMLine {
   annotation?: string;
   /** Income-source sub-line (replaces the existing SourceLine in the renderer). */
   subSource?: { a: string; b: string };
+  /** Structured above-cap breakdown (only set on Line 6 when bcsoSource === "above_cap"). */
+  bcsoAboveCap?: WDMBcsoAboveCap;
+  /** Full income methodology pass-through on Line 3 — both sides
+   *  independent. Refinement 3 (approved): parentA AND parentB are
+   *  both populated from the corresponding CalcInputs fields. Phase B
+   *  Appendix B renders path-specific sub-tables from these objects
+   *  without re-reading CalcInputs. */
+  methodology?: {
+    parentA?: IncomeMethodology;
+    parentB?: IncomeMethodology;
+  };
 }
 
 export interface WDMSection {
@@ -85,22 +153,49 @@ export interface WDMHeader {
   preparedOnDisplay: string;
 }
 
+/**
+ * Statutory cap panel — Refinement 4 (approved): one structured shape
+ * feeds BOTH narrative branches. `engaged` discriminates; both
+ * branches receive `calculatedPCSO`, `statutoryMax`, `numChildren`,
+ * `capNote`, `caseLaw`.
+ *
+ *   - Engaged (calculatedPCSO > statutoryMax):
+ *       excessOverCap > 0, factors populated with the burden-shift
+ *       factor list, userElectedPCSO populated when the user has
+ *       entered an above-cap election (Fixture #11 input — wiring lands
+ *       when the input flow ships; null until then).
+ *
+ *   - Not engaged (calculatedPCSO ≤ statutoryMax):
+ *       headroom = statutoryMax − calculatedPCSO. Feeds the below-cap
+ *       reassurance narrative ("$X/mo below the §36-5-101(e)(1)(B)
+ *       cap"). excessOverCap = 0, factors = [], userElectedPCSO = null.
+ */
 export interface WDMStatutoryCapPanel {
+  engaged: boolean;
   calculatedPCSO: number;
   statutoryMax: number;
-  excessOverCap: number;
   numChildren: number;
-  /** Neutral guideline note (from outputs.pcsoCapNote). */
+  /** Engaged: dollars above the cap. Not-engaged: 0. */
+  excessOverCap: number;
+  /** Not-engaged: dollars below the cap. Engaged: 0. */
+  headroom: number;
+  /** Neutral guideline note (from outputs.pcsoCapNote / pcsoBelowCapNote). */
   capNote: string | null;
-  /** Optional case-law footnote sourced from CITATIONS.pcso_max.caseNote. */
-  caseNote: string | null;
+  /** Case-law footnote sourced from CITATIONS.pcso_max.caseNote (Nash/Richardson/Smallman lineage). */
+  caseLaw: string | null;
+  /** Engaged: burden-shift factor list per Nash v. Mulle progeny. Not-engaged: []. */
+  factors: string[];
+  /** Engaged: user's elected PCSO when the above-cap input flow has captured one. Null otherwise. */
+  userElectedPCSO: {
+    amount: number;
+    rationale?: string;
+    source: "user_input";
+  } | null;
 }
 
 export interface WDMPanels {
-  /** Rendered when PCSO exceeds the §36-5-101(e)(1)(B) cap. */
-  statutoryCap: WDMStatutoryCapPanel | null;
-  /** Reassurance note shown when PCSO is at or below the cap. */
-  pcsoBelowCapNote: string | null;
+  /** Always present (Refinement 4). Use `engaged` to discriminate. */
+  statutoryCap: WDMStatutoryCapPanel;
   /** "Why is this support amount so low?" explainer for Equal 50/50. */
   equalParentingLowSupportNote: string | null;
   /** Rule .04(7)(f) — non-earner ARP explainer. */
