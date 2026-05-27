@@ -75,6 +75,7 @@ describe("availableDecisions", () => {
 describe("decisionContribution", () => {
   it("returns 0 for pending and declined decisions", () => {
     let inputs = defaultMSInputs();
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "A", "a", { applicable: true, proposedMonthly: 300 });
     const row = buildReconciliation(inputs).rows.find((r) => r.letter === "a")!;
     expect(
@@ -87,7 +88,9 @@ describe("decisionContribution", () => {
 
   it("adopt_obligor uses obligor's amount; falls back to 0 when not applicable", () => {
     let inputs = defaultMSInputs();
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "A", "a", { applicable: true, proposedMonthly: 400 });
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "B", "a", { applicable: false, proposedMonthly: 0 });
     const row = buildReconciliation(inputs).rows.find((r) => r.letter === "a")!;
     expect(
@@ -100,7 +103,9 @@ describe("decisionContribution", () => {
 
   it("split averages the two applicable positions on `both`", () => {
     let inputs = defaultMSInputs();
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "A", "h", { applicable: true, proposedMonthly: 600 });
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "B", "h", { applicable: true, proposedMonthly: 200 });
     const row = buildReconciliation(inputs).rows.find((r) => r.letter === "h")!;
     expect(
@@ -109,6 +114,7 @@ describe("decisionContribution", () => {
   });
 
   it("custom decision uses the chancellor's signed amount, clamped to ±$50k", () => {
+    let inputs = defaultMSInputs();
     let inputs = defaultMSInputs();
     inputs = setSide(inputs, "A", "j", { applicable: true, proposedMonthly: 0 });
     const row = buildReconciliation(inputs).rows.find((r) => r.letter === "j")!;
@@ -121,7 +127,9 @@ describe("decisionContribution", () => {
   });
 
   it("adopt_obligor uses obligor's amount; falls back to 0 when not applicable", () => {
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "A", "a", { applicable: true, proposedMonthly: 400 });
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "B", "a", { applicable: false, proposedMonthly: 0 });
     const row = buildReconciliation(inputs).rows.find((r) => r.letter === "a")!;
     expect(
@@ -133,7 +141,9 @@ describe("decisionContribution", () => {
   });
 
   it("split averages the two applicable positions on `both`", () => {
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "A", "h", { applicable: true, proposedMonthly: 600 });
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "B", "h", { applicable: true, proposedMonthly: 200 });
     const row = buildReconciliation(inputs).rows.find((r) => r.letter === "h")!;
     expect(
@@ -142,6 +152,7 @@ describe("decisionContribution", () => {
   });
 
   it("custom decision uses the chancellor's signed amount, clamped to ±$50k", () => {
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "A", "j", { applicable: true, proposedMonthly: 0 });
     const row = buildReconciliation(inputs).rows.find((r) => r.letter === "j")!;
     expect(
@@ -165,7 +176,9 @@ describe("decisionContribution", () => {
   });
 
   it("accept_agreed adopts the stipulated amount on an `agree` row", () => {
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "A", "f", { applicable: true, proposedMonthly: 150 });
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "B", "f", { applicable: true, proposedMonthly: 150 });
     const row = buildReconciliation(inputs).rows.find((r) => r.letter === "f")!;
     expect(row.inPlay).toBe("agree");
@@ -200,8 +213,11 @@ describe("recordDecision — audit trail timestamping", () => {
 describe("computeChancellorTotals — running total + pending tracking", () => {
   it("sums per-factor contributions and counts active vs. pending rows", () => {
     let inputs = defaultMSInputs();
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "A", "a", { applicable: true, proposedMonthly: 300 });
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "A", "h", { applicable: true, proposedMonthly: 600 });
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "B", "h", { applicable: true, proposedMonthly: 200 });
     const rows = buildReconciliation(inputs).rows;
     const decisions = defaultChancellorDecisions();
