@@ -312,8 +312,18 @@ function PartyColumn({
           : "border-accent/40 bg-accent/[0.05]")
       }
     >
-      <div className="mb-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-        {header}
+      <div className="mb-3 flex items-baseline justify-between gap-2">
+        <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          {header}
+        </div>
+        {/* §1.5 attribution line. Renders only for amendments — round 1 is
+            the initial draft and is implicit from the column header itself. */}
+        {party.handoffRound && party.handoffRound > 1 ? (
+          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/80">
+            Amended in round {party.handoffRound}
+            {party.authoredByName ? ` by ${party.authoredByName}` : ""}
+          </div>
+        ) : null}
       </div>
 
       <div className="space-y-3">
