@@ -743,7 +743,7 @@ describe("buildWDM v2.1 — deviationsNarrative", () => {
       privateSchoolPaidBy: "parent_a",
     });
     const flat = flattenForCommentsBlock(wdm.panels.deviationsNarrative);
-    expect(flat).toContain("Private");
+    expect(flat).toContain("private-school");
     expect(flat).toContain("Net deviation transfer");
     expect(flat).not.toMatch(/  /); // no double spaces
   });
