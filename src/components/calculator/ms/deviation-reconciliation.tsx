@@ -275,17 +275,34 @@ export function MSDeviationReconciliation({ inputs, setInputs }: Props) {
               {fmt(chancellor.totalMonthly)}
             </span>
           </div>
-          {chancellorCumulative !== null && (
-            <div className="mt-2 flex items-baseline justify-between border-t border-rule pt-2 font-medium">
-              <span>Cumulative through emancipation</span>
-              <span
-                className={
-                  "font-mono transition-colors duration-300 " +
-                  (flash ? "text-primary" : "text-ink")
-                }
-              >
-                {fmt(chancellorCumulative)}
-              </span>
+          {finalOrderCumulative !== null && months !== null && (
+            <div className="mt-2 border-t border-rule pt-2">
+              {/* §1.9 / D-011 — three-line treatment. Headline answers
+                  "what am I ordering" (canonical Williams $302,400 framing);
+                  supporting lines show the doctrinal anchor and the
+                  mediation negotiation anchor. */}
+              <div className="flex items-baseline justify-between font-medium">
+                <span>Total order through emancipation</span>
+                <span
+                  className={
+                    "font-mono transition-colors duration-300 " +
+                    (flash ? "text-primary" : "text-ink")
+                  }
+                  title={`${fmt(outputs.proposedFinalMonthly)}/mo × ${months} mo`}
+                >
+                  {fmt(finalOrderCumulative)}
+                </span>
+              </div>
+              <div className="mt-1 flex items-baseline justify-between text-xs text-muted-foreground">
+                <span>Presumptive baseline</span>
+                <span className="font-mono">
+                  {presumptiveCumulative !== null ? fmt(presumptiveCumulative) : "—"}
+                </span>
+              </div>
+              <div className="mt-0.5 flex items-baseline justify-between text-xs text-muted-foreground">
+                <span>Chancellor's deviation impact</span>
+                <span className="font-mono">{fmt(chancellorCumulative ?? 0)}</span>
+              </div>
             </div>
           )}
           {totals.avgMonthsRemaining === null && (
