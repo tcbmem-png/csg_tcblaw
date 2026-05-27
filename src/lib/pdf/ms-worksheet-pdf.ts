@@ -5,6 +5,7 @@ import type {
   MSDeviation,
   MSDeviationStructured,
 } from "@/lib/calc/ms/types";
+import { assertedImputationFactors } from "@/lib/calc/ms/imputation-labels";
 import type { CaseCaption } from "@/lib/calc/share";
 import {
   SimplePdf,
