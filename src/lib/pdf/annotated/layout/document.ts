@@ -206,7 +206,8 @@ export async function renderBlocksToPdf(
   assets: AnnotatedPdfAssets,
 ): Promise<Uint8Array> {
   const { regularPath, boldPath } = await materializeFonts(assets);
-  const printer = new PdfPrinter(buildFonts(regularPath, boldPath));
+  pdfMake.setFonts(buildFonts(regularPath, boldPath));
+  pdfMake.setLocalAccessPolicy(() => true);
 
   const footerTpl =
     meta.footerTemplate ??
@@ -254,14 +255,8 @@ export async function renderBlocksToPdf(
     content: flatten(blocks),
   };
 
-  const pdfDoc = printer.createPdfKitDocument(doc);
-  const chunks: Buffer[] = [];
-  return await new Promise<Uint8Array>((resolve, reject) => {
-    pdfDoc.on("data", (chunk: Buffer) => chunks.push(chunk));
-    pdfDoc.on("end", () => resolve(new Uint8Array(Buffer.concat(chunks))));
-    pdfDoc.on("error", reject);
-    pdfDoc.end();
-  });
+  const buf = await pdfMake.createPdf(doc).getBuffer();
+  return new Uint8Array(buf);
 }
 
 /** Surface for tests: walk the citation keys present in a block tree. */
