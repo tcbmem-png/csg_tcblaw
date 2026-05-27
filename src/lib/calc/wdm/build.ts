@@ -690,9 +690,13 @@ function buildStatutoryCapPanel(
   inputs: CalcInputs,
   outputs: CalcOutputs,
 ): WDMStatutoryCapPanel {
+  // PCSO is the *pre-deviation* presumptive order: net presumptive support
+  // (post-SSR) plus mandatory add-ons. Tenn. Code Ann. § 36-5-101(e)(1)(B)
+  // applies the cap to the PCSO, not to the FCSO. Mirrors `pcsoMagnitude`
+  // computed in calc.ts for the engaged/headroom test.
   const calculatedPCSO =
-    Math.abs(outputs.allInMonthlyFromA) +
-    Math.abs(outputs.federalBenefitOffsetFromA);
+    Math.abs(outputs.netPresumptiveSupport) +
+    Math.abs(outputs.addOnsTotalFromA);
   const statutoryMax = outputs.pcsoStatutoryMax;
   const engaged = outputs.pcsoExceedsStatutoryMax;
 
