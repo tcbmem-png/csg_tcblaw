@@ -65,6 +65,7 @@ export function defaultMSInputs(): MSInputs {
     deviationsA: ALL_FACTOR_LETTERS.map(defaultDeviation),
     deviationsB: undefined,
     childAges: [],
+    children: [],
   };
 }
 
