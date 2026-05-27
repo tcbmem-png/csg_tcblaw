@@ -65,23 +65,28 @@ const FONT_DEF_FILE_NAMES = {
   bold: "DejaVuSans-Bold.ttf",
 };
 
-function buildFonts(assets: AnnotatedPdfAssets): TFontDictionary {
-  return {
-    DejaVu: {
-      normal: FONT_DEF_FILE_NAMES.regular,
-      bold: FONT_DEF_FILE_NAMES.bold,
-      italics: FONT_DEF_FILE_NAMES.regular,
-      bolditalics: FONT_DEF_FILE_NAMES.bold,
-    },
-  };
+async function materializeFonts(
+  assets: AnnotatedPdfAssets,
+): Promise<{ regularPath: string; boldPath: string }> {
+  const { promises: fs } = await import("node:fs");
+  const os = await import("node:os");
+  const path = await import("node:path");
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "tn-annot-fonts-"));
+  const regularPath = path.join(dir, FONT_DEF_FILE_NAMES.regular);
+  const boldPath = path.join(dir, FONT_DEF_FILE_NAMES.bold);
+  await fs.writeFile(regularPath, Buffer.from(assets.regularFont));
+  await fs.writeFile(boldPath, Buffer.from(assets.boldFont));
+  return { regularPath, boldPath };
 }
 
-function buildVfs(assets: AnnotatedPdfAssets): Record<string, string> {
+function buildFonts(regularPath: string, boldPath: string): TFontDictionary {
   return {
-    [FONT_DEF_FILE_NAMES.regular]: Buffer.from(assets.regularFont).toString(
-      "base64",
-    ),
-    [FONT_DEF_FILE_NAMES.bold]: Buffer.from(assets.boldFont).toString("base64"),
+    DejaVu: {
+      normal: regularPath,
+      bold: boldPath,
+      italics: regularPath,
+      bolditalics: boldPath,
+    },
   };
 }
 
