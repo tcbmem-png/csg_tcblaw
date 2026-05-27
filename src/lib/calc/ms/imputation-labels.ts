@@ -36,7 +36,7 @@ export const MS_IMPUTATION_FACTOR_LABELS: Record<keyof MSImputationFactors, stri
 };
 
 /** Returns the populated factors as { label, value } pairs for display. */
-export function asssertedImputationFactors(
+export function assertedImputationFactors(
   basis: MSImputationBasis,
 ): { key: keyof MSImputationFactors; label: string; value: string }[] {
   return MS_IMPUTATION_FACTOR_KEYS
