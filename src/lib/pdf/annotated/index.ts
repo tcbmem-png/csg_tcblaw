@@ -81,7 +81,7 @@ function ruleDisplay(line: WDMLine): string | null {
 
 const TABLE_WIDTHS = [28, "*" as const, 64, 64, 70];
 
-function headerRow(): Array<Content> {
+function headerRow(): any[] {
   const cell = (text: string, align: "left" | "right" = "right"): Content => ({
     text,
     bold: true,
@@ -94,7 +94,7 @@ function headerRow(): Array<Content> {
   return [cell("", "left"), cell("", "left"), cell("A"), cell("B"), cell("Combined")];
 }
 
-function sectionTitleRow(title: string): Array<Content> {
+function sectionTitleRow(title: string): any[] {
   return [
     {
       text: title.toUpperCase(),
@@ -113,7 +113,7 @@ function sectionTitleRow(title: string): Array<Content> {
   ];
 }
 
-function lineRow(line: WDMLine): Array<Content> {
+function lineRow(line: WDMLine): any[] {
   const fill = line.emphasis ? COLOR_CREAM : undefined;
   const labelStack: Content[] = [
     { text: line.label, bold: !!line.emphasis, fontSize: 9.5 },
@@ -156,7 +156,7 @@ function lineRow(line: WDMLine): Array<Content> {
   ];
 }
 
-function subSourceRow(a: string, b: string): Array<Content> {
+function subSourceRow(a: string, b: string): any[] {
   return [
     { text: "", fontSize: 7 },
     { text: "", fontSize: 7 },
@@ -178,7 +178,7 @@ function subSourceRow(a: string, b: string): Array<Content> {
   ];
 }
 
-function aboveCapRow(bcso: NonNullable<WDMLine["bcsoAboveCap"]>): Array<Content> {
+function aboveCapRow(bcso: NonNullable<WDMLine["bcsoAboveCap"]>): any[] {
   // Above-cap formula broken into components (matches the on-screen
   // worksheet's Line 6 expansion under Rule .09(2)(d)).
   const ratePct = (bcso.rate * 100).toFixed(2);
@@ -201,7 +201,7 @@ function aboveCapRow(bcso: NonNullable<WDMLine["bcsoAboveCap"]>): Array<Content>
   ];
 }
 
-function inlineNoteRow(text: string): Array<Content> {
+function inlineNoteRow(text: string): any[] {
   return [
     { text: "", fontSize: 8 },
     {
@@ -219,7 +219,7 @@ function inlineNoteRow(text: string): Array<Content> {
 }
 
 function buildWorksheetTable(wdm: WDM): Content {
-  const body: Array<Array<Content>> = [headerRow()];
+  const body: Array<any[]> = [headerRow()];
 
   // Find the special-expenses block once (mirrors on-screen behavior).
   const seBlock = wdm.panels.deviationsNarrative.blocks.find(
