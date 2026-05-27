@@ -1,9 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { calculateMS, defaultMSInputs } from "../calc";
-import type { MSInputs } from "../types";
+import {
+  defaultChancellorDecisions,
+  recordDecision,
+} from "../chancellor-decisions";
+import type { MSFactorLetter, MSInputs } from "../types";
 
 function withDefaults(patch: Partial<MSInputs>): MSInputs {
   return { ...defaultMSInputs(), ...patch };
+}
+
+/** Helper: assert chancellor-adopts-obligor on the given factor letters. */
+function adoptObligor(letters: MSFactorLetter[]) {
+  const decisions = defaultChancellorDecisions();
+  for (const l of letters) {
+    decisions[l] = recordDecision(decisions[l], { decision: "adopt_obligor" });
+  }
+  return decisions;
 }
 
 describe("MS calc — § 43-19-101 verification tests", () => {
