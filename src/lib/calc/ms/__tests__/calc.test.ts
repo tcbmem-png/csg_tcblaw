@@ -149,22 +149,7 @@ describe("MS calc — additional invariants", () => {
     const out = calculateMS(inputs);
     expect(out.proposedFinalMonthly).toBe(0);
   });
-    const base = defaultMSInputs();
-    const inputs: MSInputs = {
-      ...base,
-      numChildren: 1,
-      obligorAnnualGross: 20000,
-      obligorAnnualTaxes: 2000,
-      obligorAnnualSocialSecurity: 1240,
-      deviationsA: base.deviationsA.map((d) =>
-        d.letter === "j"
-          ? { ...d, applicable: true, description: "Massive offset", proposedMonthly: -10000 }
-          : d,
-      ),
-    };
-    const out = calculateMS(inputs);
-    expect(out.proposedFinalMonthly).toBe(0);
-  });
+
 
   it("shared custody flag emits a Factor (g) note", () => {
     const out = calculateMS(
