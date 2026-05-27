@@ -1,28 +1,34 @@
 /**
- * buildWDM — Phase A
+ * buildWDM — Phase A v2
  *
  * Pure function: (CalcInputs, CalcOutputs, CaseCaption?) → WDM.
  *
- * The builder owns ALL display formatting decisions and ALL line-level
- * annotation logic that is currently inlined in
- * `official-worksheet.tsx`. Once Phase B rewires the screen and PDF
- * renderers to consume the WDM, those decisions live in exactly one
- * place.
+ * Owns all display formatting and all judgment-call metadata tagging.
+ * Phase D narrative builders consume the WDM and rely on:
+ *   - every "judgment" value carrying { rule, factors, userElection }
+ *   - every userElection carrying source: "user_input" for userQuote()
+ *   - methodology pass-through on Line 3 (both sides) for Appendix B
+ *   - bcsoAboveCap structured sub-object on Line 6 (above-cap branch)
+ *   - statutoryCap panel structured for both engaged and not-engaged
  *
  * Approved Phase A behaviors (locked in chat):
- *  - Equal 50/50 → Line 6 (BCSO) prints "$0" with the margin annotation
+ *  - Equal 50/50 → Line 6 prints "$0" with the margin annotation
  *    "equal-parenting cross-credit applied at Line 7 per Rule
  *    .04(7)(b)(2)(i)". (Cross-credit shows on Line 7.)
  *  - Equal 50/50 → PRP/ARP/SPLIT remain unchecked with the margin
  *    annotation "Equal parenting — Rule .04(7)(b)(2)(i)." on the
- *    parenting-time line. (SPLIT in TN means split custody, not
- *    split-time.)
+ *    parenting-time line.
  */
 
-import type { CalcInputs, CalcOutputs, Direction, IncomeMethodology } from "../types";
+import type {
+  CalcInputs,
+  CalcOutputs,
+  Direction,
+  IncomeMethodology,
+} from "../types";
 import type { CaseCaption } from "../share";
 import { defaultCaption } from "../share";
-import { CITATIONS } from "../citations";
+import { CITATIONS, type CitationKey } from "../citations";
 import {
   citationForBcso,
   citationForParentingMode,
@@ -32,14 +38,26 @@ import type {
   WDMLine,
   WDMSection,
   WDMValue,
+  WDMValueCategory,
   WDMCaption,
   WDMPanels,
+  WDMStatutoryCapPanel,
+  WDMUserElection,
 } from "./types";
 
 const DEVIATION_METHODOLOGY_NOTE =
   "Deviations are applied as monthly cash flows after the BCSO is set. " +
   "The court must enter written findings stating the amount of support that " +
   "would have been ordered under the guidelines and the reasons for the deviation.";
+
+// Burden-shift factor list, Nash v. Mulle progeny. Surfaced on the
+// statutoryCap panel when engaged; consumed by Phase D narrative.
+const PCSO_BURDEN_SHIFT_FACTORS: ReadonlyArray<string> = [
+  "the child's reasonable needs at the time of the order",
+  "the lifestyle the child would have enjoyed but for the parents' separation",
+  "the recipient parent's proof of need above the presumptive cap",
+  "the standard of living attributable to the obligor's income",
+];
 
 // ---------- formatting helpers ----------
 
@@ -49,16 +67,36 @@ function fmtAbs(n: number): string {
   return n < 0 ? `(${s})` : s;
 }
 
-function money(n: number): WDMValue {
-  return { display: `$${fmtAbs(n)}`, amount: n };
+function money(n: number, category: WDMValueCategory = "mechanical"): WDMValue {
+  return { display: `$${fmtAbs(n)}`, amount: n, category };
 }
 
-function pct(fraction: number): WDMValue {
-  return { display: `${(fraction * 100).toFixed(2)}%`, amount: fraction };
+function pct(fraction: number, category: WDMValueCategory = "mechanical"): WDMValue {
+  return {
+    display: `${(fraction * 100).toFixed(2)}%`,
+    amount: fraction,
+    category,
+  };
 }
 
-function text(display: string): WDMValue {
-  return { display, amount: null };
+function text(display: string, category: WDMValueCategory = "structural"): WDMValue {
+  return { display, amount: null, category };
+}
+
+function judgmentMoney(
+  n: number,
+  rule: CitationKey,
+  factors: string[],
+  userElection: WDMUserElection,
+): WDMValue {
+  return {
+    display: `$${fmtAbs(n)}`,
+    amount: n,
+    category: "judgment",
+    rule,
+    factors,
+    userElection,
+  };
 }
 
 function dirLabel(d: Direction, a: string, b: string): string {
@@ -79,6 +117,119 @@ function incomeSourceLabel(m: IncomeMethodology | undefined): string {
   if (m.path === "imputed") return "Source: imputed income (see appendix)";
   if (m.path === "special") return "Source: special situation (see appendix)";
   return "Source: entered directly";
+}
+
+// ---------- income-judgment tagging ----------
+
+/**
+ * Whether the gross-income figure for a parent is a judgment call.
+ * - useImputation toggles the gross slot to the IMPUTED figure → judgment.
+ * - imputed / variable / self_employed / special methodologies → judgment.
+ * - simple / multi_source → mechanical (factual numeric input).
+ */
+function isGrossJudgment(
+  useImputation: boolean,
+  m: IncomeMethodology | undefined,
+): boolean {
+  if (useImputation) return true;
+  if (!m) return false;
+  return (
+    m.path === "imputed" ||
+    m.path === "variable" ||
+    m.path === "self_employed" ||
+    m.path === "special"
+  );
+}
+
+function imputedRule(m: IncomeMethodology | undefined): CitationKey {
+  if (m && m.path === "imputed") {
+    if (m.method === "vocational_capacity") return "income_imputed_vocational";
+    if (m.method === "asset_based") return "income_imputed_assets";
+    return "income_imputed_prior_earnings";
+  }
+  return "income_imputed_prior_earnings";
+}
+
+function grossRule(
+  useImputation: boolean,
+  m: IncomeMethodology | undefined,
+): CitationKey {
+  if (useImputation || (m && m.path === "imputed")) return imputedRule(m);
+  if (m?.path === "variable") return "income_variable";
+  if (m?.path === "self_employed") return "income_self_employed";
+  if (m?.path === "special") {
+    if (m.situation === "incarcerated") return "income_carveout_incarceration";
+    if (m.situation === "ssi_only") return "income_carveout_means_tested";
+    if (m.situation === "federal_benefit_to_child")
+      return "income_federal_benefit_to_child";
+    return "income_imputed_prior_earnings";
+  }
+  return "gross_income";
+}
+
+function grossFactors(
+  useImputation: boolean,
+  m: IncomeMethodology | undefined,
+): string[] {
+  if (useImputation || (m && m.path === "imputed")) {
+    const method = m && m.path === "imputed" ? m.method : "prior_earnings";
+    if (method === "vocational_capacity") {
+      return [
+        "occupation",
+        "geographic area / labor market",
+        "education and training",
+        "hours per week reasonably available",
+      ];
+    }
+    if (method === "asset_based") {
+      return [
+        "non-income-producing assets controlled by the parent",
+        "reasonable rate of return on those assets",
+      ];
+    }
+    return [
+      "past and present employment",
+      "education and training",
+      "averaging period applied to prior earnings",
+    ];
+  }
+  if (m?.path === "variable") {
+    return [
+      "reasonableness of the averaging period selected",
+      "weight given to outlier years",
+      "consistency with the parent's earnings pattern",
+    ];
+  }
+  if (m?.path === "self_employed") {
+    return [
+      "ordinary-and-necessary character of each claimed expense",
+      "treatment of accelerated depreciation and §179 add-backs",
+      "characterization of distributions vs. compensation",
+    ];
+  }
+  if (m?.path === "special") {
+    return ["statutory carve-out applicability for the parent's situation"];
+  }
+  return [];
+}
+
+function grossUserElection(
+  side: "A" | "B",
+  m: IncomeMethodology | undefined,
+  useImputation: boolean,
+): WDMUserElection {
+  const field = side === "A" ? "parentAIncomeMethodology" : "parentBIncomeMethodology";
+  // Rationale lives at different keys per path; pull whatever is present.
+  let rationale: string | undefined;
+  if (m && "rationale" in m && typeof m.rationale === "string") {
+    rationale = m.rationale;
+  }
+  return {
+    field: useImputation && !m ? `useImputationFor${side}` : field,
+    value: m ?? null,
+    rationale,
+    source: "user_input",
+  };
 }
 
 function captionFrom(c: CaseCaption): WDMCaption {
@@ -116,8 +267,6 @@ function buildIdentificationSection(
   let parentingAnnotation: string | undefined;
   if (inputs.parentingType === "equal") {
     parentingTotal = "Equal (182.5 / 182.5)";
-    // Approved Phase A annotation — leaves PRP/ARP/SPLIT unchecked and
-    // calls out the rule basis directly on the line.
     parentingAnnotation = "Equal parenting — Rule .04(7)(b)(2)(i).";
   } else if (inputs.parentingType === "standard") {
     parentingTotal = `Standard (ARP = ${inputs.arpForStandard === "parent_a" ? a : b}, 80 days)`;
@@ -132,17 +281,18 @@ function buildIdentificationSection(
       {
         screenLineNo: "1",
         label: "Parent labels",
-        a: text(a),
-        b: text(b),
+        a: text(a, "structural"),
+        b: text(b, "structural"),
         total: text(
           `${inputs.numChildren} child${inputs.numChildren > 1 ? "ren" : ""}`,
+          "structural",
         ),
       },
       {
         screenLineNo: "2",
         label: "Parenting time",
         citation: citationForParentingMode(outputs),
-        total: text(parentingTotal),
+        total: text(parentingTotal, "structural"),
         annotation: parentingAnnotation,
       },
     ],
@@ -150,6 +300,34 @@ function buildIdentificationSection(
 }
 
 function buildAgiSection(inputs: CalcInputs, outputs: CalcOutputs): WDMSection {
+  // Line 3 — gross income, judgment-tagged per side independently.
+  const aJudgment = isGrossJudgment(
+    inputs.useImputationForA,
+    inputs.parentAIncomeMethodology,
+  );
+  const bJudgment = isGrossJudgment(
+    inputs.useImputationForB,
+    inputs.parentBIncomeMethodology,
+  );
+
+  const grossA = aJudgment
+    ? judgmentMoney(
+        inputs.parentAGrossMonthly,
+        grossRule(inputs.useImputationForA, inputs.parentAIncomeMethodology),
+        grossFactors(inputs.useImputationForA, inputs.parentAIncomeMethodology),
+        grossUserElection("A", inputs.parentAIncomeMethodology, inputs.useImputationForA),
+      )
+    : money(inputs.parentAGrossMonthly, "mechanical");
+
+  const grossB = bJudgment
+    ? judgmentMoney(
+        inputs.parentBGrossMonthly,
+        grossRule(inputs.useImputationForB, inputs.parentBIncomeMethodology),
+        grossFactors(inputs.useImputationForB, inputs.parentBIncomeMethodology),
+        grossUserElection("B", inputs.parentBIncomeMethodology, inputs.useImputationForB),
+      )
+    : money(inputs.parentBGrossMonthly, "mechanical");
+
   return {
     id: "agi",
     title: "II · Adjusted Gross Income",
@@ -158,50 +336,55 @@ function buildAgiSection(inputs: CalcInputs, outputs: CalcOutputs): WDMSection {
         screenLineNo: "3",
         label: "Gross monthly income",
         citation: "gross_income",
-        a: money(inputs.parentAGrossMonthly),
-        b: money(inputs.parentBGrossMonthly),
+        a: grossA,
+        b: grossB,
         subSource: {
           a: incomeSourceLabel(inputs.parentAIncomeMethodology),
           b: incomeSourceLabel(inputs.parentBIncomeMethodology),
+        },
+        // Refinement 3: both sides pass through independently.
+        methodology: {
+          parentA: inputs.parentAIncomeMethodology,
+          parentB: inputs.parentBIncomeMethodology,
         },
       },
       {
         screenLineNo: "3a",
         label: "Less: self-employment tax credit",
         citation: "se_tax_credit",
-        a: money(inputs.parentASECredit),
-        b: money(inputs.parentBSECredit),
+        a: money(inputs.parentASECredit, "mechanical"),
+        b: money(inputs.parentBSECredit, "mechanical"),
       },
       {
         screenLineNo: "3b",
         label: "Less: pre-existing child support paid",
         citation: "credit_not_in_home_children",
-        a: money(inputs.parentAPriorSupport),
-        b: money(inputs.parentBPriorSupport),
+        a: money(inputs.parentAPriorSupport, "mechanical"),
+        b: money(inputs.parentBPriorSupport, "mechanical"),
       },
       {
         screenLineNo: "3c",
         label: "Less: in-home children credit",
         citation: "credit_other_in_home_children",
-        a: money(inputs.parentAInhomeCredit),
-        b: money(inputs.parentBInhomeCredit),
+        a: money(inputs.parentAInhomeCredit, "mechanical"),
+        b: money(inputs.parentBInhomeCredit, "mechanical"),
       },
       {
         screenLineNo: "4",
         label: "Adjusted Gross Income (AGI)",
         citation: "agi",
-        a: money(outputs.parentAAGI),
-        b: money(outputs.parentBAGI),
-        total: money(outputs.combinedAGI),
+        a: money(outputs.parentAAGI, "mechanical"),
+        b: money(outputs.parentBAGI, "mechanical"),
+        total: money(outputs.combinedAGI, "mechanical"),
         emphasis: true,
       },
       {
         screenLineNo: "5",
         label: "Percentage of income (PI)",
         citation: "pro_rata",
-        a: pct(outputs.piA),
-        b: pct(outputs.piB),
-        total: text("100.00%"),
+        a: pct(outputs.piA, "mechanical"),
+        b: pct(outputs.piB, "mechanical"),
+        total: text("100.00%", "mechanical"),
       },
     ],
   };
@@ -210,17 +393,18 @@ function buildAgiSection(inputs: CalcInputs, outputs: CalcOutputs): WDMSection {
 function buildBcsoSection(inputs: CalcInputs, outputs: CalcOutputs): WDMSection {
   const lines: WDMLine[] = [];
 
-  // -------- Line 6 (BCSO) --------
   const isEqual = outputs.parentingTimeBand === "equal";
 
-  // Approved Phase A behavior: on Equal 50/50, Line 6 prints "$0" with
-  // a margin annotation that points to the cross-credit on Line 7.
+  // Line 6 — Equal 50/50 prints $0 with the cross-credit annotation.
+  // BCSO source classification is rule-driven → structural (the
+  // schedule cell or above-cap formula is mechanical given AGI, but
+  // the *choice* of source path is rule-prescribed).
   const bcsoLine: WDMLine = isEqual
     ? {
         screenLineNo: "6",
         label: "BCSO (schedule lookup, rounded up)",
         citation: citationForBcso(outputs),
-        total: money(0),
+        total: money(0, "structural"),
         emphasis: true,
         annotation:
           "equal-parenting cross-credit applied at Line 7 per Rule .04(7)(b)(2)(i)",
@@ -232,8 +416,11 @@ function buildBcsoSection(inputs: CalcInputs, outputs: CalcOutputs): WDMSection 
             ? "BCSO (above-cap formula)"
             : "BCSO (schedule lookup, rounded up)",
         citation: citationForBcso(outputs),
-        total: money(outputs.bcso),
+        total: money(outputs.bcso, "structural"),
         emphasis: true,
+        // Structured pass-through (Refinement #2 of the original four
+        // checks): Phase D narrative reads this object directly.
+        bcsoAboveCap: outputs.bcsoAboveCapBreakdown ?? undefined,
       };
   lines.push(bcsoLine);
 
@@ -248,20 +435,20 @@ function buildBcsoSection(inputs: CalcInputs, outputs: CalcOutputs): WDMSection 
     const brk = outputs.bcsoAboveCapBreakdown;
     lines.push({
       label: `Top of schedule (${inputs.numChildren} ${inputs.numChildren === 1 ? "child" : "children"} at $28,250 combined AGI)`,
-      total: money(brk.topOfSchedule),
+      total: money(brk.topOfSchedule, "structural"),
     });
     lines.push({
       label: "Combined AGI in excess of schedule cap",
-      total: money(brk.excessAGI),
+      total: money(brk.excessAGI, "mechanical"),
     });
     lines.push({
       label: `Above-cap rate × excess (${(brk.rate * 100).toFixed(2)}%)`,
       citation: "above_cap",
-      total: text(`+ $${fmtAbs(brk.addition)}`),
+      total: text(`+ $${fmtAbs(brk.addition)}`, "mechanical"),
     });
   }
 
-  // -------- Line 7 (pro-rata BCSO share, or post-multiplier cross-credit) --------
+  // Line 7 — pro-rata share, or post-multiplier cross-credit on Equal 50/50.
   let adjA = outputs.parentABcsoShare;
   let adjB = outputs.parentBBcsoShare;
   let line7Label = "Pro-rata share of BCSO";
@@ -283,8 +470,8 @@ function buildBcsoSection(inputs: CalcInputs, outputs: CalcOutputs): WDMSection 
     screenLineNo: "7",
     label: line7Label,
     citation: "pro_rata",
-    a: money(adjA),
-    b: money(adjB),
+    a: money(adjA, "mechanical"),
+    b: money(adjB, "mechanical"),
   });
 
   return {
@@ -308,8 +495,8 @@ function buildParentingTimeSection(
       citation: citationForParentingMode(outputs),
       total:
         outputs.variableMultiplier !== null
-          ? text(`multiplier ${outputs.variableMultiplier.toFixed(4)}`)
-          : text("—"),
+          ? text(`multiplier ${outputs.variableMultiplier.toFixed(4)}`, "structural")
+          : text("—", "structural"),
     },
     {
       screenLineNo: "9",
@@ -317,6 +504,7 @@ function buildParentingTimeSection(
       citation: "pro_rata",
       total: text(
         `$${fmtAbs(outputs.netPresumptiveSupport)} ${dirLabel(outputs.presumptiveDirection, a, b)}`,
+        "mechanical",
       ),
       emphasis: true,
     },
@@ -352,16 +540,17 @@ function buildAddOnsSection(
           inputs.healthPremiumMonthly > 0
             ? text(
                 `$${fmtAbs(inputs.healthPremiumMonthly)}/mo · ${a} net ${fmtAbs(outputs.addOnHealthFromA)}`,
+                "mechanical",
               )
-            : text("—"),
+            : text("—", "mechanical"),
       },
       {
         screenLineNo: "11",
         label: "Recurring uninsured medical (pro-rata)",
         citation: "addon_medical",
-        a: money(inputs.uninsuredMedicalMonthly * outputs.piA),
-        b: money(inputs.uninsuredMedicalMonthly * outputs.piB),
-        total: text(`$${fmtAbs(inputs.uninsuredMedicalMonthly)}/mo`),
+        a: money(inputs.uninsuredMedicalMonthly * outputs.piA, "mechanical"),
+        b: money(inputs.uninsuredMedicalMonthly * outputs.piB, "mechanical"),
+        total: text(`$${fmtAbs(inputs.uninsuredMedicalMonthly)}/mo`, "mechanical"),
       },
       {
         screenLineNo: "12",
@@ -371,8 +560,9 @@ function buildAddOnsSection(
           inputs.childcareMonthly > 0
             ? text(
                 `$${fmtAbs(inputs.childcareMonthly)}/mo · ${a} net ${fmtAbs(outputs.addOnChildcareFromA)}`,
+                "mechanical",
               )
-            : text("—"),
+            : text("—", "mechanical"),
       },
     ],
   };
@@ -390,13 +580,31 @@ function buildDeviationsSection(
   const lines: WDMLine[] = [];
 
   if (inputs.includePrivateSchool) {
+    // Deviations are court-discretion calls → judgment.
+    const election: WDMUserElection = {
+      field: "includePrivateSchool",
+      value: {
+        privateSchoolAnnual: inputs.privateSchoolAnnual,
+        privateSchoolPaidBy: inputs.privateSchoolPaidBy,
+      },
+      source: "user_input",
+    };
     lines.push({
       screenLineNo: "13",
       label: "Private school tuition (deviation, pro-rata)",
       citation: "private_school",
-      total: text(
-        `$${fmtAbs(outputs.privateSchoolMonthlyTotal)}/mo · ${a} net ${fmtAbs(outputs.privateSchoolDeviationFromA)}`,
-      ),
+      total: {
+        display: `$${fmtAbs(outputs.privateSchoolMonthlyTotal)}/mo · ${a} net ${fmtAbs(outputs.privateSchoolDeviationFromA)}`,
+        amount: outputs.privateSchoolMonthlyTotal,
+        category: "judgment",
+        rule: "private_school",
+        factors: [
+          "best interest of the child",
+          "consistency with the parents' financial means",
+          "history of the child's enrollment",
+        ],
+        userElection: election,
+      },
     });
   }
 
@@ -405,8 +613,20 @@ function buildDeviationsSection(
       screenLineNo: "14",
       label: "Special expenses — 7% of BCSO threshold",
       citation: "special_expenses",
-      total: text(`Threshold $${fmtAbs(outputs.specialExpensesThresholdAmount)}/mo`),
+      total: text(
+        `Threshold $${fmtAbs(outputs.specialExpensesThresholdAmount)}/mo`,
+        "structural",
+      ),
     });
+    const seElection: WDMUserElection = {
+      field: "includeSpecialExpenses",
+      value: {
+        specialExpensesAnnual: inputs.specialExpensesAnnual,
+        specialExpensesWaiveThreshold: inputs.specialExpensesWaiveThreshold,
+        specialExpensesPaidBy: inputs.specialExpensesPaidBy,
+      },
+      source: "user_input",
+    };
     lines.push({
       screenLineNo: "14a",
       label:
@@ -415,10 +635,19 @@ function buildDeviationsSection(
           : "Within presumed coverage — no deviation",
       total:
         outputs.specialExpensesIncludedAsDeviation > 0
-          ? text(
-              `$${fmtAbs(outputs.specialExpensesIncludedAsDeviation)}/mo · ${a} net ${fmtAbs(outputs.specialExpensesDeviationFromA)}`,
-            )
-          : text("—"),
+          ? {
+              display: `$${fmtAbs(outputs.specialExpensesIncludedAsDeviation)}/mo · ${a} net ${fmtAbs(outputs.specialExpensesDeviationFromA)}`,
+              amount: outputs.specialExpensesIncludedAsDeviation,
+              category: "judgment",
+              rule: "special_expenses",
+              factors: [
+                "child's reasonable need for the expense",
+                "amount in excess of the 7% presumed-coverage threshold",
+                "whether the threshold has been waived by the court",
+              ],
+              userElection: seElection,
+            }
+          : text("—", "structural"),
     });
   }
 
@@ -445,41 +674,49 @@ function buildFinalSection(
         citation: "fcso",
         total: text(
           `$${fmtAbs(outputs.allInMonthly)} ${dirLabel(outputs.allInDirection, a, b)}`,
+          "mechanical",
         ),
         emphasis: true,
       },
       {
         screenLineNo: "16",
         label: "Annual",
-        total: money(outputs.allInAnnual),
+        total: money(outputs.allInAnnual, "mechanical"),
       },
     ],
   };
 }
 
-function buildPanels(
+function buildStatutoryCapPanel(
   inputs: CalcInputs,
   outputs: CalcOutputs,
-): WDMPanels {
-  const statutoryCap = outputs.pcsoExceedsStatutoryMax
-    ? {
-        // Match the screen worksheet's "calculated PCSO" expression.
-        calculatedPCSO:
-          Math.abs(outputs.allInMonthlyFromA) +
-          Math.abs(outputs.federalBenefitOffsetFromA),
-        statutoryMax: outputs.pcsoStatutoryMax,
-        excessOverCap: outputs.pcsoExcessOverCap,
-        numChildren: inputs.numChildren,
-        capNote: outputs.pcsoCapNote,
-        caseNote: CITATIONS.pcso_max.caseNote ?? null,
-      }
-    : null;
+): WDMStatutoryCapPanel {
+  const calculatedPCSO =
+    Math.abs(outputs.allInMonthlyFromA) +
+    Math.abs(outputs.federalBenefitOffsetFromA);
+  const statutoryMax = outputs.pcsoStatutoryMax;
+  const engaged = outputs.pcsoExceedsStatutoryMax;
 
   return {
-    statutoryCap,
-    pcsoBelowCapNote: outputs.pcsoExceedsStatutoryMax
-      ? null
-      : outputs.pcsoBelowCapNote,
+    engaged,
+    calculatedPCSO,
+    statutoryMax,
+    numChildren: inputs.numChildren,
+    excessOverCap: engaged ? outputs.pcsoExcessOverCap : 0,
+    headroom: engaged ? 0 : Math.max(0, statutoryMax - calculatedPCSO),
+    capNote: engaged ? outputs.pcsoCapNote : outputs.pcsoBelowCapNote,
+    caseLaw: CITATIONS.pcso_max.caseNote ?? null,
+    factors: engaged ? [...PCSO_BURDEN_SHIFT_FACTORS] : [],
+    // Fixture #11 input flow not yet wired — leave null until the
+    // above-cap user-elected PCSO input lands. Phase D narrative reads
+    // this field; null means "no user election yet".
+    userElectedPCSO: null,
+  };
+}
+
+function buildPanels(inputs: CalcInputs, outputs: CalcOutputs): WDMPanels {
+  return {
+    statutoryCap: buildStatutoryCapPanel(inputs, outputs),
     equalParentingLowSupportNote: outputs.equalParentingLowSupportNote,
     nonEarnerArpNote: outputs.nonEarnerArpNote,
     zeroPresumptiveNote: outputs.zeroPresumptiveNote,
@@ -547,4 +784,18 @@ export function findLineByScreenNo(wdm: WDM, screenLineNo: string): WDMLine | un
     }
   }
   return undefined;
+}
+
+/** Walk every WDMValue in the WDM (sections × lines × {a,b,total}).
+ *  Used by the Phase A lint tests and by Phase D narrative routing. */
+export function walkValues(wdm: WDM): WDMValue[] {
+  const out: WDMValue[] = [];
+  for (const s of wdm.sections) {
+    for (const l of s.lines) {
+      for (const v of [l.a, l.b, l.total]) {
+        if (v) out.push(v);
+      }
+    }
+  }
+  return out;
 }
