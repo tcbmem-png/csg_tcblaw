@@ -12,6 +12,7 @@ import { ComparisonView } from "@/components/calculator/comparison";
 import { CaseCaptionForm } from "@/components/calculator/case-caption";
 import { ComparisonAppendix } from "@/components/calculator/comparison-appendix";
 import { PartiesPlanChildren } from "@/components/calculator/parties-plan-children";
+import { NarrativeOverridePanel } from "@/components/calculator/narrative-override";
 import {
   defaultCaption,
   decodeShare,
