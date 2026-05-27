@@ -6,7 +6,11 @@ import type {
   MSDeviationComputation,
 } from "./types";
 import { defaultMSImputationBasis } from "./types";
-import { defaultChancellorDecisions } from "./chancellor-decisions";
+import {
+  computeChancellorTotals,
+  defaultChancellorDecisions,
+} from "./chancellor-decisions";
+import { buildReconciliation } from "./reconciliation";
 import {
   MS_AGI_HIGH_THRESHOLD,
   MS_AGI_LOW_THRESHOLD,
