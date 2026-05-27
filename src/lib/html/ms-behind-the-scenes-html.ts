@@ -625,8 +625,9 @@ footer.authorities li { margin-bottom: .25rem; }
   .live-bar { grid-template-columns: 1fr; gap: .5rem; }
   .case-meta { grid-template-columns: repeat(2, 1fr); }
 }
+@page { size: letter; margin: 0.5in; }
 @media print {
-  body { background: white; padding: .5in; font-size: 10pt; }
+  body { background: white; padding: 0; font-size: 10pt; }
   .live-bar { position: static; box-shadow: none; }
   .no-print { display: none !important; }
   section.module { page-break-inside: avoid; border: none; padding: .5rem 0; }
