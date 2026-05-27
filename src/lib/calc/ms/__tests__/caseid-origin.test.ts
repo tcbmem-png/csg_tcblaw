@@ -12,10 +12,10 @@ import {
   decodeMSShare,
   randomToken,
 } from "../share";
-import { defaultHandoffState } from "../types";
-import type { HandoffState } from "../types";
 import { defaultMSInputs } from "../calc";
 import { defaultCaption } from "@/lib/calc/share";
+import { defaultHandoffState } from "../types";
+import type { HandoffState } from "../types";
 
 class MemoryStorage {
   private s: Record<string, string> = {};
@@ -63,13 +63,15 @@ describe("caseId origin detection", () => {
     const caseId = "0".repeat(32);
     const caption = defaultCaption();
     expect(await isOriginatorBrowser(caseId, defaultMSInputs(), caption)).toBe(false);
+  });
+
   it("randomToken returns 16-byte / 32-hex tokens", () => {
     const t = randomToken(16);
     expect(t).toMatch(/^[0-9a-f]{32}$/);
     expect(t).not.toBe(randomToken(16));
   });
 
-  it("full round-trip: originator → receiver edits → originator still recognized as origin", () => {
+  it("full round-trip: originator → receiver edits → originator still recognized as origin", async () => {
     // 1. Originator mints caseId, builds payload, records origination.
     const caseId = randomToken(16);
     const caption = defaultCaption();
@@ -112,12 +114,11 @@ describe("caseId origin detection", () => {
 
     // 4. Originator's browser still recognizes the case as their own,
     //    even though inputs (and therefore the fingerprint) changed.
-    return isOriginatorBrowser(
+    const isOrigin = await isOriginatorBrowser(
       reopened!.handoff.caseId,
       reopened!.inputs,
       caption,
-    ).then((isOrigin) => {
-      expect(isOrigin).toBe(true);
-    });
+    );
+    expect(isOrigin).toBe(true);
   });
 });
