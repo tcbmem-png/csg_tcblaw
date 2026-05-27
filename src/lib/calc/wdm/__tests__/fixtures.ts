@@ -83,12 +83,17 @@ export const FIXTURES: WorksheetFixture[] = [
   },
 
   // -------------------------------------------------------------------
-  // F04 — Berger-shaped: Mother vocationally imputed + both deviations
-  //   Exercises: vocational imputation, private school, special expenses
+  // F04 — Standard parenting, 2 children, one-side imputation,
+  //       Rule .07(2)(d) deviations applied (private school + special
+  //       expenses). Dimensions: income tier within-schedule; parenting
+  //       Standard (ARP=B); deviations both .07(2)(d)1 and .07(2)(d)2;
+  //       imputation on (Parent A, vocational_capacity /
+  //       voluntary_underemployment).
   // -------------------------------------------------------------------
   {
-    slug: "f04-berger-imputed-with-deviations",
-    label: "Berger-shaped: Mother imputed (vocational) + PS + SE deviations",
+    slug: "f04-standard-imputed-with-deviations",
+    label:
+      "Standard parenting, 2 children, imputation on (Parent A), Rule .07(2)(d) deviations applied",
     exercises: [
       "imputation (vocational_capacity / voluntary_underemployment)",
       "private school deviation",
