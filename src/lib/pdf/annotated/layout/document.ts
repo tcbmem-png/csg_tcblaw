@@ -212,8 +212,8 @@ export async function renderBlocksToPdf(
   vfs.writeFileSync(FONT_DEF_FILE_NAMES.regular, Buffer.from(assets.regularFont));
   vfs.writeFileSync(FONT_DEF_FILE_NAMES.bold, Buffer.from(assets.boldFont));
   const printer = new PdfPrinter(buildFonts(assets), vfs);
-      },
-    };
+  // buildVfs retained for potential debug introspection; unused at runtime
+  void buildVfs;
 
   const footerTpl =
     meta.footerTemplate ??
