@@ -620,3 +620,69 @@ by construction, because none of them gate on a reducer-only sentinel.
 Server-side round-bump enforcement. Tamper-evident audit log. Any
 of these can be added later as a Phase-N feature with explicit
 policy rationale; none are required for the Phase 3.5 / Phase 4 scope.
+
+---
+
+## D-016 — Gate-pattern Type C: mount-gate on a sibling field
+
+**Posture.** The gate-pattern catalog (D-013, D-014) named *Type A —
+field-shape mismatch* (renderer reads a path the payload didn't
+populate) and noted *Type B — action-gated sentinel* (renderer fires
+only on a reducer flag no URL state can set). Slice 5.5's second
+re-test surfaced a third subtype: **Type C — mount-gate on a sibling
+field.** The renderer exists and is correct; the data is canonical;
+the field the renderer reads is populated. But the renderer lives
+inside a parent block conditionally mounted on a *different* field —
+one the test payload didn't know to set.
+
+**Concrete instance.** The §1.5 attribution line lives at
+`src/components/calculator/ms/party-factor-block.tsx:321–326` inside
+`PartyColumn`, and reads `party.handoffRound` + `party.authoredByName`
+exactly as Appendix A.5 specifies. `PartyColumn` is mounted by the
+grid block at line 189: `{inPlay !== "neither" && <grid/>}`.
+`inPlayFrom` (line 66) reads `deviationsA[i].applicable` /
+`deviationsB[i].applicable` — NOT any field under `.party`. A test
+payload that sets `party.position = "applies"`,
+`party.handoffRound = 2`, and `party.authoredByName = "Maria Lopez"`
+but leaves both `applicable` flags `false` causes `inPlay === "neither"`,
+the grid short-circuits, no `PartyColumn` mounts, and the attribution
+line never enters the DOM. The test agent's "renderer absent" probe
+is correct as a literal DOM observation, but the absence is
+structural — the renderer was never given a chance to mount.
+
+**Diagnosis posture (extended).** When a render surface fails to
+appear despite canonical data, run the three subtype checks in order:
+
+  (a) **Type A — field-shape.** Does the renderer read the field at
+      the path the payload writes? Check renderer source vs Appendix A.5.
+  (b) **Type C — mount-gate.** Is the renderer inside a conditional
+      block whose predicate reads a *different* field than the
+      renderer itself? Walk up the JSX from the renderer to the
+      nearest `{cond && <...>}` and grep the predicate's fields
+      against the payload.
+  (c) **Type B — action-gate.** Only after (a) and (b) clear: does
+      the renderer (or any ancestor) gate on a reducer flag, a
+      `useEffect`-set sentinel, or a `localStorage` probe that no URL
+      state can populate?
+
+In practice, Types A and C account for every confirmed gate-pattern
+instance documented in this file. Type B is documented for
+completeness and remains undiscovered in MS code as of Phase 3.5
+close.
+
+**Documentation fix, not a code fix.** Appendix A.6 was updated to
+flag the `.applicable = true` prerequisite as a mount-gate sibling
+to the `.party.*` fields. The renderer, the data shape, and the
+share-URL codec are all correct as built. Phase 3.5 closes on this
+documentation revision — no production code change is required.
+
+**Sixth instance in the gate-pattern catalog.** Family roster: Slice 1
+(mode-switch gate, fixed by removing a conditional render of the
+reconciliation table), Slice 3 (enum mismatch `long` vs `over_180`,
+Type A), Slice 5.5 first cut (`bumpHandoffRound` never called from
+live code — adjacent to Type B, resolved by wiring the call sites),
+D-014 (field-shape `lastEditedBy` nested vs `authoredByName` flat,
+Type A), D-016 (mount-gate on `.applicable`, Type C). The pattern's
+durability across six instances justifies the three-subtype
+diagnostic above as the standing first check for any "renderer
+absent" report from the test agent.
