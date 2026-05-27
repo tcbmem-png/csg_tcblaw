@@ -25,8 +25,10 @@ import {
   FACTOR_TITLES,
   buildReconciliation,
   summarizeRow,
+  type FactorInPlay,
 } from "@/lib/calc/ms/reconciliation";
 import { stampPartyEdit } from "@/lib/calc/ms/share";
+import { inPlayPresentation } from "@/lib/calc/ms/in-play-labels";
 import {
   Field,
   NumInput,
