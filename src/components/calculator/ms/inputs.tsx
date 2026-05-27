@@ -306,9 +306,15 @@ function MSDeviationsSection({
         />
       )}
 
-      {inputs.comparisonMode === "side_by_side" && (
-        <MSDeviationReconciliation inputs={inputs} setInputs={setInputs} />
-      )}
+      {/*
+        Reconciliation / chancellor decision row renders whenever any factor
+        is asserted — not only in side-by-side mode. In single-position mode
+        the obligee column is suppressed internally, and the chancellor
+        decision pills + pending-count badge + cumulative-through-emancipation
+        projection are the doctrinally important surfaces regardless of
+        whether obligee has populated a counter-slate.
+      */}
+      <MSDeviationReconciliation inputs={inputs} setInputs={setInputs} />}
 
       <MSChildrenRoster inputs={inputs} setInputs={setInputs} />
     </Section>
