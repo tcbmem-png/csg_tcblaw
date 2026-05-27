@@ -910,3 +910,149 @@ Any v2 implementation should produce output indistinguishable from the Williams 
 ---
 
 *This document is open source. Any deviation from the conventions in §1, or any update reflecting a statutory amendment, must be reflected in the `calculator_version` table and noted in the audit trail of any case computed under the new convention. Consistency is the operating premise: same positions in, same numbers out, every time. The chancellor's discretion is preserved — the calculator structures the analysis; the chancellor rules.*
+
+---
+
+## Appendix A — URL-state payload schema and test-injection contract
+
+This appendix is the single source of truth for the field shape carried
+by share URLs and consumed by URL-state hydration. Test agents construct
+payloads from this appendix. Runtime refactors that rename a field MUST
+update this appendix in the same commit. See D-014 (gate-pattern instance
+#6) and D-015 (URL-state is unsigned) for the rationale.
+
+### A.1 Top-level shape
+
+The share payload is base64url-encoded and decoded into the working
+`MSInputs` plus an out-of-band `HandoffState`. The runtime types of
+record live in `src/lib/calc/ms/types.ts`; the encoder/decoder lives in
+`src/lib/calc/ms/share.ts`. Anything not present in those modules is
+not a contract.
+
+### A.2 Per-party-entry shape (`MSPartyEntry`)
+
+Each `MSDeviation` may carry a `party?: MSPartyEntry` block. The shape is **flat** —
+attribution fields are top-level strings, NOT a nested `lastEditedBy: { name, firm }`
+object:
+
+```ts
+interface MSPartyEntry {
+  position: "" | "downward" | "upward" | "apply_no_amount" | "oppose";
+  factsAsserted: string;
+  documentationReferenced: string;
+  proposedMonthly: number;          // signed; same sign as MSDeviation.proposedMonthly
+  legalAuthority: string;
+
+  // §1.5 attribution — flat strings, null on legacy URLs
+  handoffRound?: number | null;     // 1 = originator draft; ≥2 = amendment rounds
+  authoredAt?: string | null;       // ISO timestamp of last MATERIAL edit
+  authoredByName?: string | null;   // attorney display name
+  authoredByFirm?: string | null;   // attorney firm (optional)
+}
+```
+
+**Render-gate threshold.** The "Amended in round N by [name]" line in
+`PartyColumn` renders iff `handoffRound > 1` AND `authoredByName` is
+truthy. Round 1 is the originator's authored draft and is implicit from
+the column header; no "Amended in round 1" line ever renders by design.
+
+### A.3 Handoff state shape (`HandoffState`)
+
+```ts
+interface HandoffAttorney { name: string; firm: string; }
+
+interface HandoffState {
+  status: "none" | "originated" | "in_progress" | "completed";
+  originatingSide: "A" | "B";
+  originatingAttorney: HandoffAttorney | null;
+  receivingAttorney:   HandoffAttorney | null;
+  createdAt:           string | null;  // ISO
+  lastReceivingEditAt: string | null;  // ISO
+  completedAt:         string | null;  // ISO
+  caseId:              string | null;  // 16-byte hex, stable across re-sends
+  handoffRound:        number;         // 0 = pre-send; 1 = first send; 2+ = send-back rounds
+}
+```
+
+### A.4 Chancellor decision shape (`MSChancellorDecision`)
+
+Carried as `chancellorDecisions: MSChancellorDecision[]` on the payload,
+one entry per factor letter that has been decided.
+
+```ts
+type MSChancellorDecisionKind =
+  | "none"
+  | "adopt_obligor"
+  | "adopt_obligee"
+  | "split"           // NOT "split_difference" — see D-010
+  | "custom"
+  | "decline"
+  | "accept_agreed";
+
+interface MSChancellorDecision {
+  factorLetter: "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j";
+  decision:     MSChancellorDecisionKind;
+  customAmount: number;          // signed; meaningful only when decision === "custom"
+  decidedAt:    string | null;   // ISO; null while decision === "none"
+}
+```
+
+### A.5 Canonical-prose ↔ runtime-field-name mapping
+
+When canonical prose (§§1.1–1.10 and §8) references a concept, the
+following table is the binding translation to runtime field names.
+Test payloads, future jurisdictions inheriting this convention
+(AR, AL, …), and any human reader cross-referencing prose to code
+should use this table verbatim.
+
+| Canonical prose phrase                          | Runtime field path                                              | Notes |
+|-------------------------------------------------|-----------------------------------------------------------------|-------|
+| "amended by [attorney]" / "last edited by"      | `deviationsA[i].party.authoredByName` (flat string)             | Sibling: `authoredByFirm`. NOT a nested `lastEditedBy` object. |
+| "amendment round" / "round N"                   | `deviationsA[i].party.handoffRound` (number)                    | Render gate: `> 1`. |
+| "edit timestamp" / "authored at"                | `deviationsA[i].party.authoredAt` (ISO string)                  |  |
+| "originating counsel" / "originator"            | `handoff.originatingAttorney.{name,firm}` + `handoff.originatingSide` | Side: `"A"` or `"B"`. |
+| "receiving counsel" / "opposing counsel"        | `handoff.receivingAttorney.{name,firm}`                          |  |
+| "current handoff round" (state-level)           | `handoff.handoffRound` (number)                                 | Bumped only by `bumpHandoffRound`; see D-013. |
+| "case identity" / "case ID"                     | `handoff.caseId` (16-byte hex, nullable)                        |  |
+| "this factor applies" / "in play for [side]"    | `deviationsA[i].applicable` (boolean) + symmetrical B           | Drives §1.4 four-state classifier. |
+| "party's proposed monthly amount"               | `deviationsA[i].party.proposedMonthly` (signed number)          | Mirrored to `deviationsA[i].proposedMonthly` for calc. |
+| "party's position"                              | `deviationsA[i].party.position` (enum)                          | One of: `downward`, `upward`, `apply_no_amount`, `oppose`. |
+| "split the difference" (chancellor's decision)  | `chancellorDecisions[i].decision === "split"`                   | Runtime kept as `split` due to call-site cost; see D-010. |
+| "adopt obligor's proposal"                      | `chancellorDecisions[i].decision === "adopt_obligor"`           |  |
+| "adopt obligee's proposal"                      | `chancellorDecisions[i].decision === "adopt_obligee"`           |  |
+| "custom chancellor amount"                      | `chancellorDecisions[i].decision === "custom"` + `customAmount` | Bounded ±$50,000. |
+| "decline to deviate"                            | `chancellorDecisions[i].decision === "decline"`                 |  |
+| "accept agreed amount" (uncontested factor)     | `chancellorDecisions[i].decision === "accept_agreed"`           |  |
+| "incarceration suspension" / "long incarceration" | `incarceration.status === "over_180"`                         | Runtime enum is `over_180`, not `long`; see Slice 3 closure. |
+| "imputed income basis"                          | `agiBasis === "imputed"` + `imputationBasis.*`                  | §1.7 surface. |
+
+### A.6 Test-injection example (attribution surface)
+
+Payload fragment that causes the obligee column of factor (e) to render
+"Amended in round 2 by Maria Lopez" after URL hydration:
+
+```ts
+deviationsB[/* index of letter "e" */].party = {
+  position: "upward",
+  factsAsserted: "Eldest child enters travel-team season Aug–Nov; …",
+  documentationReferenced: "Coach invoice 2026-04-15",
+  proposedMonthly: 450,
+  legalAuthority: "Miss. Code Ann. § 43-19-103(e); McEachern v. McEachern",
+  handoffRound: 2,
+  authoredByName: "Maria Lopez",
+  authoredByFirm: "Lopez & Co.",
+  authoredAt: "2026-05-27T14:30:00.000Z",
+};
+```
+
+Construct the URL via the encoder in `src/lib/calc/ms/share.ts`, open in
+the browser, and the attribution line renders deterministically — no
+localStorage probe, no reducer sentinel, no action flow required.
+
+### A.7 Integrity disclaimer
+
+Per D-015: URL-state is unsigned. The render layer displays whatever
+the URL hydrates. The integrity model for any worksheet leaving this
+calculator is attorney signature on the preparer's-use-only block.
+This appendix documents the shape required to exercise the render
+surfaces in testing; it is NOT a forgery-prevention contract.
