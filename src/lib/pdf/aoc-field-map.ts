@@ -574,8 +574,6 @@ const partIV: AocField[] = [
     rect: { x: COL.motherP2Money.x + VALUE_X_OFFSET, y: row(129).y, w: COL.motherP2Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
     source: (_w, inputs, o) => {
-      
-      void split;
       const { a } = lineAaSplit(o, inputs.healthPaidBy, inputs.healthPremiumMonthly);
       return a > 0 ? fmtMoney(a) : null;
     },
