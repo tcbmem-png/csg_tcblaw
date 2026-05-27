@@ -149,32 +149,15 @@ export function MSPartyFactorBlock({
         { value: "obligor" as const, label: "This factor applies" },
       ];
 
-  // §1.4 visual treatment — Williams reference. The four-state classifier
-  // maps to border accents readable at a glance:
-  //   neither   → muted (faded)
-  //   agree     → green (success)
-  //   both      → amber (accent / in-dispute)
-  //   *_only    → party-color (primary for obligor, accent for obligee)
+  // §1.4 visual treatment — Williams reference. All label + accent decisions
+  // delegate to inPlayPresentation() so the chip, card border, and summary
+  // background stay locked to a single source of truth across every surface
+  // (factor block, reconciliation table, sticky live-bar, PDF).
   const reportInPlay = row.inPlay;
+  const present = inPlayPresentation(reportInPlay);
   const cardBorder =
-    reportInPlay === "neither"
-      ? "border-rule opacity-70"
-      : reportInPlay === "agree"
-        ? "border-l-4 border-l-success border-rule"
-        : reportInPlay === "both"
-          ? "border-l-4 border-l-accent border-rule"
-          : reportInPlay === "obligor_only"
-            ? "border-l-4 border-l-primary border-rule"
-            : reportInPlay === "obligee_only"
-              ? "border-l-4 border-l-accent border-rule"
-              : "border-rule";
-
-  const summaryAccent =
-    reportInPlay === "agree"
-      ? "border-l-2 border-success bg-success/5"
-      : reportInPlay === "both"
-        ? "border-l-2 border-accent bg-accent/10"
-        : "border-l-2 border-primary bg-primary/5";
+    reportInPlay === "neither" ? `${present.borderClass} opacity-70` : present.borderClass;
+  const summaryAccent = present.bgClass;
 
   return (
     <div className={`rounded-md border bg-background p-4 ${cardBorder}`}>
