@@ -432,7 +432,7 @@ CREATE TABLE ms_chancellor_decision (
   case_id            INTEGER NOT NULL REFERENCES ms_case(case_id),
   factor_letter      CHAR(1) NOT NULL CHECK (factor_letter IN ('a','b','c','d','e','f','g','h','i','j')),
   decision           TEXT NOT NULL CHECK (decision IN (
-    'adopt_obligor', 'adopt_obligee', 'split_difference', 'custom', 'decline', 'accept_agreed'
+    'adopt_obligor', 'adopt_obligee', 'split', 'custom', 'decline', 'accept_agreed'
   )),
   custom_amount      NUMERIC,
   decided_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -457,7 +457,7 @@ BEGIN
   CASE d.decision
     WHEN 'adopt_obligor'    THEN RETURN COALESCE(obligor_prop, 0);
     WHEN 'adopt_obligee'    THEN RETURN COALESCE(obligee_prop, 0);
-    WHEN 'split_difference' THEN RETURN ROUND((COALESCE(obligor_prop,0) + COALESCE(obligee_prop,0)) / 2);
+    WHEN 'split' THEN RETURN ROUND((COALESCE(obligor_prop,0) + COALESCE(obligee_prop,0)) / 2);
     WHEN 'custom'           THEN RETURN COALESCE(d.custom_amount, 0);
     WHEN 'accept_agreed'    THEN RETURN COALESCE(obligor_prop, obligee_prop, 0);
     WHEN 'decline'          THEN RETURN 0;
