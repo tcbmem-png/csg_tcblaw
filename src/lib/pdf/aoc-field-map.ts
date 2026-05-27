@@ -456,41 +456,54 @@ const partII: AocField[] = [
 
 const partIII: AocField[] = [
   // 4 BCSO allotted to PRP's household (top=434.9). Goes in the PRP column.
+  // Equal 50/50 has no PRP; per Rule .04(7)(b)(2)(i) the BCSO is shared
+  // symmetrically, so we populate BOTH columns with the BCSO. The Equal
+  // margin annotation already explains the symmetry.
   {
     aocLine: "4",
-    description: "BCSO allotted to PRP — Mother col (if Mother is PRP)",
+    description: "BCSO allotted to PRP — Mother col",
     page: 1,
     rect: { x: COL.motherP1Money.x + VALUE_X_OFFSET, y: row(435).y, w: COL.motherP1Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
-    source: (_w, _i, o) => (prpIs(o) === "parent_a" ? fmtMoney(o.bcso) : null),
+    source: (_w, _i, o) => {
+      const prp = prpIs(o);
+      if (prp === "parent_a" || prp === "equal") return fmtMoney(o.bcso);
+      return null;
+    },
   },
   {
     aocLine: "4",
-    description: "BCSO allotted to PRP — Father col (if Father is PRP)",
+    description: "BCSO allotted to PRP — Father col",
     page: 1,
     rect: { x: COL.fatherP1Money.x + VALUE_X_OFFSET, y: row(435).y, w: COL.fatherP1Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
-    source: (_w, _i, o) => (prpIs(o) === "parent_b" ? fmtMoney(o.bcso) : null),
+    source: (_w, _i, o) => {
+      const prp = prpIs(o);
+      if (prp === "parent_b" || prp === "equal") return fmtMoney(o.bcso);
+      return null;
+    },
   },
-  // 4a Share of BCSO owed to PRP (top=443.5). ARP's pro-rata share — goes
-  // in ARP column.
+  // 4a Each parent's pro-rata share of BCSO (top=443.5). The official form
+  // shows BOTH columns (PI × BCSO for each parent), not just the ARP's
+  // share — the ARP share is what's "owed" to the PRP, but Line 4a is the
+  // arithmetic decomposition. Populate both regardless of arpIdentity.
   {
     aocLine: "4a",
-    description: "Share of BCSO owed to PRP — Mother col (if Mother is ARP)",
+    description: "BCSO pro-rata share — Mother col",
     page: 1,
     rect: { x: COL.motherP1Money.x + VALUE_X_OFFSET, y: row(444).y, w: COL.motherP1Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
     source: (_w, _i, o) =>
-      o.arpIdentity === "parent_a" ? fmtMoney(o.parentABcsoShare) : null,
+      o.parentABcsoShare > 0 ? fmtMoney(o.parentABcsoShare) : null,
   },
   {
     aocLine: "4a",
-    description: "Share of BCSO owed to PRP — Father col (if Father is ARP)",
+    description: "BCSO pro-rata share — Father col",
     page: 1,
     rect: { x: COL.fatherP1Money.x + VALUE_X_OFFSET, y: row(444).y, w: COL.fatherP1Money.w - VALUE_X_OFFSET, h: 9 },
     fit: moneyFit,
     source: (_w, _i, o) =>
-      o.arpIdentity === "parent_b" ? fmtMoney(o.parentBBcsoShare) : null,
+      o.parentBBcsoShare > 0 ? fmtMoney(o.parentBBcsoShare) : null,
   },
   // 5 ARP parent's average parenting time (top=460.6). Days as integer.
   // Equal 50/50 → leave blank (per Phase A approval; margin note covers).
