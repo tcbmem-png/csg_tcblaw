@@ -9,6 +9,11 @@
  */
 import type { MSDeviation, MSFactorLetter, MSInputs } from "./types";
 
+// Letters match Miss. Code Ann. § 43-19-103 verbatim (2024 codification).
+// Verified against MDHS-published statute, Justia 2024, FindLaw, and the
+// legislature's bill history: (g) parental arrangement, (h) assets,
+// (i) obligee's child-care expenses. Do not reorder without re-verifying
+// against the statute itself — letter-mapping.test.ts enforces this.
 export const FACTOR_TITLES: Record<MSFactorLetter, string> = {
   a: "Extraordinary medical, psychological, educational, or dental expenses",
   b: "Independent income of the child",
@@ -17,8 +22,8 @@ export const FACTOR_TITLES: Record<MSFactorLetter, string> = {
   e: "The age of the child",
   f: "Special needs traditionally met within the family budget",
   g: "The particular shared parental arrangement",
-  h: "Total available assets of obligee, obligor, and child",
-  i: "Payment by obligee of child care expenses for employment or disability",
+  h: "Total available assets of the obligee, obligor, and the child",
+  i: "Payment by the obligee of child care expenses (employment or disability)",
   j: "Any other adjustment needed to achieve an equitable result",
 };
 

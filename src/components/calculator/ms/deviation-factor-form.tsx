@@ -16,9 +16,9 @@ import type {
   MSStructuredD,
   MSStructuredE,
   MSStructuredF,
-  MSStructuredG,
-  MSStructuredH,
-  MSStructuredI,
+  MSStructuredAssets,
+  MSStructuredChildcare,
+  MSStructuredParental,
   MSStructuredJ,
   MSExpenseDuration,
 } from "@/lib/calc/ms/types";
@@ -102,6 +102,7 @@ export function defaultStructured(letter: MSFactorLetter): MSDeviationStructured
         evidence: { receipts: false, photos: false, testimony: false, other: false, otherNote: "" },
       };
     case "g":
+      // § 43-19-103(g) — The particular shared parental arrangement.
       return {
         letter: "g",
         arrangement: "",
@@ -123,6 +124,7 @@ export function defaultStructured(letter: MSFactorLetter): MSDeviationStructured
         approachOther: "",
       };
     case "h":
+      // § 43-19-103(h) — Total available assets of obligee, obligor, and child.
       return {
         letter: "h",
         obligor: { realEstate: 0, equity: 0, investments: 0, retirement: 0, business: 0, other: 0, otherNote: "" },
@@ -133,6 +135,7 @@ export function defaultStructured(letter: MSFactorLetter): MSDeviationStructured
         description: "",
       };
     case "i":
+      // § 43-19-103(i) — Payment by obligee of child care expenses.
       return {
         letter: "i",
         reason: "",
@@ -238,11 +241,11 @@ function renderForLetter(
     case "f":
       return <FormF s={s} set={set} />;
     case "g":
-      return <FormG s={s} set={set} />;
+      return <FormParental s={s} set={set} />;
     case "h":
-      return <FormH s={s} set={set} />;
+      return <FormAssets s={s} set={set} />;
     case "i":
-      return <FormI s={s} set={set} />;
+      return <FormChildcare s={s} set={set} />;
     case "j":
       return <FormJ s={s} set={set} />;
   }
@@ -487,8 +490,8 @@ function FormF({ s, set }: { s: MSStructuredF; set: (n: MSStructuredF) => void }
 }
 
 // ===== Factor (g) — shared parental arrangement =====
-function FormG({ s, set }: { s: MSStructuredG; set: (n: MSStructuredG) => void }) {
-  const u = (p: Partial<MSStructuredG>) => set({ ...s, ...p });
+function FormParental({ s, set }: { s: MSStructuredParental; set: (n: MSStructuredParental) => void }) {
+  const u = (p: Partial<MSStructuredParental>) => set({ ...s, ...p });
   return (
     <>
       <div className="rounded-md border-l-4 border-accent bg-accent/10 p-3 text-xs text-ink">
@@ -559,9 +562,9 @@ function FormG({ s, set }: { s: MSStructuredG; set: (n: MSStructuredG) => void }
 }
 
 // ===== Factor (h) — available assets =====
-function FormH({ s, set }: { s: MSStructuredH; set: (n: MSStructuredH) => void }) {
-  const u = (p: Partial<MSStructuredH>) => set({ ...s, ...p });
-  const Block = ({ who, val, on }: { who: "obligor" | "obligee"; val: MSStructuredH["obligor"]; on: (p: Partial<MSStructuredH["obligor"]>) => void }) => (
+function FormAssets({ s, set }: { s: MSStructuredAssets; set: (n: MSStructuredAssets) => void }) {
+  const u = (p: Partial<MSStructuredAssets>) => set({ ...s, ...p });
+  const Block = ({ who, val, on }: { who: "obligor" | "obligee"; val: MSStructuredAssets["obligor"]; on: (p: Partial<MSStructuredAssets["obligor"]>) => void }) => (
     <div className="rounded-md border border-rule p-3">
       <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{who}</div>
       <Grid>
@@ -609,8 +612,8 @@ function FormH({ s, set }: { s: MSStructuredH; set: (n: MSStructuredH) => void }
 }
 
 // ===== Factor (i) — obligee child-care costs =====
-function FormI({ s, set }: { s: MSStructuredI; set: (n: MSStructuredI) => void }) {
-  const u = (p: Partial<MSStructuredI>) => set({ ...s, ...p });
+function FormChildcare({ s, set }: { s: MSStructuredChildcare; set: (n: MSStructuredChildcare) => void }) {
+  const u = (p: Partial<MSStructuredChildcare>) => set({ ...s, ...p });
   return (
     <>
       <Field label="Does the obligee pay child-care expenses?">

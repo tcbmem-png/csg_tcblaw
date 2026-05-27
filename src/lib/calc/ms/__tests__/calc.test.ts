@@ -115,6 +115,8 @@ describe("MS calc — additional invariants", () => {
       withDefaults({ obligorAnnualGross: 50000, sharedCustodyFlag: true }),
     );
     expect(out.warnings.some((w) => w.includes("§ 43-19-103(g)"))).toBe(true);
+    // Guard against regression to the (i)-mapped variant shipped briefly in v6.
+    expect(out.warnings.some((w) => w.includes("§ 43-19-103(i)"))).toBe(false);
   });
 });
 

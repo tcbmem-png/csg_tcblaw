@@ -1,4 +1,4 @@
-import type { MSInputs, MSDeviation } from "@/lib/calc/ms/types";
+import type { MSInputs, MSDeviation, HandoffSide } from "@/lib/calc/ms/types";
 import { calculateMS, defaultDeviation } from "@/lib/calc/ms/calc";
 import {
   NumInput,
@@ -33,9 +33,12 @@ const ALL_LETTERS: MSInputs["deviationsA"][number]["letter"][] = [
 export function MSCalculatorInputs({
   inputs,
   setInputs,
+  lockedSide = null,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
+  /** When non-null, the named slate is read-only (two-attorney handoff). */
+  lockedSide?: HandoffSide | null;
 }) {
   const u = (patch: Partial<MSInputs>) => setInputs({ ...inputs, ...patch });
   const suspensionApplies = calculateMS(inputs).suspensionApplies;
@@ -206,7 +209,11 @@ export function MSCalculatorInputs({
         )}
       </Section>
 
-      <MSDeviationsSection inputs={inputs} setInputs={setInputs} />
+      <MSDeviationsSection
+        inputs={inputs}
+        setInputs={setInputs}
+        lockedSide={lockedSide}
+      />
     </div>
   );
 }
@@ -214,9 +221,11 @@ export function MSCalculatorInputs({
 function MSDeviationsSection({
   inputs,
   setInputs,
+  lockedSide,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
+  lockedSide: HandoffSide | null;
 }) {
   const updateMode = (m: typeof inputs.comparisonMode) => {
     if (m === "side_by_side" && !inputs.deviationsB) {
@@ -269,7 +278,11 @@ function MSDeviationsSection({
           }}
         />
       ) : (
-        <DeviationPickList inputs={inputs} setInputs={setInputs} />
+        <DeviationPickList
+          inputs={inputs}
+          setInputs={setInputs}
+          lockedSide={lockedSide}
+        />
       )}
 
       {inputs.comparisonMode === "side_by_side" && (
@@ -314,9 +327,11 @@ function ChildAgesInput({
 function DeviationPickList({
   inputs,
   setInputs,
+  lockedSide,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
+  lockedSide: HandoffSide | null;
 }) {
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && !!inputs.deviationsB;
@@ -360,6 +375,8 @@ function DeviationPickList({
             obligeeLabel={inputs.obligeeLabel || "Obligee"}
             sideBySide={sideBySide}
             buildContextInputs={() => inputs}
+            obligorLocked={lockedSide === "A"}
+            obligeeLocked={lockedSide === "B"}
           />
         );
       })}

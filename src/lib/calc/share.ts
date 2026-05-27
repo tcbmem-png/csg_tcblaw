@@ -44,11 +44,17 @@ export function defaultChildEntry(): ChildEntry {
   return { name: "", dob: "", daysWithA: 0, daysWithB: 0 };
 }
 
-interface SharePayload {
+interface SharePayloadV1 {
   v: 1;
   i: CalcInputs;
   c: CaseCaption;
 }
+interface SharePayloadV2 {
+  v: 2;
+  i: CalcInputs;
+  c: CaseCaption;
+}
+type SharePayload = SharePayloadV1 | SharePayloadV2;
 
 /** URL-safe base64. */
 function b64urlEncode(s: string): string {
@@ -64,7 +70,7 @@ function b64urlDecode(s: string): string {
 }
 
 export function encodeShare(inputs: CalcInputs, caption: CaseCaption): string {
-  const payload: SharePayload = { v: 1, i: inputs, c: caption };
+  const payload: SharePayloadV2 = { v: 2, i: inputs, c: caption };
   return b64urlEncode(JSON.stringify(payload));
 }
 
@@ -73,8 +79,10 @@ export function decodeShare(
 ): { inputs: CalcInputs; caption: CaseCaption } | null {
   try {
     const parsed = JSON.parse(b64urlDecode(s)) as Partial<SharePayload>;
-    if (parsed.v !== 1 || !parsed.i) return null;
-    // Merge with defaults to tolerate older payloads missing newer fields.
+    // v1 and v2 share the same shape; v2 just permits the expanded
+    // IncomeMethodology discriminated union. Existing v1 payloads round-trip
+    // through the same merge.
+    if ((parsed.v !== 1 && parsed.v !== 2) || !parsed.i) return null;
     const inputs: CalcInputs = { ...defaultInputs(), ...parsed.i };
     const caption: CaseCaption = { ...defaultCaption(), ...(parsed.c ?? {}) };
     return { inputs, caption };

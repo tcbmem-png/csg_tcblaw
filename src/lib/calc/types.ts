@@ -4,19 +4,106 @@
  * Income methodology captured by the optional Income Helper.
  * Stored on CalcInputs but NOT consumed by the calculation engine — only
  * surfaced on the worksheet appendix to document how the monthly gross
- * figure was derived. Adding new variants is backward-compatible because
- * all fields are optional and `decodeShare` merges with defaults.
+ * figure was derived. Phase 2: discriminated union over the six income
+ * paths. `monthlyGrossResult` is the canonical "what flows into
+ * parentXGrossMonthly" field for every path.
  */
-export type IncomeMethodology = {
+export type IncomeMethodology =
+  | SimpleMethodology
+  | VariableMethodology
+  | SelfEmployedMethodology
+  | MultiSourceMethodology
+  | ImputedMethodology
+  | SpecialMethodology;
+
+export interface SimpleMethodology {
   path: "simple";
   source: "w2_box5_annual" | "monthly_gross";
-  /** Annual W-2 Box 5 figure when source = w2_box5_annual. */
   w2Box5Annual?: number;
-  /** Monthly gross entered directly when source = monthly_gross. */
   monthlyGrossEntered?: number;
-  /** Final monthly figure pushed into the calculator. */
+  /** Optional 401(k)/403(b) etc. monthly contributions added back to monthly_gross source. */
+  voluntaryRetirementMonthly?: number;
   monthlyGrossResult: number;
-};
+}
+
+export interface VariableYearRow {
+  year: string;
+  amount: number;
+}
+export interface VariableMethodology {
+  path: "variable";
+  years: VariableYearRow[];
+  averagingMethod: "3yr" | "5yr" | "custom";
+  rationale?: string;
+  monthlyGrossResult: number;
+}
+
+export interface SelfEmployedAddBack {
+  label: string;
+  amount: number;
+}
+export interface SelfEmployedMethodology {
+  path: "self_employed";
+  businessType?: string;
+  grossReceiptsAnnual: number;
+  ordinaryExpensesAnnual: number;
+  addBacks: SelfEmployedAddBack[];
+  monthlyGrossResult: number;
+}
+
+export interface MultiSourceRow {
+  label: string;
+  annual: number;
+  note?: string;
+}
+export interface MultiSourceMethodology {
+  path: "multi_source";
+  sources: MultiSourceRow[];
+  monthlyGrossResult: number;
+}
+
+export type ImputationBasis =
+  | "voluntary_underemployment"
+  | "failure_to_produce_evidence"
+  | "non_income_producing_assets";
+
+export interface ImputedMethodology {
+  path: "imputed";
+  basis: ImputationBasis;
+  method: "prior_earnings" | "vocational_capacity" | "asset_based";
+  /** Actual real-earnings monthly figure (gross slot holds the imputed figure). */
+  actualMonthlyGross: number;
+  // prior_earnings sub-flow
+  years?: VariableYearRow[];
+  averagingMethod?: "3yr" | "5yr" | "custom";
+  // vocational_capacity sub-flow
+  occupation?: string;
+  area?: string;
+  hoursPerWeek?: number;
+  // asset_based sub-flow
+  assetsTotal?: number;
+  rateOfReturn?: number;
+  rationale?: string;
+  monthlyGrossResult: number;
+}
+
+export type SpecialSituation =
+  | "ssi_only"
+  | "incarcerated"
+  | "military"
+  | "federal_benefit_to_child";
+
+export interface SpecialMethodology {
+  path: "special";
+  situation: SpecialSituation;
+  incarcerationReason?: "domestic_violence" | "child_abuse" | "criminal_nonpayment" | "other";
+  hasMeansToPay?: boolean;
+  bahMonthly?: number;
+  basMonthly?: number;
+  federalBenefitMonthly?: number;
+  rationale?: string;
+  monthlyGrossResult: number;
+}
 
 export interface CalcInputs {
   parentALabel: string;

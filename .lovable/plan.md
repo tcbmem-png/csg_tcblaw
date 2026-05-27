@@ -1,116 +1,109 @@
+
 ## Goal
 
-Bring the MS deviation worksheet in line with the new build brief: lighter two-party per-factor input, real-time agreement/disagreement readout, a reconciliation view with monthly + cumulative dollars, and a dedicated chancellor-ready PDF. Existing FormA–FormJ structured forms remain available as Position-A-only optional detail (per your choice).
+Make the MS deviation handoff readable as "two attorneys email a worksheet back and forth; the link is the worksheet." State-aware status banner at the top of the deviations area, state-aware action panel where the current scattered handoff buttons live. Fix the round-trip identity bug so the originator's browser still recognizes a URL after the receiver edits it. Add a localStorage save-and-resume for receiving counsel with a true state-divergence check. MS-only; no server-state changes.
 
-## What's already there (keep)
+## The five moments
 
-- Walkthrough (`deviation-walkthrough.tsx`), entry-mode picker, single vs. side-by-side toggle.
-- Structured per-factor sub-forms (`deviation-factor-form.tsx`) and their types.
-- Light comparison view (`deviation-comparison.tsx`) — will be replaced by the new reconciliation table.
-- Existing MS worksheet PDF (`src/lib/pdf/ms-worksheet-pdf.ts`) — untouched.
+Derived from `handoff.status` + `activeSide` + `isOriginatorBrowser`:
 
-## What changes
+1. **Drafting** — `status === "none"`. No banner; primary action "Send to opposing counsel".
+2. **Sent — awaiting response** — `originated` AND originator browser AND not the receiving `?side=` session.
+3. **Your turn (receiver)** — `activeSide && activeSide !== originatingSide`.
+4. **Returned for review** — `in_progress` (or `completed`) AND `isOriginatorBrowser` AND not a receiver session.
+5. **Complete** — `status === "completed"`.
 
-### 1. Per-party schema (brief §"Per-party input")
+A small `useHandoffMoment(handoff, activeSide, isOriginator)` hook returns `{ moment, counterpartyLabel, timestamp }` so banner and action panel share one source of truth.
 
-Add a new shared shape used on both sides:
+Known asymmetry (accepted, not fixed): once a receiver downloads the final PDF, the originator's view stays at moment 4 until they reopen the URL. PDF is the canonical artifact. Optional "Mark complete" affordance is out of scope for this cycle — flagged so we don't forget it.
 
-```ts
-// src/lib/calc/ms/types.ts
-export type MSPartyPosition =
-  | "" | "downward" | "upward" | "apply_no_amount" | "oppose";
+## Components
 
-export interface MSPartyEntry {
-  position: MSPartyPosition;
-  factsAsserted: string;
-  documentationReferenced: string;
-  proposedMonthly: number;     // signed; blank = 0
-  legalAuthority: string;
-}
+```
+src/components/calculator/ms/
+  handoff-share-dialog.tsx        rewrite copy + remove jargon
+  handoff-landing-banner.tsx      rewrite + add originator-receives-back variant
+  handoff-status-banner.tsx       NEW — moment-driven status strip
+  handoff-action-panel.tsx        NEW — moment-driven primary/alt/secondary buttons
+  handoff-resume-prompt.tsx       NEW — divergence-aware resume prompt
+  handoff-resume-pill.tsx         NEW — quiet "saved draft available — restore?" pill
+  result-sidebar.tsx              remove handoff-specific buttons; keep "Copy shareable link" (see Sidebar decision)
 ```
 
-Extend `MSDeviation`:
-```ts
-party?: MSPartyEntry;          // populated for whichever side this slate represents
-```
+### Sidebar decision (open item resolved)
 
-Position A's slate may still hold `structured` (the elaborate FormA–FormJ). Position B's slate carries `party` only.
+Keep **Copy shareable link** in the sidebar as a universal affordance (option A in the review). It's not handoff-specific — it always copies the current URL — and it's useful at any moment for "send this to my paralegal / save to Clio". The new action panel handles the role-aware "Send to opposing counsel / Send back / Send revisions back" semantics; the sidebar's Copy is the plumbing-level escape hatch. They don't conflict — different jobs.
 
-### 2. "Is this factor in play?" selector
+`MSHandoffShareDialog`, `Hand off to opposing counsel`, `Re-generate handoff URL`, and `Download deviation worksheet (PDF)` all leave the sidebar and move into `handoff-action-panel.tsx`.
 
-Above the per-party block, a 4-state radio: *not asserted / asserted by obligor / asserted by obligee / asserted by both*. Drives `applicable` on each side and collapses the form when "not asserted by either."
+### Copy (verbatim from spec)
 
-### 3. New per-factor two-column block
+Status banner uses `Intl.DateTimeFormat("en-US", { weekday:"long", month:"long", day:"numeric", hour:"numeric", minute:"2-digit" })` for "Tuesday, May 26 at 2:14 PM".
 
-Component `MSPartyFactorBlock` rendering two `MSPartyEntry` editors side by side with the brief's five fields + factor-specific help text (medical/asset/seasonal/etc. prompts pulled from the brief's per-factor "Help text" lines).
+Send dialog: title "Send to opposing counsel". The existing "Scrub my financial entries" toggle becomes "☑ Show opposing counsel a blank slate (recommended)" — same boolean, new label/helper. Primary "Copy link"; secondary "Copy link & open email" (see mailto handling below); "Cancel".
 
-Existing structured FormA–FormJ rendered below Position A's column as an `<details>` "Detailed evidence (optional)" disclosure — preserved for users who want the deeper capture.
+Landing banner: two variants — receiving-side and originator-receives-back — text per spec.
 
-### 4. Real-time comparison row
+## Round-trip case identity
 
-Computes per-factor state from both `party` entries and renders one of:
-- Both agree, same amount → "Parties agree: factor applies, $X/mo. Net: [up/down]."
-- Both apply, different amounts → "Both apply; differ on amount. Obligor $X; obligee $Y. Gap: $|X−Y|/mo."
-- One asserts, other opposes → "Asserted by [side]; opposed by [other]. Magnitude if granted: $X/mo."
-- Neither → collapsed (just the header).
+Add `caseId: string | null` to `HandoffState`. Generated once at first Send via `randomToken(16)` — **16 bytes / 128 bits, same entropy as the existing C2 origin token** (called out so a future maintainer doesn't downsize). Preserved verbatim on re-generate.
 
-Lives at the bottom of each factor card; pure presentational helper in `deviation-factor-form.tsx`.
+- New `recordOriginatedHandoff(caseId)` / `isOriginatorBrowser(caseId, inputs, caption)` key off `caseId`. Storage shape: `ms.handoff.origins` → `{ [caseId]: token }`.
+- Back-compat: if `caseId` is null on a decoded payload, fall back to the existing `fingerprintShare(inputs, caption)` check. Old URLs in the wild still behave as today; once re-sent, they get a caseId.
+- `MSHandoffLandingBanner` switches to the single new API (which internally picks caseId or falls back to fingerprint).
 
-### 5. Reconciliation view
+This makes "↩️ Returned" detection survive any number of receiving-side edits.
 
-Replaces `deviation-comparison.tsx` with `MSDeviationReconciliation`:
+## Receiving-side save-and-resume (state-divergence, not timestamp)
 
-- Table: factor letter | in play? | obligor position | obligee position | obligor $ | obligee $ | gap $.
-- Totals row: obligor total / obligee total / net difference (monthly).
-- Cumulative row: net difference × `avgMonthsRemaining`, where:
-  ```
-  avgMonthsRemaining = clamp( mean( max(0, 21 - age_i) ) * 12, 0, 21*12 )
-  ```
-  Uses a new optional `childAges: number[]` input. When empty, the cumulative row shows "Enter child ages to see cumulative impact" rather than guessing.
-- "See full comparison" link from the result sidebar already exists for TN; mirror it on MS.
+New `src/lib/calc/ms/resume.ts`:
 
-### 6. Child ages input
+- `saveReceivingDraft(caseId, { inputs, handoff, baseShareHash })` — writes to `localStorage["ms.handoff.draft." + caseId]`. **`baseShareHash` = a hash of the URL `?s=` value the receiver was editing against at the moment of save** (cheap djb2 or reuse `fingerprintShare`). Called from the receiver-side debounced URL-sync effect in `ms.tsx` so the saved snapshot and the hash are always taken together.
+- `loadReceivingDraft(caseId)` / `clearReceivingDraft(caseId)`.
+- On hydrate: if receiving session AND a stored draft exists for the URL's `caseId`, **compare the URL's current share hash to the stored `baseShareHash`** (not timestamps):
+  - **Equal** → URL is the same one the receiver was editing. Render `<MSHandoffResumePrompt variant="resumable">` with two options: "Continue your edits" / "Use the version they sent". This is the normal "you closed the tab" path.
+  - **Different** → originator sent a new URL since the draft. Render `<MSHandoffResumePrompt variant="diverged">` with three options: "Continue your edits", "Use the version they just sent", "Compare both" (Compare is wired but routes to a `toast.info("Side-by-side compare coming in a later cycle")` for now — UI affordance exists, implementation deferred).
+- **Dismiss (X) is non-destructive.** Hides the prompt for this session, preserves the draft. A small `<MSHandoffResumePill>` ("You have a saved draft for this case — restore?") sits in the deviations section header so the receiver can re-summon the prompt at any time. Only the explicit "Continue your edits" / "Use the version they sent" actions mutate state.
+- Draft is cleared when status flips to `completed`, AND when "Send back" successfully copies the URL (the receiver has handed it off; saved draft is now stale).
 
-Add `childAges: number[]` to `MSInputs` (defaulted to `[]` so existing state is forward-compatible). Surface in `ms/inputs.tsx` near `numChildren` as a comma-separated list with the existing monthly-hint pattern (keeps Option-2 minimalism).
+## Send-back / send-revisions feedback
 
-### 7. Dedicated Deviation Worksheet PDF
+Receiver clicks "Send back to Jane Counsel →" → URL copies → toast via `sonner`:
 
-New file `src/lib/pdf/ms-deviation-pdf.ts`, generated alongside the existing MS worksheet PDF. Sections:
+> "Link copied. Paste it into your email to Jane — when she opens it, she'll see your client's positions filled in on her copy."
 
-1. **Case Information** — parties, attorneys, children + ages, statutory %, presumptive monthly (pulled from existing MS outputs).
-2. **Deviation Analysis by Factor** — for each factor, full statutory text, in-play state, two-column per-party content (position, facts verbatim, docs, authority, $), gap line. Non-asserted factors collapse to a single line.
-3. **Reconciliation Summary** — same table as on-screen + monthly + cumulative totals.
-4. **Proposed Final Order** — presumptive ± deviation = proposed final monthly; blank findings block; signature line.
-5. Footer — disclaimer, citation to https://csg.tcblaw.org/ms, repo URL.
+Same pattern for the originator's "Send revisions back". Inline confirmation also lives under the button (mirrors the existing `CopyLinkButton` idle/copied state) so users without notification permission still see the receipt.
 
-Wired into MS result sidebar as a second download button: "Download deviation worksheet (PDF)" next to the existing worksheet download.
+## mailto handling (URL never goes through mailto)
 
-### 8. Persistence + sharing
+"Send to opposing counsel / Copy link & open email" and the receiver-side "Send back & open email" do **two** things in order:
 
-`MSPartyEntry` and `childAges` are plain serializable data; they ride along on the existing localStorage save and shareable-URL encode in `src/lib/calc/ms/share.ts` without schema-version bump — just additive fields with safe defaults during decode.
+1. `navigator.clipboard.writeText(url)` first.
+2. `window.location.href = "mailto:?subject=" + encodeURIComponent(subjectFromCaption) + "&body=" + encodeURIComponent("Paste your link below this line:\n\n----------\n")`.
 
-### 9. Acceptance checks
+The share URL is never embedded in the mailto body, so we never hit the ~2000-char client-side clipping ceiling on long deviation slates. Subject is derived from caption (`"[Matter] — MS deviation worksheet"`); falls back to a generic subject when caption is empty.
 
-- Walkthrough still works; "Yes, this factor applies" now opens the two-party block (not just the structured form).
-- Side-by-side mode replaced by the new always-two-party layout; the `comparisonMode` toggle becomes "Show opposing party column" (kept for users who don't have the other side's position).
-- `ms/calc.ts` total still derives from `deviationsA[*].proposedMonthly` for the obligor-side worksheet math; obligee totals are display-only.
-- All existing MS calc tests pass (no engine changes).
-- New unit tests for the reconciliation aggregator (gap math, cumulative when ages missing/present).
+## Tests
 
-## Files touched
+Keep all existing `src/lib/calc/ms/__tests__/handoff.test.ts` assertions passing.
 
-- **Types:** `src/lib/calc/ms/types.ts` (add `MSPartyEntry`, `MSPartyPosition`, `childAges`).
-- **Inputs UI:** `src/components/calculator/ms/inputs.tsx` (child ages field).
-- **Factor UI:** `src/components/calculator/ms/deviation-factor-form.tsx` (new `MSPartyFactorBlock`, in-play selector, real-time row; existing FormA–FormJ wrapped in disclosure).
-- **Walkthrough:** `src/components/calculator/ms/deviation-walkthrough.tsx` (use new block; widen "applies?" to 4-state).
-- **Reconciliation:** replace `deviation-comparison.tsx` with `deviation-reconciliation.tsx`; keep export alias for now.
-- **Sidebar:** `src/components/calculator/ms/result-sidebar.tsx` (deviation PDF button + reconciliation link).
-- **PDF:** new `src/lib/pdf/ms-deviation-pdf.ts` + wire-up in MS route.
-- **Share:** `src/lib/calc/ms/share.ts` (decode defaults for new fields).
-- **Tests:** new `src/lib/calc/ms/__tests__/reconciliation.test.ts`.
+- `caseId-origin-detection.test.ts`: generate URL → mutate inputs (simulate receiver edits) → re-encode → `isOriginatorBrowser` still true based on caseId.
+- `caseId-backcompat.test.ts`: decode a v3 payload with no caseId → fingerprint fallback still detects originator.
+- `resume.test.ts`:
+  - save → load round-trips inputs.
+  - resumable path: stored `baseShareHash` == current URL hash → returns `{ status: "resumable" }`.
+  - diverged path: stored hash differs → returns `{ status: "diverged" }`.
+  - clear on completion.
+  - **Dismiss is non-destructive** — calling the prompt's dismiss path does not remove the stored draft.
+- `handoff-status-banner.test.tsx` (RTL): for each of the five moments, render with a shaped `handoff` + `activeSide` and assert banner text.
+- `send-back-toast.test.tsx` (RTL): clicking "Send back" calls `navigator.clipboard.writeText` and emits the expected sonner toast string.
 
-## Out of scope (per brief §"What Should NOT Be in This Module")
+## Out of scope
 
-- No new calc math beyond reconciliation aggregation; the chancellor decides.
-- No Option-1 MS monthly engine refactor (still queued separately).
-- No DB persistence — same localStorage + URL share story as today.
+Real-time sync, round counters, full side-by-side diff implementation (the "Compare both" affordance is scaffolded only), receiver-initiated "Mark complete", anything TN.
+
+## Files
+
+Edit: `src/lib/calc/ms/types.ts`, `src/lib/calc/ms/share.ts`, `src/components/calculator/ms/handoff-share-dialog.tsx`, `src/components/calculator/ms/handoff-landing-banner.tsx`, `src/components/calculator/ms/result-sidebar.tsx`, `src/routes/ms.tsx`, `src/lib/calc/ms/__tests__/handoff.test.ts`.
+
+Create: `src/components/calculator/ms/handoff-status-banner.tsx`, `src/components/calculator/ms/handoff-action-panel.tsx`, `src/components/calculator/ms/handoff-resume-prompt.tsx`, `src/components/calculator/ms/handoff-resume-pill.tsx`, `src/lib/calc/ms/resume.ts`, plus the four new test files above.
