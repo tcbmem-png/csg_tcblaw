@@ -128,22 +128,9 @@ export function MSWorksheetPreview({
       </Table>
 
       {inputs.agiBasis === "imputed" && (
-        <div className="mt-3 rounded border-l-4 border-accent bg-accent/10 p-3 text-sm">
-          <strong>Imputed income — § 43-19-101(5).</strong> Basis:
-          <ul className="mt-1 list-disc pl-6 text-xs">
-            {inputs.imputationBasis.pastEarnings && <li>Past earnings and employment history</li>}
-            {inputs.imputationBasis.jobSkills && <li>Job skills and educational attainment</li>}
-            {inputs.imputationBasis.localMarket && <li>Local job market & prevailing earnings</li>}
-            {inputs.imputationBasis.availableEmployers && <li>Available employers willing to hire</li>}
-            {inputs.imputationBasis.other && (
-              <li>
-                Other factors
-                {inputs.imputationBasis.note ? `: ${inputs.imputationBasis.note}` : ""}
-              </li>
-            )}
-          </ul>
-        </div>
+        <ImputationCallout inputs={inputs} outputs={outputs} />
       )}
+
 
       {(outputs.requiresFindingHighIncome || outputs.requiresFindingLowIncome) && (
         <div className="mt-4 rounded border-l-4 border-accent bg-accent/10 p-3 text-sm">
