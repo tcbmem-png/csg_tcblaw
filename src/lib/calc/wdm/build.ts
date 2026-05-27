@@ -775,6 +775,7 @@ function buildPanels(inputs: CalcInputs, outputs: CalcOutputs): WDMPanels {
         : null,
     parentRoleCheckboxes: buildParentRoleCheckboxes(inputs, outputs),
     deviationsNarrative: buildDeviationsNarrative(inputs, outputs),
+    bcsoAmount: Math.abs(outputs.bcso),
   };
 }
 
