@@ -245,23 +245,14 @@ export function MSPartyFactorBlock({
   );
 }
 
-function InPlayBadge({
-  state,
-}: {
-  state: "obligor_only" | "obligee_only" | "both" | "agree";
-}) {
-  const map = {
-    obligor_only: { label: "Asserted by obligor", cls: "border-primary text-primary" },
-    obligee_only: { label: "Asserted by obligee", cls: "border-accent text-accent-foreground bg-accent/15" },
-    both: { label: "In dispute", cls: "border-accent text-accent-foreground bg-accent/15" },
-    agree: { label: "Agreed amount", cls: "border-success text-success bg-success/10" },
-  } as const;
-  const cfg = map[state];
+function InPlayBadge({ state }: { state: FactorInPlay }) {
+  if (state === "neither") return null;
+  const p = inPlayPresentation(state);
   return (
     <span
-      className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${cfg.cls}`}
+      className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${p.chipClass}`}
     >
-      {cfg.label}
+      {p.label}
     </span>
   );
 }
