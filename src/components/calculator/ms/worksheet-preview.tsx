@@ -185,6 +185,18 @@ export function MSWorksheetPreview({
           >
             Download Deviation Memorandum (PDF)
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              void import("@/lib/html/ms-sensitivity-html").then((m) =>
+                m.downloadMSSensitivityHtml({ inputs, outputs, caption }),
+              );
+            }}
+            className="rounded-md border border-amber-500/40 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100"
+            data-testid="download-sensitivity-html"
+          >
+            Download Sensitivity Analysis (HTML)
+          </button>
         </div>
       </div>
 
