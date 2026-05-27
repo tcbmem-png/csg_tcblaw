@@ -159,117 +159,11 @@ export function CalculatorInputs({
 
   return (
     <div>
-      <Section title="Parents" cite="Rule .04(3)">
-        <Grid>
-          <Field label="Parent A label">
-            <input
-              type="text"
-              value={inputs.parentALabel}
-              onChange={(e) => u({ parentALabel: e.target.value })}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-ring"
-            />
-          </Field>
-          <Field label="Parent B label">
-            <input
-              type="text"
-              value={inputs.parentBLabel}
-              onChange={(e) => u({ parentBLabel: e.target.value })}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-ring"
-            />
-          </Field>
-        </Grid>
-      </Section>
+      {/* Parents / Children / Parenting Time now live in the combined
+          <PartiesPlanChildren> section rendered upstream in src/routes/tn.tsx.
+          This component picks up at Income. */}
 
-      <Section title="Children" cite="Rule .09">
-        <Field label="Number of children" help="1 to 5. For 6+, consult counsel.">
-          <Radio
-            value={String(inputs.numChildren) as "1" | "2" | "3" | "4" | "5"}
-            onChange={(v) => u({ numChildren: parseInt(v) })}
-            options={[
-              { value: "1", label: "1" },
-              { value: "2", label: "2" },
-              { value: "3", label: "3" },
-              { value: "4", label: "4" },
-              { value: "5", label: "5" },
-            ]}
-          />
-        </Field>
-        <Field
-          label="Age of youngest child"
-          help="Used only by the Comparison tab to project cumulative support through age 18."
-        >
-          <Radio
-            value={String(inputs.youngestChildAge)}
-            onChange={(v) => u({ youngestChildAge: parseInt(v) })}
-            options={Array.from({ length: 18 }, (_, i) => ({
-              value: String(i),
-              label: String(i),
-            }))}
-          />
-        </Field>
-      </Section>
 
-      <Section title="Parenting time" cite="Rule .04(7)">
-        <Field label="Arrangement">
-          <Radio
-            value={inputs.parentingType}
-            onChange={(v) => u({ parentingType: v })}
-            options={[
-              { value: "standard", label: "Standard (80 ARP days)" },
-              { value: "equal", label: "Equal 50/50" },
-              { value: "custom", label: "Custom days" },
-            ]}
-          />
-        </Field>
-        {inputs.parentingType === "standard" && (
-          <Field label="Which parent is the ARP?">
-            <Radio
-              value={inputs.arpForStandard ?? "parent_b"}
-              onChange={(v) => u({ arpForStandard: v })}
-              options={[
-                { value: "parent_a", label: inputs.parentALabel },
-                { value: "parent_b", label: inputs.parentBLabel },
-              ]}
-            />
-          </Field>
-        )}
-        {inputs.parentingType === "custom" && (
-          <>
-            <Grid>
-              <Field
-                label={`${inputs.parentALabel} days/year`}
-                help="Total of both parents must = 365."
-              >
-                <NumInput
-                  value={inputs.parentADays ?? 0}
-                  onChange={(n) =>
-                    u({ parentADays: n, parentBDays: Math.max(0, 365 - n) })
-                  }
-                />
-              </Field>
-              <Field label={`${inputs.parentBLabel} days/year`}>
-                <NumInput
-                  value={inputs.parentBDays ?? 0}
-                  onChange={(n) =>
-                    u({ parentBDays: n, parentADays: Math.max(0, 365 - n) })
-                  }
-                />
-              </Field>
-            </Grid>
-            {((inputs.parentADays ?? 0) <= 5 ||
-              (inputs.parentBDays ?? 0) <= 5 ||
-              (inputs.parentADays ?? 0) >= 360 ||
-              (inputs.parentBDays ?? 0) >= 360) && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Tennessee's guidelines (Rule .04(7)(i)) cap the upward
-                adjustment at about 19% over the ARP's standard pro-rata
-                share, even at 0 ARP days. Many sole-custody cases are still
-                entered at the standard 285/80 split.
-              </p>
-            )}
-          </>
-        )}
-      </Section>
 
       <Section title={`Income — ${inputs.parentALabel}`} cite="Rule .04(3)">
         <Toggle
@@ -553,38 +447,51 @@ export function CalculatorInputs({
           label="Include private school as a deviation"
         />
         {inputs.includePrivateSchool && (
-          <Grid>
+          <>
+            <Grid>
+              <Field
+                label="Annual tuition (combined)"
+                help="Pro-rata to income share if granted."
+              >
+                <NumInput
+                  value={inputs.privateSchoolAnnual}
+                  onChange={(n) => u({ privateSchoolAnnual: n })}
+                />
+              </Field>
+              <Field label="Paid by">
+                <Radio
+                  value={inputs.privateSchoolPaidBy}
+                  onChange={(v) => u({ privateSchoolPaidBy: v })}
+                  options={[
+                    { value: "parent_a", label: inputs.parentALabel },
+                    { value: "parent_b", label: inputs.parentBLabel },
+                    { value: "split_pro_rata", label: "Split pro-rata" },
+                  ]}
+                />
+              </Field>
+            </Grid>
             <Field
-              label="Annual tuition (combined)"
-              help="Pro-rata to income share if granted."
+              label="Why is this a deviation?"
+              help="Composed into the AOC Part VI narrative automatically with the Rule .07(2)(d) citation prepended."
             >
-              <NumInput
-                value={inputs.privateSchoolAnnual}
-                onChange={(n) => u({ privateSchoolAnnual: n })}
+              <textarea
+                value={inputs.privateSchoolReason}
+                onChange={(e) => u({ privateSchoolReason: e.target.value })}
+                placeholder="e.g. Westminster School; parties stipulate; in the child's best interest given continuity of curriculum."
+                rows={3}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs text-ink outline-none focus:ring-2 focus:ring-ring"
               />
             </Field>
-            <Field label="Paid by">
-              <Radio
-                value={inputs.privateSchoolPaidBy}
-                onChange={(v) => u({ privateSchoolPaidBy: v })}
-                options={[
-                  { value: "parent_a", label: inputs.parentALabel },
-                  { value: "parent_b", label: inputs.parentBLabel },
-                  { value: "split_pro_rata", label: "Split pro-rata" },
-                ]}
-              />
-            </Field>
-          </Grid>
-        )}
-        {inputs.includePrivateSchool && (
-          <div className="rounded-md border border-accent/40 bg-accent/10 p-3 text-xs text-ink">
-            Private school is a <strong>discretionary deviation</strong>. The
-            court must make written findings that it is in the child's best
-            interest and consistent with the parents' financial circumstances.
-            It is NOT a mandatory add-on.
-          </div>
+            <div className="rounded-md border border-accent/40 bg-accent/10 p-3 text-xs text-ink">
+              Private school is a <strong>discretionary deviation</strong>.
+              The court must make written findings that it is in the child's
+              best interest and consistent with the parents' financial
+              circumstances. It is NOT a mandatory add-on.
+            </div>
+          </>
         )}
       </Section>
+
 
       <Section title="Special expenses (7% threshold)" cite="Rule .07(2)(d)">
         <Toggle
