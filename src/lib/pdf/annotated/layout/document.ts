@@ -208,16 +208,10 @@ export async function renderBlocksToPdf(
   meta: AnnotatedPdfMeta,
   assets: AnnotatedPdfAssets,
 ): Promise<Uint8Array> {
-  const printer = new PdfPrinter(buildFonts(assets));
-  // pdfmake's printer reads font bytes from its `vfs` map; attach
-  // ours so it doesn't try to hit the filesystem.
-  (printer as unknown as { fs: { readFileSync: (p: string) => Buffer } }).fs =
-    {
-      readFileSync: (p: string) => {
-        const vfs = buildVfs(assets);
-        const key = p.split("/").pop() ?? p;
-        if (!(key in vfs)) throw new Error(`pdfmake VFS miss: ${p}`);
-        return Buffer.from(vfs[key], "base64");
+  const vfs = new VirtualFileSystem();
+  vfs.writeFileSync(FONT_DEF_FILE_NAMES.regular, Buffer.from(assets.regularFont));
+  vfs.writeFileSync(FONT_DEF_FILE_NAMES.bold, Buffer.from(assets.boldFont));
+  const printer = new PdfPrinter(buildFonts(assets), vfs);
       },
     };
 
