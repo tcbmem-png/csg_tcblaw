@@ -18,6 +18,7 @@ import type {
   MSFactorLetter,
   MSPartyEntry,
   MSPartyPosition,
+  HandoffAttorney,
 } from "@/lib/calc/ms/types";
 import {
   FACTOR_STATUTORY_TEXT,
@@ -25,6 +26,7 @@ import {
   buildReconciliation,
   summarizeRow,
 } from "@/lib/calc/ms/reconciliation";
+import { stampPartyEdit } from "@/lib/calc/ms/share";
 import {
   Field,
   NumInput,
