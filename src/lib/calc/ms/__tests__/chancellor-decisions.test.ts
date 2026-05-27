@@ -73,15 +73,45 @@ describe("availableDecisions", () => {
 });
 
 describe("decisionContribution", () => {
-  let inputs: MSInputs;
-  beforeEachSetup();
-  function beforeEachSetup() {
-    inputs = defaultMSInputs();
-  }
-
   it("returns 0 for pending and declined decisions", () => {
+    let inputs = defaultMSInputs();
     inputs = setSide(inputs, "A", "a", { applicable: true, proposedMonthly: 300 });
     const row = buildReconciliation(inputs).rows.find((r) => r.letter === "a")!;
+    expect(
+      decisionContribution(row, { ...defaultChancellorDecision("a") }),
+    ).toBe(0);
+    expect(
+      decisionContribution(row, recordDecision(defaultChancellorDecision("a"), { decision: "decline" })),
+    ).toBe(0);
+  });
+
+  it("adopt_obligor uses obligor's amount; falls back to 0 when not applicable", () => {
+    let inputs = defaultMSInputs();
+    inputs = setSide(inputs, "A", "a", { applicable: true, proposedMonthly: 400 });
+    inputs = setSide(inputs, "B", "a", { applicable: false, proposedMonthly: 0 });
+    const row = buildReconciliation(inputs).rows.find((r) => r.letter === "a")!;
+    expect(
+      decisionContribution(row, recordDecision(defaultChancellorDecision("a"), { decision: "adopt_obligor" })),
+    ).toBe(400);
+    expect(
+      decisionContribution(row, recordDecision(defaultChancellorDecision("a"), { decision: "adopt_obligee" })),
+    ).toBe(0);
+  });
+
+  it("split averages the two applicable positions on `both`", () => {
+    let inputs = defaultMSInputs();
+    inputs = setSide(inputs, "A", "h", { applicable: true, proposedMonthly: 600 });
+    inputs = setSide(inputs, "B", "h", { applicable: true, proposedMonthly: 200 });
+    const row = buildReconciliation(inputs).rows.find((r) => r.letter === "h")!;
+    expect(
+      decisionContribution(row, recordDecision(defaultChancellorDecision("h"), { decision: "split" })),
+    ).toBe(400);
+  });
+
+  it("custom decision uses the chancellor's signed amount, clamped to ±$50k", () => {
+    let inputs = defaultMSInputs();
+    inputs = setSide(inputs, "A", "j", { applicable: true, proposedMonthly: 0 });
+    const row = buildReconciliation(inputs).rows.find((r) => r.letter === "j")!;
     expect(
       decisionContribution(row, { ...defaultChancellorDecision("a") }),
     ).toBe(0);
