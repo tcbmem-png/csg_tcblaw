@@ -15,7 +15,18 @@
  *
  * Baseline update protocol is HUMAN-APPROVAL ONLY. See README.md.
  */
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+// Lock wall-clock determinism: OfficialWorksheet stamps `new Date()` in
+// its header. Without this, baselines drift daily.
+const FIXED_NOW = new Date("2026-05-27T12:00:00Z");
+beforeAll(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(FIXED_NOW);
+});
+afterAll(() => {
+  vi.useRealTimers();
+});
 import { renderToStaticMarkup } from "react-dom/server";
 import { OfficialWorksheet } from "@/components/calculator/official-worksheet";
 import { calculate } from "../../calc";
