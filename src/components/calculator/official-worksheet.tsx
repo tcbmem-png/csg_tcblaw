@@ -15,6 +15,7 @@
  * is still derived from `inputs`/`outputs` here; promotion into the WDM
  * is tracked for Phase D.
  */
+import { Fragment } from "react";
 import type { CalcInputs, CalcOutputs } from "@/lib/calc/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import { defaultCaption } from "@/lib/calc/share";
@@ -304,6 +305,3 @@ function SectionBlock({
     </>
   );
 }
-
-// Local Fragment import to keep the JSX above clean.
-import { Fragment } from "react";
