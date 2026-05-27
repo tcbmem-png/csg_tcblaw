@@ -11,24 +11,16 @@
  * on the AOC overlay (which uses the same TTFs via @pdf-lib/fontkit).
  */
 
-// pdfmake server-side Printer + VirtualFileSystem. Type declarations
-// don't ship these; the runtime classes are stable.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const PdfPrinter = require("pdfmake/js/Printer").default as new (
-  fontDescriptors: TFontDictionary,
-  virtualfs?: unknown,
-) => {
-  createPdfKitDocument: (
-    doc: TDocumentDefinitions,
-  ) => NodeJS.ReadableStream & { end: () => void };
-};
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const VirtualFileSystem = require("pdfmake/js/virtual-fs.js")
-  .default as new () => {
-  writeFileSync: (name: string, content: Buffer) => void;
-  readFileSync: (name: string) => Buffer;
-  existsSync: (name: string) => boolean;
-};
+// pdfmake server-side singleton. Use the package's top-level API which
+// wires up virtualfs + URL resolver + access policies for us.
+import { createRequire } from "node:module";
+const nodeRequire = createRequire(import.meta.url);
+interface PdfMakeServer {
+  setFonts: (fonts: TFontDictionary) => void;
+  setLocalAccessPolicy: (cb: (path: string) => boolean) => void;
+  createPdf: (doc: TDocumentDefinitions) => { getBuffer: () => Promise<Buffer> };
+}
+const pdfMake = nodeRequire("pdfmake") as PdfMakeServer;
 
 import type {
   Content,
@@ -72,23 +64,28 @@ const FONT_DEF_FILE_NAMES = {
   bold: "DejaVuSans-Bold.ttf",
 };
 
-function buildFonts(assets: AnnotatedPdfAssets): TFontDictionary {
-  return {
-    DejaVu: {
-      normal: FONT_DEF_FILE_NAMES.regular,
-      bold: FONT_DEF_FILE_NAMES.bold,
-      italics: FONT_DEF_FILE_NAMES.regular,
-      bolditalics: FONT_DEF_FILE_NAMES.bold,
-    },
-  };
+async function materializeFonts(
+  assets: AnnotatedPdfAssets,
+): Promise<{ regularPath: string; boldPath: string }> {
+  const { promises: fs } = await import("node:fs");
+  const os = await import("node:os");
+  const path = await import("node:path");
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "tn-annot-fonts-"));
+  const regularPath = path.join(dir, FONT_DEF_FILE_NAMES.regular);
+  const boldPath = path.join(dir, FONT_DEF_FILE_NAMES.bold);
+  await fs.writeFile(regularPath, Buffer.from(assets.regularFont));
+  await fs.writeFile(boldPath, Buffer.from(assets.boldFont));
+  return { regularPath, boldPath };
 }
 
-function buildVfs(assets: AnnotatedPdfAssets): Record<string, string> {
+function buildFonts(regularPath: string, boldPath: string): TFontDictionary {
   return {
-    [FONT_DEF_FILE_NAMES.regular]: Buffer.from(assets.regularFont).toString(
-      "base64",
-    ),
-    [FONT_DEF_FILE_NAMES.bold]: Buffer.from(assets.boldFont).toString("base64"),
+    DejaVu: {
+      normal: regularPath,
+      bold: boldPath,
+      italics: regularPath,
+      bolditalics: boldPath,
+    },
   };
 }
 
@@ -208,12 +205,8 @@ export async function renderBlocksToPdf(
   meta: AnnotatedPdfMeta,
   assets: AnnotatedPdfAssets,
 ): Promise<Uint8Array> {
-  const vfs = new VirtualFileSystem();
-  vfs.writeFileSync(FONT_DEF_FILE_NAMES.regular, Buffer.from(assets.regularFont));
-  vfs.writeFileSync(FONT_DEF_FILE_NAMES.bold, Buffer.from(assets.boldFont));
-  const printer = new PdfPrinter(buildFonts(assets), vfs);
-  // buildVfs retained for potential debug introspection; unused at runtime
-  void buildVfs;
+  const { regularPath, boldPath } = await materializeFonts(assets);
+  const printer = new PdfPrinter(buildFonts(regularPath, boldPath));
 
   const footerTpl =
     meta.footerTemplate ??
