@@ -97,7 +97,27 @@ export function calculateMS(inputs: MSInputs): MSOutputs {
 
   // We still compute everything for display, but if suspension applies
   // we floor the final at zero and surface the suspension finding.
-  const gross = Math.max(0, inputs.obligorAnnualGross);
+  const actualGross = Math.max(0, inputs.obligorAnnualGross);
+  // ----- § 43-19-101(5) imputation blend -----
+  // Active only when basis === "imputed". The application slider (0..100)
+  // mixes actual and imputed gross linearly so the user can model partial
+  // imputation outcomes. The note that imputation is "scenario modeling —
+  // not a court determination" is emitted in warnings, below.
+  const imputationActive =
+    inputs.agiBasis === "imputed" && inputs.imputationBasis.imputedAnnualGross > 0;
+  const imputationApplicationPct = Math.min(
+    100,
+    Math.max(0, Number(inputs.imputationBasis.applicationPct ?? 100)),
+  );
+  const imputedGross = Math.max(
+    0,
+    Number(inputs.imputationBasis.imputedAnnualGross || 0),
+  );
+  const blendedGross = imputationActive
+    ? actualGross * (1 - imputationApplicationPct / 100) +
+      imputedGross * (imputationApplicationPct / 100)
+    : actualGross;
+  const gross = blendedGross;
   const taxes = Math.max(0, inputs.obligorAnnualTaxes);
   const ss = Math.max(0, inputs.obligorAnnualSocialSecurity);
   const mandRet = Math.max(0, inputs.obligorAnnualMandatoryRetirement);
