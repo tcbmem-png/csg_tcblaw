@@ -101,8 +101,8 @@ export function MSWorksheetPreview({
       <div className="rounded-lg border border-rule bg-background p-6 font-serif text-ink">
         <h2 className="text-xl font-bold">Mississippi Child Support Worksheet</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          Miss. Code Ann. § 43-19-36 (suspension during incarceration). Guidelines
-          effective {outputs.guidelinesEffectiveDate}.
+          Miss. Code Ann. § 43-19-36 (suspension during incarceration).
+          Guidelines: {outputs.guidelinesEffectiveDate}.
         </p>
 
         <CaptionBlock caption={caption} inputs={inputs} />
