@@ -452,3 +452,43 @@ not factor-classification chips), so the consistency contract is
 satisfied across all surfaces that currently render the state.
 
 **Source.** Slice 5 verification pass.
+
+---
+
+## D-013 — Round-bump call sites (Slice 5.5)
+
+**Decision.** `bumpHandoffRound` is invoked at exactly two state
+transitions in the live UI:
+
+1. **Originator first send** — `handoff-share-dialog.tsx::build()` sets
+   `handoffRound: max(1, prior)` when minting the initial "originated"
+   handoff. Round 1 = the originator's authored draft (implicit from
+   the column header — no "Amended in round 1" line renders by design).
+
+2. **Either side sends back** — `handoff-action-panel.tsx::copySendBackUrl()`
+   bumps the round once per send-back, persisting both into the encoded
+   URL and the local `handoff` state via `setHandoff(result.handoff)`.
+   Receiver send-back → round 2. Originator revisions → round 3. And
+   so on for each subsequent round trip.
+
+**Why.** The §1.5 stamping helpers (`stampPartyEdit`,
+`stampSlatesAfterEdit`) were wired and tested end-to-end since Phase 2.5,
+but the `handoffRound` field on `HandoffState` was never advanced past
+its default `0`. Consequences cascaded:
+
+- `PartyColumn.updateParty` guards stamping on `handoffRound > 0`, so
+  every receiver edit silently skipped stamping.
+- Even when stamping ran (via test URLs that pre-set `handoffRound: 1`),
+  the "Amended in round N by [name]" render gate is `> 1`, so round-1
+  stamps suppressed the line — the correct doctrinal behavior for the
+  authored draft, but masking the absent round-bump on send-back.
+
+**Same architectural class** as the gate-disguised-as-mismatch family
+documented under D-009 / D-010: the data-layer contract was honored
+end-to-end (storage, encoding, decoding, render gate), but a single
+state transition that should advance the contract was never invoked.
+The fifth instance in that catalog.
+
+**Source.** Slice 5.5 — attribution rendering gap surfaced by Phase 3.5
+test agent after Slice 5 verification confirmed stamping helpers without
+exercising the round-bump call site.
