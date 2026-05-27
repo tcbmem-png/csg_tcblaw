@@ -20,7 +20,7 @@ const TARGETS = new Set([
 async function loadAssets() {
   const base = path.join("src/lib/pdf/assets");
   const [blankPdf, regular, bold] = await Promise.all([
-    fs.readFile(path.join(base, "tn-cs-worksheet-blank.pdf")),
+    fs.readFile(path.join(base, "tn-cs-worksheet-fillable.pdf")),
     fs.readFile(path.join(base, "fonts/DejaVuSans.ttf")),
     fs.readFile(path.join(base, "fonts/DejaVuSans-Bold.ttf")),
   ]);
