@@ -15,7 +15,7 @@
 // works in ESM (tsx/node) without bundler interop quirks.
 import { createRequire } from "node:module";
 const nodeRequire = createRequire(import.meta.url);
-const PdfPrinter = nodeRequire("pdfmake/src/printer") as new (
+const PdfPrinter = nodeRequire("pdfmake/js/Printer").default as new (
   fontDescriptors: TFontDictionary,
 ) => {
   createPdfKitDocument: (
