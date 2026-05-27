@@ -73,6 +73,8 @@ export function MSDeviationWalkthrough({
           obligeeLabel={inputs.obligeeLabel || "Obligee"}
           sideBySide={sideBySide}
           buildContextInputs={() => inputs}
+          handoffRound={handoffRound}
+          currentAuthor={currentAuthor}
         />
       </div>
 
