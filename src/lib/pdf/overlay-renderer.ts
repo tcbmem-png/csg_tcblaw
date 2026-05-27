@@ -146,6 +146,11 @@ export async function renderOverlay(
     for (const f of failed) console.warn("  -", f);
   }
 
+  // Drop the fillable-mode field-highlight tint BEFORE regenerating
+  // appearance streams, otherwise the light-blue /MK /BG color gets
+  // baked into the page on flatten().
+  stripFieldHighlightBackgrounds(form);
+
   // Regenerate every appearance stream against DejaVu so all Unicode
   // glyphs render under flatten() (and in viewers that ignore
   // NeedAppearances).
