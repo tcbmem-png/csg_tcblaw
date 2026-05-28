@@ -37,7 +37,7 @@ function williamsLike(): MSInputs {
           applicable: true,
           proposedMonthly: 400,
           party: {
-            position: "increase",
+            position: "upward",
             factsAsserted: "Obligor share of extracurricular costs",
             documentationReferenced: "Invoices Ex. A",
             proposedMonthly: 400,
@@ -58,7 +58,7 @@ function williamsLike(): MSInputs {
           applicable: true,
           proposedMonthly: 200,
           party: {
-            position: "decrease",
+            position: "downward",
             factsAsserted: "Shared, not solely obligor's share",
             documentationReferenced: "Bank records Ex. 2",
             proposedMonthly: 200,
