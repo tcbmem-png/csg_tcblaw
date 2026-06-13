@@ -3,10 +3,18 @@ import type { WorksheetData } from "./official-fillable-pdf";
 
 type Party = "mother" | "father";
 
-const num = (v?: number | null) =>
-  v == null || Number.isNaN(v) ? undefined : Math.round(v * 100) / 100;
 const N = (v?: number | string | null) =>
   v == null || v === "" ? 0 : Number(v);
+
+/** Money formatter — rounded, thousands-separated string. Use ONLY for dollar fields. */
+const money = (v?: number | null): string | undefined =>
+  v == null || Number.isNaN(Number(v))
+    ? undefined
+    : Number(Math.round(Number(v))).toLocaleString("en-US");
+
+/** Plain numeric rounding for non-money fields (days, percents). */
+const num = (v?: number | null) =>
+  v == null || Number.isNaN(v) ? undefined : Math.round(v * 100) / 100;
 
 /** UI-only fields not present in CalcInputs/CalcOutputs. */
 export interface WorksheetUi {
@@ -24,6 +32,8 @@ export interface WorksheetUi {
   preparerDate?: string;
   preparerTitle?: string;
   comments?: string;
+  /** Authored Part VI narrative (e.g., statutory cap explanation). When present, takes precedence over the auto-built cap note. */
+  narrativeOverride?: string;
 }
 
 export function buildWorksheetData(
@@ -45,12 +55,12 @@ export function buildWorksheetData(
   else if (o.presumptiveDirection === "parent_a_to_b") obligor = ui.parentAParty;
   else if (o.presumptiveDirection === "parent_b_to_a") obligor = partyB;
   const obligorIsMother = obligor === "mother";
-  const obl = (v?: number | null) =>
+  const oblMoney = (v?: number | null) =>
     obligor == null
-      ? { a: undefined as number | undefined, b: undefined as number | undefined }
+      ? { a: undefined as string | undefined, b: undefined as string | undefined }
       : obligorIsMother
-        ? { a: num(v), b: undefined }
-        : { a: undefined, b: num(v) };
+        ? { a: money(v), b: undefined }
+        : { a: undefined, b: money(v) };
 
   // Part II income chain
   const income = pick(N(i.parentAGrossMonthly), N(i.parentBGrossMonthly));
@@ -93,27 +103,53 @@ export function buildWorksheetData(
   const share10 = { m: piDec.m * combinedExp, f: piDec.f * combinedExp };
   const aso11 = { m: adjShare.m + share10.m, f: adjShare.f + share10.f };
 
+  // F1: tie obligor's Line 11 to authoritative PCSO so 11(obligor) == 12 (no $1 rounding gap).
+  const pcsoAbs = Math.abs(N(o.netPresumptiveSupport));
+  if (obligor === "mother") aso11.m = pcsoAbs;
+  else if (obligor === "father") aso11.f = pcsoAbs;
+
   // Part V / VI obligor singles
-  const pcso = obl(Math.abs(N(o.netPresumptiveSupport)));
-  const devTotal = Math.abs(
-    N(o.privateSchoolDeviationFromA) + N(o.specialExpensesDeviationFromA),
-  );
-  const dev = obl(devTotal || undefined);
-  const fcso = obl(Math.abs(N(o.allInMonthly)));
-  const fcsoAdj = obl(
-    Math.max(
-      0,
-      Math.abs(N(o.allInMonthly)) - Math.abs(N(o.federalBenefitOffsetFromA)),
-    ),
+  const pcso = oblMoney(pcsoAbs);
+
+  // F3: derive Line 14 from PCSO->FCSO delta so 12 + 14 = 15 always reconciles.
+  const fcsoAbs = Math.abs(N(o.allInMonthly));
+  const devSigned =
+    o.allInMonthly == null || o.netPresumptiveSupport == null
+      ? null
+      : Math.round(fcsoAbs - pcsoAbs);
+  const dev = oblMoney(devSigned || undefined);
+
+  const fcso = oblMoney(fcsoAbs);
+  const fcsoAdj = oblMoney(
+    Math.max(0, fcsoAbs - Math.abs(N(o.federalBenefitOffsetFromA))),
   );
 
   // Identification
   const names = motherIsA
     ? { mother: i.parentALabel, father: i.parentBLabel }
     : { mother: i.parentBLabel, father: i.parentALabel };
-  const reasons = [i.privateSchoolReason, i.specialExpensesReason]
+
+  // F5: gate each reason on its include flag — never print stale rationale.
+  const reasons = [
+    i.includePrivateSchool ? i.privateSchoolReason : "",
+    i.includeSpecialExpenses ? i.specialExpensesReason : "",
+  ]
     .filter(Boolean)
     .join("; ");
+
+  // F4: surface the statutory cap analysis in the comments box.
+  const capNote = o.pcsoExceedsStatutoryMax
+    ? `Statutory cap check (Tenn. Code Ann. § 36-5-101(e)(1)(B)): calculated PCSO $${money(o.netPresumptiveSupport)}/mo ` +
+      `exceeds the presumptive maximum of $${money(o.pcsoStatutoryMax)}/mo by $${money(o.pcsoExcessOverCap)}/mo. ` +
+      `Amount above the cap requires written findings.`
+    : "";
+  const commentsCombined =
+    [ui.narrativeOverride, ui.narrativeOverride ? "" : capNote, ui.comments]
+      .filter((s): s is string => Boolean(s && s.trim()))
+      .join("\n\n") || undefined;
+
+  // F2: Line 4 (BCSO allotted to household) — populate in PRP (non-obligor) column.
+  const prpIsMother = obligor == null ? null : !obligorIsMother;
 
   const data: WorksheetData = {
     mother_name: names.mother,
@@ -126,45 +162,47 @@ export function buildWorksheetData(
     status_father_prp: obligorIsMother,
     status_father_arp: obligor != null && !obligorIsMother,
 
-    line1_income_a: num(income.m),
-    line1_income_b: num(income.f),
-    line1a_fed_benefit_a: num(fed.m),
-    line1a_fed_benefit_b: num(fed.f),
-    line1b_se_tax_a: num(se.m),
-    line1b_se_tax_b: num(se.f),
-    line1c_subtotal_a: num(subtotalM),
-    line1c_subtotal_b: num(subtotalF),
-    line1d_credit_inhome_a: num(inhome.m),
-    line1d_credit_inhome_b: num(inhome.f),
-    line1e_credit_not_inhome_a: num(notin.m),
-    line1e_credit_not_inhome_b: num(notin.f),
-    line2_agi_a: num(agi.m),
-    line2_agi_b: num(agi.f),
-    line2a_combined_agi: num(o.combinedAGI),
+    line1_income_a: money(income.m),
+    line1_income_b: money(income.f),
+    line1a_fed_benefit_a: money(fed.m),
+    line1a_fed_benefit_b: money(fed.f),
+    line1b_se_tax_a: money(se.m),
+    line1b_se_tax_b: money(se.f),
+    line1c_subtotal_a: money(subtotalM),
+    line1c_subtotal_b: money(subtotalF),
+    line1d_credit_inhome_a: money(inhome.m),
+    line1d_credit_inhome_b: money(inhome.f),
+    line1e_credit_not_inhome_a: money(notin.m),
+    line1e_credit_not_inhome_b: money(notin.f),
+    line2_agi_a: money(agi.m),
+    line2_agi_b: money(agi.f),
+    line2a_combined_agi: money(o.combinedAGI),
     line3_pi_a: num(piPct.m),
     line3_pi_b: num(piPct.f),
 
-    line4a_bcso_owed_a: num(rawShare.m),
-    line4a_bcso_owed_b: num(rawShare.f),
+    line4_bcso_allotted_a: prpIsMother === true ? money(o.bcso) : undefined,
+    line4_bcso_allotted_b: prpIsMother === false ? money(o.bcso) : undefined,
+    line4a_bcso_owed_a: money(rawShare.m),
+    line4a_bcso_owed_b: money(rawShare.f),
     line5_arp_parenting_a: num(days.m),
     line5_arp_parenting_b: num(days.f),
-    line6_pt_adjustment_a: num(ptAdj.m),
-    line6_pt_adjustment_b: num(ptAdj.f),
-    line7_adjusted_bcso_a: num(adjShare.m),
-    line7_adjusted_bcso_b: num(adjShare.f),
+    line6_pt_adjustment_a: money(ptAdj.m),
+    line6_pt_adjustment_b: money(ptAdj.f),
+    line7_adjusted_bcso_a: money(adjShare.m),
+    line7_adjusted_bcso_b: money(adjShare.f),
 
-    line8a_health_insurance_a: num(health.m),
-    line8a_health_insurance_b: num(health.f),
-    line8b_uninsured_medical_a: num(med.m),
-    line8b_uninsured_medical_b: num(med.f),
-    line8c_childcare_a: num(cc.m),
-    line8c_childcare_b: num(cc.f),
-    line9_total_expenses_a: num(total9.m),
-    line9_total_expenses_b: num(total9.f),
-    line10_share_expenses_a: num(share10.m),
-    line10_share_expenses_b: num(share10.f),
-    line11_aso_a: num(aso11.m),
-    line11_aso_b: num(aso11.f),
+    line8a_health_insurance_a: money(health.m),
+    line8a_health_insurance_b: money(health.f),
+    line8b_uninsured_medical_a: money(med.m),
+    line8b_uninsured_medical_b: money(med.f),
+    line8c_childcare_a: money(cc.m),
+    line8c_childcare_b: money(cc.f),
+    line9_total_expenses_a: money(total9.m),
+    line9_total_expenses_b: money(total9.f),
+    line10_share_expenses_a: money(share10.m),
+    line10_share_expenses_b: money(share10.f),
+    line11_aso_a: money(aso11.m),
+    line11_aso_b: money(aso11.f),
 
     line12_pcso_a: pcso.a,
     line12_pcso_b: pcso.b,
@@ -180,7 +218,7 @@ export function buildWorksheetData(
     preparer_name: ui.preparerName,
     preparer_date: ui.preparerDate,
     preparer_title: ui.preparerTitle,
-    comments: ui.comments,
+    comments: commentsCombined,
   };
 
   (ui.children ?? []).slice(0, 5).forEach((c, idx) => {
@@ -202,6 +240,7 @@ export function worksheetUiFromCaption(
     docketNumber?: string;
     court?: string;
     preparedBy?: string;
+    narrativeOverride?: string;
     children?: Array<{
       name: string;
       dob: string;
@@ -225,5 +264,6 @@ export function worksheetUiFromCaption(
     docketNumber: caption.docketNumber || undefined,
     courtName: caption.court || undefined,
     preparerName: caption.preparedBy || undefined,
+    narrativeOverride: caption.narrativeOverride?.trim() || undefined,
   };
 }
