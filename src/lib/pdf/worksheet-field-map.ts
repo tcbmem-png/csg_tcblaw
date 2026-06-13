@@ -150,8 +150,14 @@ export function buildWorksheetData(
       `exceeds the presumptive maximum of $${money(o.pcsoStatutoryMax)}/mo by $${money(o.pcsoExcessOverCap)}/mo. ` +
       `Amount above the cap requires written findings.`
     : "";
+  const floorNote = o.minimumOrderApplied
+    ? `Statutory minimum order applied: presumptive support fell below the minimum order; FCSO set to the minimum. See Tenn. Comp. R. & Regs. 1240-02-04-.07.`
+    : o.ssrApplied
+      ? `Self-support reserve applied: the obligor's pro-rata BCSO was reduced to preserve the self-support reserve.`
+      : "";
+  const base = ui.narrativeOverride || capNote;
   const commentsCombined =
-    [ui.narrativeOverride, ui.narrativeOverride ? "" : capNote, ui.comments]
+    [base, floorNote, ui.comments]
       .filter((s): s is string => Boolean(s && s.trim()))
       .join("\n\n") || undefined;
 
