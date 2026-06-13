@@ -112,18 +112,20 @@ export function buildWorksheetData(
   // Line 12 — PCSO (authoritative)
   const pcso = oblMoney(N(o.netPresumptiveSupport));
 
-  // Line 14 — TRUE discretionary deviations ONLY (not the PCSO→FCSO delta)
-  const devTotal =
-    N(o.privateSchoolDeviationFromA) + N(o.specialExpensesDeviationFromA);
-  const dev = devTotal
-    ? oblMoney(devTotal)
-    : { a: undefined as string | undefined, b: undefined as string | undefined };
-
   // federal child benefit credited to the obligor (Line 1a)
   const fedBenefit = Math.abs(N(o.federalBenefitOffsetFromA));
 
   // Line 15 — FCSO BEFORE federal-benefit credit (allInMonthly is net of benefit, add it back)
-  const fcso = oblMoney(N(o.allInMonthly) + fedBenefit);
+  const fcsoBeforeBenefit = N(o.allInMonthly) + fedBenefit;
+  const fcso = oblMoney(fcsoBeforeBenefit);
+
+  // Line 14 — PCSO→FCSO delta as a genuine deviation.
+  // Floors (minimum order / SSR) are NOT deviations — they're explained in comments.
+  const floorApplied = o.minimumOrderApplied || o.ssrApplied;
+  const devAmt = floorApplied ? 0 : fcsoBeforeBenefit - N(o.netPresumptiveSupport);
+  const dev = devAmt
+    ? oblMoney(devAmt)
+    : { a: undefined as string | undefined, b: undefined as string | undefined };
 
   // Line 16 — FCSO adjusted for federal benefit; blank when no benefit
   const fcsoAdj =
