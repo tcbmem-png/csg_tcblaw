@@ -109,20 +109,27 @@ export function buildWorksheetData(
   else if (obligor === "father") aso11.f = pcsoAbs;
 
   // Part V / VI obligor singles
-  const pcso = oblMoney(pcsoAbs);
+  // Line 12 — PCSO (authoritative)
+  const pcso = oblMoney(N(o.netPresumptiveSupport));
 
-  // F3: derive Line 14 from PCSO->FCSO delta so 12 + 14 = 15 always reconciles.
-  const fcsoAbs = Math.abs(N(o.allInMonthly));
-  const devSigned =
-    o.allInMonthly == null || o.netPresumptiveSupport == null
-      ? null
-      : Math.round(fcsoAbs - pcsoAbs);
-  const dev = oblMoney(devSigned || undefined);
+  // Line 14 — TRUE discretionary deviations ONLY (not the PCSO→FCSO delta)
+  const devTotal =
+    N(o.privateSchoolDeviationFromA) + N(o.specialExpensesDeviationFromA);
+  const dev = devTotal
+    ? oblMoney(devTotal)
+    : { a: undefined as string | undefined, b: undefined as string | undefined };
 
-  const fcso = oblMoney(fcsoAbs);
-  const fcsoAdj = oblMoney(
-    Math.max(0, fcsoAbs - Math.abs(N(o.federalBenefitOffsetFromA))),
-  );
+  // federal child benefit credited to the obligor (Line 1a)
+  const fedBenefit = Math.abs(N(o.federalBenefitOffsetFromA));
+
+  // Line 15 — FCSO BEFORE federal-benefit credit (allInMonthly is net of benefit, add it back)
+  const fcso = oblMoney(N(o.allInMonthly) + fedBenefit);
+
+  // Line 16 — FCSO adjusted for federal benefit; blank when no benefit
+  const fcsoAdj =
+    fedBenefit > 0
+      ? oblMoney(N(o.allInMonthly))
+      : { a: undefined as string | undefined, b: undefined as string | undefined };
 
   // Identification
   const names = motherIsA
@@ -143,8 +150,14 @@ export function buildWorksheetData(
       `exceeds the presumptive maximum of $${money(o.pcsoStatutoryMax)}/mo by $${money(o.pcsoExcessOverCap)}/mo. ` +
       `Amount above the cap requires written findings.`
     : "";
+  const floorNote = o.minimumOrderApplied
+    ? `Statutory minimum order applied: presumptive support fell below the minimum order; FCSO set to the minimum. See Tenn. Comp. R. & Regs. 1240-02-04-.07.`
+    : o.ssrApplied
+      ? `Self-support reserve applied: the obligor's pro-rata BCSO was reduced to preserve the self-support reserve.`
+      : "";
+  const base = ui.narrativeOverride || capNote;
   const commentsCombined =
-    [ui.narrativeOverride, ui.narrativeOverride ? "" : capNote, ui.comments]
+    [base, floorNote, ui.comments]
       .filter((s): s is string => Boolean(s && s.trim()))
       .join("\n\n") || undefined;
 
