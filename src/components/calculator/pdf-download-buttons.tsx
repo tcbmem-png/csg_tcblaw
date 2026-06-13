@@ -55,12 +55,15 @@ export function PdfDownloadButtons({
     if (busy) return;
     setBusy("aoc");
     try {
-      const { renderOfficialWorksheetPdf } = await import(
-        "@/lib/pdf/official-worksheet-pdf"
+      const { downloadOfficialWorksheet } = await import(
+        "@/lib/pdf/official-fillable-pdf"
       );
-      const bytes = await renderOfficialWorksheetPdf({ inputs, outputs, caption });
-      triggerDownload(
-        bytes,
+      const { buildWorksheetData, worksheetUiFromCaption } = await import(
+        "@/lib/pdf/worksheet-field-map"
+      );
+      const ui = worksheetUiFromCaption(inputs, caption);
+      await downloadOfficialWorksheet(
+        buildWorksheetData(inputs, outputs, ui),
         `${safeName(caption, "tn-child-support-worksheet")}-AOC.pdf`,
       );
     } finally {
