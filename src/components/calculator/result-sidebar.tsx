@@ -30,6 +30,7 @@ export function ResultSidebar({
   onViewComparison?: () => void;
 }) {
   const [printing, setPrinting] = useState(false);
+  const [aocBusy, setAocBusy] = useState(false);
   async function downloadAnnotated() {
     if (printing) return;
     setPrinting(true);
@@ -50,6 +51,26 @@ export function ResultSidebar({
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } finally {
       setPrinting(false);
+    }
+  }
+  async function downloadAocForm() {
+    if (aocBusy) return;
+    setAocBusy(true);
+    try {
+      const { downloadOfficialWorksheet } = await import("@/lib/pdf/official-fillable-pdf");
+      const { buildWorksheetData, worksheetUiFromCaption } = await import(
+        "@/lib/pdf/worksheet-field-map"
+      );
+      const ui = worksheetUiFromCaption(inputs, caption);
+      const base = (caption.matterName || caption.docketNumber || "tn-child-support-worksheet")
+        .replace(/[^A-Za-z0-9_-]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "tn-child-support-worksheet";
+      await downloadOfficialWorksheet(
+        buildWorksheetData(inputs, outputs, ui),
+        `${base}-AOC.pdf`,
+      );
+    } finally {
+      setAocBusy(false);
     }
   }
   return (
@@ -204,6 +225,15 @@ export function ResultSidebar({
           title="Downloads the annotated PDF. The worksheet view also offers the AOC-format (filing-ready) replica."
         >
           {printing ? "Generating…" : "Download annotated PDF"}
+        </button>
+        <button
+          type="button"
+          onClick={downloadAocForm}
+          disabled={aocBusy}
+          className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40 disabled:opacity-60"
+          title="Fills the official AOC Child Support Worksheet (filing-ready, numbers only)."
+        >
+          {aocBusy ? "Generating…" : "Download AOC form"}
         </button>
         <CopyLinkButton />
       </div>
