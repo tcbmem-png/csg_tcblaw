@@ -422,9 +422,9 @@ describe("Zero / empty inputs — no NaN, no crash", () => {
     for (const v of Object.values(d)) {
       if (typeof v === "string") expect(v).not.toBe("NaN");
     }
-    // Obligor-only fields stay blank when there's no presumptive support
+    // With defaults, ARP=Parent B (Father) is the obligor; PCSO=0 renders as "0", not NaN
+    expect(d.line12_pcso_b).toBe("0");
     expect(d.line12_pcso_a).toBeUndefined();
-    expect(d.line12_pcso_b).toBeUndefined();
   });
 });
 
