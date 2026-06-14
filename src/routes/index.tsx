@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, type LinkProps } from "@tanstack/react-router";
 
 const GITHUB_URL = "https://github.com/tcbmem-png/csg_tcblaw";
 const GITHUB_ISSUES_URL = "https://github.com/tcbmem-png/csg_tcblaw/issues";
@@ -144,7 +144,9 @@ function StateCard({
   body,
   feature,
 }: {
-  to: "/tn" | "/ms";
+  // Any registered route path — adding a new state route (e.g. "/ar") makes it
+  // assignable here automatically, so new states don't hard-fail strict TS.
+  to: LinkProps["to"];
   tag: string;
   title: string;
   cite: string;
