@@ -8,6 +8,7 @@
 import type { IncomeShareScheduleConfig } from "./schedule";
 import type { ParentingModel } from "./parenting";
 import type { LowIncomeModel } from "./low-income";
+import type { NetIncomeConfig } from "./net-income";
 
 export type FinalRounding =
   | "nearest_dollar"
@@ -19,6 +20,8 @@ export interface IncomeSharesSpec {
   code: string;
   /** income_shares_net states run a gross→net pre-step before this engine. */
   model: "income_shares_gross" | "income_shares_net";
+  /** Required for income_shares_net (FL); the gross→net deduction config. */
+  netIncome?: NetIncomeConfig;
   schedule: IncomeShareScheduleConfig;
   parenting: { model: ParentingModel; params: unknown };
   lowIncome: { model: LowIncomeModel; params: unknown } | null;

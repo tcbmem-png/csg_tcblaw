@@ -23,6 +23,7 @@ import { lookupScheduleAmount } from "./schedule";
 import { PARENTING_STRATEGIES, type ParentingStrategy } from "./parenting";
 import { LOW_INCOME_STRATEGIES, type LowIncomeStrategy } from "./low-income";
 import { splitProRataNetFromA } from "./pro-rata";
+import { grossToNetMonthly } from "./net-income";
 
 function emptyOutputs(errors: string[], warnings: string[]): IncomeSharesOutputs {
   return {
@@ -63,14 +64,25 @@ export function incomeShares(
     errors.push("Number of children must be between 1 and 5.");
   }
 
-  const aAGI = Math.max(
-    0,
-    inputs.parentAGrossMonthly - (inputs.parentADeductionsMonthly ?? 0),
-  );
-  const bAGI = Math.max(
-    0,
-    inputs.parentBGrossMonthly - (inputs.parentBDeductionsMonthly ?? 0),
-  );
+  // income_shares_net (FL) runs a gross→net pre-step before combining. It is
+  // stubbed fail-loud (core/net-income.ts) — throws until the FL pack lands.
+  // income_shares_gross states (TN, AR, ...) use gross minus pre-summed
+  // deductions and are unaffected.
+  let aAGI: number;
+  let bAGI: number;
+  if (spec.model === "income_shares_net") {
+    aAGI = grossToNetMonthly(inputs.parentAGrossMonthly, spec.netIncome);
+    bAGI = grossToNetMonthly(inputs.parentBGrossMonthly, spec.netIncome);
+  } else {
+    aAGI = Math.max(
+      0,
+      inputs.parentAGrossMonthly - (inputs.parentADeductionsMonthly ?? 0),
+    );
+    bAGI = Math.max(
+      0,
+      inputs.parentBGrossMonthly - (inputs.parentBDeductionsMonthly ?? 0),
+    );
+  }
   const combinedAGI = aAGI + bAGI;
   if (combinedAGI <= 0) {
     return emptyOutputs(
