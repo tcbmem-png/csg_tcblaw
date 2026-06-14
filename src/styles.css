@@ -85,6 +85,15 @@
   --rule: oklch(0.82 0.02 60);
   --input: oklch(0.9 0.015 70);
   --ring: oklch(0.5 0.115 18);
+
+  /* Tile-grid state map (homepage). Tuned against cream background;
+     -foreground pair is the 2-letter code color and meets AA contrast. */
+  --state-available: oklch(0.46 0.06 150);          /* muted earthy green */
+  --state-available-foreground: oklch(0.98 0.01 80);
+  --state-coming: oklch(0.68 0.115 70);             /* warm amber/ochre */
+  --state-coming-foreground: oklch(0.2 0.025 30);
+  --state-planned: oklch(0.88 0.012 80);            /* soft warm gray */
+  --state-planned-foreground: oklch(0.45 0.018 40);
 }
 
 .dark {
