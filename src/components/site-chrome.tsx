@@ -1,13 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { CONSTANTS_EFFECTIVE_DATE } from "@/lib/calc/data/constants";
+import { detectState } from "@/lib/states";
 
-type StateCode = "TN" | "MS" | null;
-
-function detectState(pathname: string): StateCode {
-  if (pathname === "/tn" || pathname.startsWith("/tn/")) return "TN";
-  if (pathname === "/ms" || pathname.startsWith("/ms/")) return "MS";
-  return null;
-}
 
 const GITHUB_URL = "https://github.com/tcbmem-png/csg_tcblaw";
 const FIRM_URL = "https://tcblaw.org";
