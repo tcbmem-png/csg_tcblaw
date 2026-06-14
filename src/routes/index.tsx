@@ -1,4 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { StateTileMap } from "@/components/home/state-tile-map";
+import { StateList } from "@/components/home/state-list";
 
 const GITHUB_URL = "https://github.com/tcbmem-png/csg_tcblaw";
 const GITHUB_ISSUES_URL = "https://github.com/tcbmem-png/csg_tcblaw/issues";
@@ -11,13 +13,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Open-source child support calculators. Every line of math cites the rule that authorizes it. Tennessee Income Shares Model and Mississippi statutory-percentage guideline, with filing-ready worksheets. MIT licensed. No signup, no paywall.",
+          "Open-source child support calculators. Tennessee and Mississippi live; Southeast next, all 50 states planned. Every line of math cites the rule.",
       },
       { property: "og:title", content: "Child Support Guideline Calculators — TCB Law" },
       {
         property: "og:description",
         content:
-          "Open-source, MIT licensed. Every line of math cites the rule. Tennessee and Mississippi child support calculators with filing-ready worksheets.",
+          "Open-source, MIT licensed. TN and MS calculators live, Southeast next, all 50 states on the roadmap. Every line of math cites the rule.",
       },
       { property: "og:url", content: "https://csg.tcblaw.org/" },
     ],
@@ -52,24 +54,15 @@ function Index() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-6 py-16">
-        <div className="grid gap-6 md:grid-cols-2">
-          <StateCard
-            to="/tn"
-            tag="Tennessee"
-            title="Income Shares Model"
-            cite="Tenn. Comp. R. & Regs. 1240-02-04"
-            body="Combined-income BCSO schedule, parenting-time adjustment, mandatory add-ons, SSR and PCSO ceiling checks, and a worksheet that mirrors the 2022 TN DHS form."
-            feature="Includes a guided income module covering W-2 income, variable income, self-employment, multi-source, imputation, and special situations."
-          />
-          <StateCard
-            to="/ms"
-            tag="Mississippi"
-            title="Statutory percentage guideline"
-            cite="Miss. Code Ann. § 43-19-101"
-            body="Flat percentage of the obligor's AGI (14%–26% by child count), with the 10 statutory deviation factors of § 43-19-103 and findings on the $10k / $100k thresholds."
-            feature="Includes a structured § 43-19-103 deviation worksheet with two-attorney handoff for chancery filings."
-          />
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        {/* Mobile: list first (tap targets), map second. md+: map first, list second. */}
+        <div className="grid gap-10 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <div className="order-2 md:order-1">
+            <StateTileMap />
+          </div>
+          <div className="order-1 md:order-2">
+            <StateList />
+          </div>
         </div>
       </section>
 
@@ -133,45 +126,5 @@ function Index() {
         </div>
       </section>
     </div>
-  );
-}
-
-function StateCard({
-  to,
-  tag,
-  title,
-  cite,
-  body,
-  feature,
-}: {
-  to: "/tn" | "/ms";
-  tag: string;
-  title: string;
-  cite: string;
-  body: string;
-  feature: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="group relative block rounded-lg border border-rule bg-background p-7 transition-all hover:border-primary hover:shadow-md"
-    >
-      <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
-        {tag}
-      </p>
-      <h2 className="mt-2 font-serif text-2xl text-ink">{title}</h2>
-      <p className="mt-1 font-mono text-xs text-muted-foreground">{cite}</p>
-      <p className="mt-4 text-sm text-muted-foreground">{body}</p>
-      <p className="mt-3 text-sm italic text-ink/80">{feature}</p>
-      <p className="mt-6 flex items-center justify-between text-sm font-medium text-primary">
-        <span>Open the {tag} calculator</span>
-        <span
-          aria-hidden
-          className="text-2xl leading-none transition-transform group-hover:translate-x-1"
-        >
-          →
-        </span>
-      </p>
-    </Link>
   );
 }
