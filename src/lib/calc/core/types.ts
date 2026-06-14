@@ -17,6 +17,17 @@ export interface TransferLine {
 }
 
 /**
+ * A direct (non-pro-rata) deviation: a flat dollar adjustment to the order in
+ * the payor→payee direction. `increase` raises the payor's obligation,
+ * `decrease` lowers it (AR AO 10 § II(2) deviations expressed as an amount).
+ */
+export interface DirectDeviation {
+  id: string;
+  amount: number;
+  direction: "increase" | "decrease";
+}
+
+/**
  * Generic income-shares inputs. State adapters map their own rich input
  * shape (e.g. TN CalcInputs) onto this. AGI = gross − deductions; the
  * deduction list is pre-summed by the adapter so the core stays model-clean.
@@ -33,8 +44,10 @@ export interface IncomeSharesInputs {
   parentBDays?: number;
   /** Mandatory pro-rata add-ons (health, childcare, uninsured medical, ...). */
   addOns?: TransferLine[];
-  /** Net-transfer deviations (amounts already past any threshold logic). */
+  /** Net-transfer (pro-rata) deviations — an expense split between parents. */
   deviations?: TransferLine[];
+  /** Direct (flat-amount) deviations applied in the payor→payee direction. */
+  directDeviations?: DirectDeviation[];
 }
 
 export interface IncomeSharesOutputs {

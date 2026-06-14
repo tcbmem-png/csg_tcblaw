@@ -17,8 +17,9 @@ export interface BcsoLookup {
 /** TN schedule config consumed by the generic core lookup. */
 export const TN_SCHEDULE_CONFIG: IncomeShareScheduleConfig = {
   rows: BCSO_SCHEDULE,
+  maxChildren: 5,
   cap: COMBINED_AGI_CAP,
-  aboveCap: ABOVE_CAP,
+  aboveCap: { behavior: "marginal_percent", byChildren: ABOVE_CAP },
   convention: "round_up",
 };
 

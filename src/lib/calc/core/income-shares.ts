@@ -111,6 +111,9 @@ export function incomeShares(
 
   // --- Low-income strategy ---
   let ssrApplied = false;
+  let minimumOrderApplied = false;
+  let suppressAddOns = false;
+  let bcsoReported = bcso;
   if (spec.lowIncome) {
     const lowIncomeStrategy = LOW_INCOME_STRATEGIES[
       spec.lowIncome.model
@@ -121,24 +124,38 @@ export function incomeShares(
     );
     presumptiveFromA = li.presumptiveAfterAdjustment;
     ssrApplied = li.applied;
+    if (li.note) warnings.push(li.note);
+    if (li.minimumApplied) minimumOrderApplied = true;
+    if (li.suppressAddOns) suppressAddOns = true;
+    if (li.overrideBcso != null) bcsoReported = li.overrideBcso;
   }
 
-  // --- Pro-rata add-ons ---
+  // --- Pro-rata add-ons (dropped when the low-income strategy suppresses) ---
   let addOnsTotalFromA = 0;
-  for (const a of inputs.addOns ?? []) {
-    addOnsTotalFromA += splitProRataNetFromA(a.monthly, a.paidBy, piA, piB);
+  if (!suppressAddOns) {
+    for (const a of inputs.addOns ?? []) {
+      addOnsTotalFromA += splitProRataNetFromA(a.monthly, a.paidBy, piA, piB);
+    }
   }
 
-  // --- Net-transfer deviations ---
+  // --- Deviations: pro-rata expense splits + direct flat adjustments ---
   let deviationsTotalFromA = 0;
-  for (const d of inputs.deviations ?? []) {
-    deviationsTotalFromA += splitProRataNetFromA(d.monthly, d.paidBy, piA, piB);
+  if (!suppressAddOns) {
+    for (const d of inputs.deviations ?? []) {
+      deviationsTotalFromA += splitProRataNetFromA(d.monthly, d.paidBy, piA, piB);
+    }
+    // Direct deviations adjust the order in the payor→payee direction.
+    const payorSign =
+      Math.sign(presumptiveFromA + addOnsTotalFromA) || Math.sign(presumptiveFromA);
+    for (const d of inputs.directDeviations ?? []) {
+      const delta = (d.direction === "increase" ? 1 : -1) * d.amount * payorSign;
+      deviationsTotalFromA += delta;
+    }
   }
 
   let allInFromA = presumptiveFromA + addOnsTotalFromA + deviationsTotalFromA;
 
   // --- Minimum-order floor (applied to the presumptive magnitude) ---
-  let minimumOrderApplied = false;
   if (spec.minimumOrder != null) {
     const absPresumptive = Math.abs(presumptiveFromA);
     if (absPresumptive > 0 && absPresumptive < spec.minimumOrder) {
@@ -157,7 +174,7 @@ export function incomeShares(
     combinedAGI: roundFinal(combinedAGI, spec.rounding.finalOrder),
     piA,
     piB,
-    bcso: roundFinal(bcso, spec.rounding.finalOrder),
+    bcso: roundFinal(bcsoReported, spec.rounding.finalOrder),
     bcsoSource: lookup.source,
     scheduleAgiUsed: lookup.scheduleAgiUsed,
     scheduleIsShaded: lookup.isShaded,

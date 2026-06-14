@@ -11,9 +11,11 @@
  *   offset_dual_worksheet  — AR (two worksheets, straight offset, no 1.5x)
  */
 import { tnVariableMultiplier } from "./tn-variable-multiplier";
+import { offsetDualWorksheet } from "./offset-dual-worksheet";
 
 export const PARENTING_STRATEGIES = {
   tn_variable_multiplier: tnVariableMultiplier,
+  offset_dual_worksheet: offsetDualWorksheet,
 } as const;
 
 export type ParentingModel = keyof typeof PARENTING_STRATEGIES;
@@ -21,3 +23,5 @@ export type ParentingModel = keyof typeof PARENTING_STRATEGIES;
 export * from "./types";
 export { tnVariableMultiplier } from "./tn-variable-multiplier";
 export type { TnVariableMultiplierParams } from "./tn-variable-multiplier";
+export { offsetDualWorksheet } from "./offset-dual-worksheet";
+export type { OffsetDualWorksheetParams } from "./offset-dual-worksheet";

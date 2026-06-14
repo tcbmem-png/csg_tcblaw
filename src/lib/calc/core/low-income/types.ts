@@ -23,6 +23,12 @@ export interface LowIncomeResult {
   collapsedToZero: boolean;
   /** Which parent was the obligor when collapse occurred. */
   obligorIsA: boolean;
+  /** Drop pro-rata add-ons and deviations (AR SSR drops add-ons entirely). */
+  suppressAddOns?: boolean;
+  /** A statutory minimum-order floor was applied as part of this adjustment. */
+  minimumApplied?: boolean;
+  /** Replace the reported BCSO (AR SSR recomputes from payor gross alone). */
+  overrideBcso?: number;
 }
 
 export type LowIncomeStrategy<P = unknown> = (

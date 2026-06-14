@@ -1,0 +1,218 @@
+[
+  {
+    "id": "AR-baseline-2child",
+    "source": "AR Mini-Treatise Example A (+ Review §1.6 rounding fix); chart value confirmed. Authoritative.",
+    "notes": "Standard visitation (90 overnights < 141). Add-ons both paid by residential parent B. finalOrder is half-up ($1,247), distinct from the schedule round-down.",
+    "inputs": {
+      "parentAGrossMonthly": 5000,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 2,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a",
+      "addOns": [
+        { "id": "health_insurance", "monthly": 200, "paidBy": "parent_b" },
+        { "id": "work_related_childcare", "monthly": 400, "paidBy": "parent_b" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 8000,
+      "piA": 0.625,
+      "piB": 0.375,
+      "bcso": 1395,
+      "bcsoSource": "schedule",
+      "allInMonthly": 1247,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AR-self-employed-2child",
+    "source": "AR Mini-Treatise Example B as corrected by Review §1.1 (SE-FICA + add-backs). Authoritative.",
+    "notes": "grossA is the already-computed monthly SE gross (111000 - 8492 FICA, /12). round_down 11542 -> 11500 row. Engine uses exact share -> $1,654 (treatise's $1,653 used a truncated 74.0%).",
+    "inputs": {
+      "parentAGrossMonthly": 8542,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 2,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a",
+      "addOns": [
+        { "id": "health_insurance", "monthly": 200, "paidBy": "parent_b" },
+        { "id": "work_related_childcare", "monthly": 400, "paidBy": "parent_b" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 11542,
+      "piA": 0.7401,
+      "piB": 0.2599,
+      "bcso": 1635,
+      "allInMonthly": 1654,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AR-above-cap-1child",
+    "source": "AR Mini-Treatise Example C; chart cap value $1,952 confirmed; above-cap discretionary (Parnell 2022 Ark. 52). Authoritative for the at-cap floor.",
+    "notes": "Combined $52,500 > $30,000 cap. BCSO = highest tabulated 1-child amount ($1,952) as a floor; finalOrder = floor x payor share. Discretionary increment is non-formulaic and not modeled.",
+    "inputs": {
+      "parentAGrossMonthly": 50000,
+      "parentBGrossMonthly": 2500,
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 52500,
+      "piA": 0.9524,
+      "piB": 0.0476,
+      "bcso": 1952,
+      "bcsoSource": "above_cap",
+      "allInMonthly": 1859,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AR-shared-5050-1child",
+    "source": "AR Mini-Treatise Example D; chart value $1,074 confirmed; AR straight offset, NO 1.5x. Authoritative.",
+    "notes": "Approx 50/50 (183/182). Offset: BCSO x shareA - BCSO x shareB = 644.40 - 429.60 = 214.80 -> $215 half-up. Higher earner (A) pays.",
+    "inputs": {
+      "parentAGrossMonthly": 6000,
+      "parentBGrossMonthly": 4000,
+      "numChildren": 1,
+      "parentingType": "equal"
+    },
+    "expected": {
+      "combinedAGI": 10000,
+      "piA": 0.6,
+      "piB": 0.4,
+      "bcso": 1074,
+      "allInMonthly": 215,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AR-lowincome-ssr-minimum-1child",
+    "source": "AR Mini-Treatise Example E; SSR (<$900) + $125 minimum. Authoritative.",
+    "notes": "Payor gross $750 < $900: BCSO from payor gross alone (shaded zone = $125); add-ons dropped; $125 minimum applies. Pack gives no shareA/shareB for this fixture, so shares are not asserted.",
+    "inputs": {
+      "parentAGrossMonthly": 750,
+      "parentBGrossMonthly": 2800,
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a",
+      "addOns": [
+        { "id": "health_insurance", "monthly": 150, "paidBy": "parent_b" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 3550,
+      "bcso": 125,
+      "allInMonthly": 125,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": true,
+      "minimumOrderApplied": true
+    }
+  },
+  {
+    "id": "AR-addons-heavy-3child",
+    "source": "Hand-derived; chart value 3-child @ $10,000 = $1,802 confirmed against official chart.",
+    "notes": "Payor A pays health OOP (credit), residential B pays childcare. Line11 = 1081.20 + 0.6x750 = 1531.20; credit 250; Line13 = 1281.20 -> $1,281.",
+    "inputs": {
+      "parentAGrossMonthly": 6000,
+      "parentBGrossMonthly": 4000,
+      "numChildren": 3,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a",
+      "addOns": [
+        { "id": "health_insurance", "monthly": 250, "paidBy": "parent_a" },
+        { "id": "work_related_childcare", "monthly": 500, "paidBy": "parent_b" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 10000,
+      "piA": 0.6,
+      "piB": 0.4,
+      "bcso": 1802,
+      "allInMonthly": 1281,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AR-imputation-1child",
+    "source": "Hand-derived; chart value 1-child @ $6,000 = $815 confirmed; imputation per AO 10 § III(8).",
+    "notes": "Payee B imputed from $0 actual to $3,000 full-time capacity; engine consumes the resolved imputed gross. Combined $6,000.",
+    "inputs": {
+      "parentAGrossMonthly": 3000,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 6000,
+      "piA": 0.5,
+      "piB": 0.5,
+      "bcso": 815,
+      "allInMonthly": 408,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AR-multichild-4-standard",
+    "source": "Hand-derived; chart value 4-child @ $12,000 = $2,242 confirmed against official chart.",
+    "notes": "Standard visitation, 4 children.",
+    "inputs": {
+      "parentAGrossMonthly": 7000,
+      "parentBGrossMonthly": 5000,
+      "numChildren": 4,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 12000,
+      "piA": 0.5833,
+      "piB": 0.4167,
+      "bcso": 2242,
+      "allInMonthly": 1308,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AR-deviation-private-school-2child",
+    "source": "Hand-derived from Treatise Example A base; deviation under AO 10 § II(2)(a), requires written findings.",
+    "notes": "Presumptive (no add-ons) Line13 = $872; +$300 educational-expenses deviation (direct, increase) = $1,172.",
+    "inputs": {
+      "parentAGrossMonthly": 5000,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 2,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a",
+      "directDeviations": [
+        { "id": "educational_expenses", "amount": 300, "direction": "increase" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 8000,
+      "piA": 0.625,
+      "piB": 0.375,
+      "bcso": 1395,
+      "allInMonthly": 1172,
+      "allInDirection": "parent_a_to_b",
+      "deviationsTotalFromA": 300,
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  }
+]
