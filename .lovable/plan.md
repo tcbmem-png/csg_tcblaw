@@ -1,153 +1,62 @@
-# TN Calculator UX Consolidation (revised)
 
-Single-source-of-truth refactor: kill the redundant "Filing Details" intake, fold its three remaining responsibilities (Mother/Father role, per-child rows, deviation narrative) into the upstream sections that already collect the same facts, and reorganize the input flow.
+## Goal
 
-## New section order on /tn
+The live audit confirms all F1–F9 are fixed. Lock that in so the adapter (`src/lib/pdf/worksheet-field-map.ts`) can't silently regress, and finish the cheap spot-checks the tester flagged as "not yet run".
 
-```text
-1. Case caption                           (matter / docket / court / prepared by / client)
-2. Parties, parenting plan & children     (NEW combined section — see below)
-3. Income — Parent A                      (Income Helper as collapsible sub-panel)
-4. Income — Parent B                      (Income Helper as collapsible sub-panel)
-5. Adjustments (credits)                  (unchanged)
-6. Mandatory add-ons (pro-rata)           (per-toggle "why" textareas added)
-7. Discretionary deviations               (per-toggle "why" textareas added)
-```
+## (b) Spot-check — already verified, no code change
 
-"Filing Details (AOC form)" section is deleted entirely. Income Helper moves under each parent's income section (still collapsible, default collapsed). The `comments` field on Case Caption is also deleted (its only use was a Part VI overflow that is now auto-composed).
+Both AOC buttons call the same generator:
 
-## Section 2: combined "Parties, parenting plan & children"
+- `src/components/calculator/result-sidebar.tsx` (sidebar button)
+- `src/components/calculator/pdf-download-buttons.tsx` (Worksheet tab button)
 
-Three sub-blocks **in this order** so each step pre-seeds the next.
+Each dynamically imports `downloadOfficialWorksheet` from `@/lib/pdf/official-fillable-pdf` and feeds it `buildWorksheetData(inputs, outputs, worksheetUiFromCaption(inputs, caption))`. Same template, same field map, same filename pattern (`<matter>-AOC.pdf`). No divergence to fix.
 
-### 2a. Parties (required role per parent)
+## (c) Regression test suite
 
-Per parent row: label text input **+ required role segmented control** `[Mother] [Father]`. Roles are mutually exclusive across the two parents — selecting Mother on Parent A forces Parent B to Father (and vice versa), implemented as a paired toggle, not two independent radios. Until both are set, an inline notice appears ("Pick which parent is Mother — required for the AOC form"); does not block math.
+New file: `src/lib/pdf/__tests__/worksheet-field-map.test.ts`
 
-Role drives AOC PDF column assignment only. Engine math stays parent-A/parent-B neutral.
+Pure-function tests against `buildWorksheetData(i, o, ui)` — no PDF rendering, no DOM. Each test constructs a minimal `CalcInputs` + `CalcOutputs` fixture and asserts the specific cells the audit cared about. This catches every F-finding regression in milliseconds.
 
-### 2b. Parenting plan (ARP / PRP — picked BEFORE child DOBs)
+### Cases covered (one `describe` per finding + the untested scenarios)
 
-Required choice **before** the child list expands. Three options:
+1. **F1 — Line 11 == Line 12 for the obligor** (no $1 gap). Baseline 11k/11k, ARP=Father.
+2. **F2 — Line 4 BCSO populates in the PRP (non-obligor) column**, blank in obligor column.
+3. **F3 / F9 — pure private-school deviation:** Line 12=477, Line 14=−340, Line 15=137; 12+14=15 reconciles.
+4. **F4 — statutory cap note** appears in `comments` when `pcsoExceedsStatutoryMax` is true, with the §36-5-101(e)(1)(B) text + dollar figures.
+5. **F5 — reason text gating:** `deviations_specify` is `undefined` when `includePrivateSchool=false` even if `privateSchoolReason` is non-empty.
+6. **F6 — comma formatting:** large dollar fields (80,000) include thousands separators.
+7. **F7 — federal benefit:** Line 1a=600, Line 12=615, Line 14 blank, Line 15=615, Line 16=15 (benefit not double-subtracted, not on Line 14).
+8. **F8 — SSR / minimum order:** Line 12=0, Line 14 blank, Line 15=100, `low_income="Y"`, comments mention the minimum order / SSR — floor NOT mislabeled as a deviation.
+9. **Obligor-direction parity** (mirrors audit Cases 2/3): when ARP=Mother, obligor columns flip to A and Column B is empty.
+10. **Swap routing** (audit Case 4): when `parentARole="father"`, `mother_name` resolves to Parent B, paid-by routing (`split_pro_rata`, single-payer) lands in the correct columns.
+11. **Untested-by-tester scenarios** (cheap to cover here):
+    - Equal 50/50 parenting: obligor derived from `presumptiveDirection` when `arpIdentity` is unset.
+    - Zero/empty income inputs: no NaN, no crash, numeric fields are `undefined` or `"0"`.
+    - Long unicode parent/child names: passed through verbatim (no truncation, no escape mangling).
+    - `narrativeOverride` precedence: when provided, it leads the comments box (cap note can still be appended via the existing `.filter(Boolean).join("\n\n")` chain — assert order).
 
-- **Standard schedule** — one parent has the children most of the year (default 285 / 80).
-- **Equal 50/50** — children split time equally.
-- **Custom days** — different totals per parent.
+### Fixture helpers
 
-#### ARP / PRP terminology + paired toggle
+Small in-file helpers (no new modules):
 
-First time the section renders, show a one-line glossary inline:
-
-> Tennessee labels the parent the children live with most as the **PRP** (Primary Residential Parent). The other parent is the **ARP** (Alternate Residential Parent). Support generally flows from ARP to PRP.
-
-For Standard and Custom, render a **single paired toggle** keyed by role-qualified labels (no parent-A-vs-parent-B ambiguity):
-
-```text
-Who is the ARP (paying parent)?
-  [ Jane / Mother ]   [ John / Father ]
-                ARP            PRP
-```
-
-Selecting one side instantly flips the labels under the buttons so the user can see at a glance that picking "Jane / Mother = ARP" makes "John / Father = PRP". This is a single state variable (`arpForStandard`), surfaced as a toggle so they can't set both or neither. Labels use the format `${parentLabel} / ${role}` — pulls from 2a, so it can't drift.
-
-For Equal 50/50, the ARP/PRP toggle hides and is replaced by a read-only note: "50/50 — neither parent is the ARP; cross-credit applies."
-
-### 2c. Children (auto-seeded from 2b)
-
-"Number of children" stepper (1–5). For each child added, the row pre-fills days **from the 2b decision**:
-
-- Standard, ARP = Father → every child seeds `daysWithMother = 285`, `daysWithFather = 80`.
-- Equal 50/50 → every child seeds 182 / 183 (or labeled "≈ 182.5 each").
-- Custom (parent-level days entered) → every child seeds those parent-level days.
-
-User can override a single child's days if that child's schedule actually differs. Override appears as a small "differs from plan" badge on that row.
-
-**Edge case (different days per child): explicitly out of scope.** When per-child days are inconsistent, the engine still uses the parent-level day totals from 2b for math (per current behavior). The per-child override is captured for the AOC form's per-child day cells only, with an inline note: *"Per-child schedules that differ from the overall plan are recorded on the AOC form but do not change the math — consult counsel."* No new engine code paths.
-
-Each child row also captures name + DOB. "Age of youngest child" is derived from the youngest DOB when present; falls back to a single stepper otherwise.
-
-## Per-toggle deviation "why" capture (kills the standalone narrative)
-
-`caption.deviationNarrative` (a single bottom-of-page textbox) is replaced by inline "Why is this a deviation?" textareas next to each toggle:
-
-- "Mandatory add-ons" → private school toggle → inline reason.
-- Same for special expenses, and any future deviation toggle.
-
-AOC Part VI narrative is auto-composed at PDF render time with rule citations prepended:
-
-```text
-Private school tuition deviation per Rule .07(2)(d): {private school reason}.
-Special expenses deviation per Rule .07(2)(d): {special expenses reason}.
-```
-
-A single "Edit composed narrative" expander lets the user override the composed text (rare). No standalone narrative box anywhere in the UI.
-
-## What gets deleted
-
-- `src/components/calculator/filing-details.tsx` — entire file.
-- `caption.comments` — field + all UI references.
-- `caption.deviationNarrative` — replaced by per-toggle `*Reason` fields on `CalcInputs`.
-- "Comments / rebuttal notes" field in `case-caption.tsx`.
-- `<FilingDetailsForm>` import + render in `src/routes/tn.tsx`.
-
-`preparer_*` on the AOC PDF is filled from `caption.preparedBy` (already in Case Caption). No second preparer input.
-
-## Backend / share-payload changes
-
-`CaseCaption` becomes:
 ```ts
-interface CaseCaption {
-  matterName: string;
-  docketNumber: string;
-  court: string;
-  preparedBy: string;
-  client: string;
-  parentARole: "mother" | "father" | null;
-  parentBRole: "mother" | "father" | null;  // enforced opposite of A
-  children: ChildEntry[];                    // name + dob + per-child days (override-only)
-}
+const baseInputs = (): CalcInputs => ({ ...defaultInputs(), /* overrides per test */ });
+const mkOutputs = (over: Partial<CalcOutputs>): CalcOutputs => ({ /* zeroed defaults */, ...over });
 ```
 
-`CalcInputs` gains per-toggle reason fields:
-```ts
-privateSchoolReason: string;
-specialExpensesReason: string;
-```
+`defaultInputs` already exists in `src/lib/calc/calc.ts`. For `CalcOutputs`, build a minimal zeroed object literal in the test file (the adapter only reads a known subset of fields; we don't need a full engine run for any of these assertions). Where a case needs real engine output (cap, SSR, federal benefit), call `calculate(inputs)` from `@/lib/calc/calc` instead of hand-rolling outputs — this also guards against engine/adapter drift.
 
-### Share-link back-compat
-`decodeShare` keeps reading legacy `comments` and `deviationNarrative` from v1/v2 payloads and folds them into a single "Imported narrative" override on the composed Part VI text, so existing shared URLs keep producing the same PDF output. Writing new payloads stops emitting those fields — payload bumps to `v: 3`.
+### Run
 
-## AOC PDF fill (downstream of this refactor)
+Existing `bunx vitest run` picks the new file up; no config changes.
 
-This refactor produces the inputs the fillable-PDF plan needs:
-- Mother/Father columns: from required `parentARole` / `parentBRole`.
-- Per-child rows 1–6: from `caption.children[]` (name + DOB + per-role days, auto-seeded or overridden).
-- Part VI narrative: from auto-composed per-toggle reasons.
-- Preparer: from `caption.preparedBy`.
+## Files
+
+- **add** `src/lib/pdf/__tests__/worksheet-field-map.test.ts` (only file changed)
 
 ## Out of scope
 
-- Fillable-PDF wiring (the prior Phase B). This PR is the intake-side prerequisite.
-- Engine changes — math is identical. **Different days per child does NOT introduce a new math path**; per-child overrides are captured for AOC form display only.
-- MS calculator — same pattern could apply later.
-
-## Files touched
-
-- `src/lib/calc/share.ts` — `CaseCaption` shape, `v: 3` payload, back-compat reader, paired role validator.
-- `src/lib/calc/types.ts` — add reason fields to `CalcInputs`.
-- `src/lib/calc/calc.ts` — `defaultInputs()` adds empty reason strings.
-- `src/components/calculator/case-caption.tsx` — remove comments field.
-- `src/components/calculator/inputs.tsx` — replace Parents / Children / Parenting Time sections with the combined section (2a → 2b → 2c order, paired role toggle, paired ARP/PRP toggle, child rows auto-seeded from plan, per-child "differs from plan" override). Add inline "why" textareas next to deviation toggles.
-- `src/routes/tn.tsx` — drop `<FilingDetailsForm>`, reorder per the new outline.
-- `src/components/calculator/filing-details.tsx` — **deleted**.
-- `src/components/calculator/official-worksheet.tsx` + `src/lib/pdf/official-worksheet-pdf.ts` — read role + per-child rows + composed narrative from new sources; drop comments.
-- Tests: update `src/lib/calc/__tests__/calc.test.ts`; add `share-backcompat.test.ts` for v1/v2 payloads carrying `comments` / `deviationNarrative`; add `parties-children-seed.test.tsx` (RTL) for the auto-seed-on-plan-change behavior; add a paired-toggle test ensuring Parent A = Mother forces Parent B = Father.
-
-## Implementation phases
-
-- **Phase A** — types + share back-compat + Case Caption comments removal + reason fields on inputs (no UI swap yet; existing UI keeps working).
-- **Phase B** — build the combined Section 2 (2a → 2b → 2c) and the per-toggle "why" textareas; delete `filing-details.tsx`; wire AOC PDF to new sources.
-- **Phase C** — move Income Helper into per-parent sections (collapsed by default).
-- **Phase D** — test pass + manual QA against an existing v2 shared URL to confirm back-compat.
-
-Pause after Phase B for a UI sanity check before C and D.
+- No production code changes — the audit says F1–F9 are clean.
+- No PDF rendering in tests (slow + flaky; the adapter is the only thing that can regress).
+- No browser/e2e — the tester already covered that against the live site.
