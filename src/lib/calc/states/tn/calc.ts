@@ -14,6 +14,7 @@ import {
   type TnVariableMultiplierParams,
 } from "../../core/parenting";
 import { selfSupportReserve } from "../../core/low-income";
+import { reimbursementFromA, splitProRataNetFromA } from "../../core/pro-rata";
 
 /** TN parenting-time strategy params, sourced from the TN constants. */
 const TN_PARENTING_PARAMS: TnVariableMultiplierParams = {
@@ -33,39 +34,6 @@ function directionFromASignedFlow(flowFromA: number): Direction {
   if (flowFromA > 0) return "parent_a_to_b";
   if (flowFromA < 0) return "parent_b_to_a";
   return "none";
-}
-
-/** Sign convention: each helper returns the amount added to Parent A's net outflow.
- * If A pays a third-party expense, B owes A their pro-rata share — that REDUCES A's net outflow,
- * so the returned value is negative. If B pays, A owes B their share — positive.
- */
-function reimbursementFromA(
-  totalMonthly: number,
-  paidBy: "parent_a" | "parent_b",
-  piA: number,
-  piB: number,
-): number {
-  if (totalMonthly <= 0) return 0;
-  if (paidBy === "parent_a") {
-    // B reimburses A their pro-rata share -> reduces A's net outflow.
-    return -totalMonthly * piB;
-  }
-  // A reimburses B their pro-rata share -> increases A's outflow.
-  return totalMonthly * piA;
-}
-
-function splitProRataNetFromA(
-  totalMonthly: number,
-  paidBy: "parent_a" | "parent_b" | "split_pro_rata",
-  piA: number,
-  piB: number,
-): number {
-  if (totalMonthly <= 0) return 0;
-  if (paidBy === "split_pro_rata") {
-    // Each parent pays their share directly — no transfer through support order.
-    return 0;
-  }
-  return reimbursementFromA(totalMonthly, paidBy, piA, piB);
 }
 
 export function calculate(inputs: CalcInputs): CalcOutputs {

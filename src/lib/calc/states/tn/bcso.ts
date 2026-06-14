@@ -15,7 +15,7 @@ export interface BcsoLookup {
 }
 
 /** TN schedule config consumed by the generic core lookup. */
-const TN_SCHEDULE_CONFIG: IncomeShareScheduleConfig = {
+export const TN_SCHEDULE_CONFIG: IncomeShareScheduleConfig = {
   rows: BCSO_SCHEDULE,
   cap: COMBINED_AGI_CAP,
   aboveCap: ABOVE_CAP,

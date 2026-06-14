@@ -1,0 +1,53 @@
+[
+  {
+    "id": "TN-3ch-5050-mid",
+    "source": "calc.test.ts — Verification Test 1 (CSV scenario), AOC-verified",
+    "notes": "Mid-income 50/50, 3 children. Schedule row $12,500 -> BCSO $1,933; net presumptive $644 A->B.",
+    "inputs": {
+      "parentAGrossMonthly": 8333.33,
+      "parentBGrossMonthly": 4166.67,
+      "numChildren": 3,
+      "parentingType": "equal"
+    },
+    "expected": {
+      "combinedAGI": 12500,
+      "bcso": 1933,
+      "netPresumptiveSupport": 644,
+      "presumptiveDirection": "parent_a_to_b",
+      "allInMonthly": 644,
+      "allInDirection": "parent_a_to_b"
+    }
+  },
+  {
+    "id": "TN-3ch-5050-abovecap",
+    "source": "calc.test.ts — Verification Test 2 (above-cap 50/50)",
+    "notes": "Combined AGI above the $28,250 cap; BCSO from the above-cap formula = $6,930 for 3 children.",
+    "inputs": {
+      "parentAGrossMonthly": 51250,
+      "parentBGrossMonthly": 28167,
+      "numChildren": 3,
+      "parentingType": "equal"
+    },
+    "expected": {
+      "bcso": 6930,
+      "bcsoSource": "above_cap",
+      "presumptiveDirection": "parent_a_to_b"
+    }
+  },
+  {
+    "id": "TN-2ch-standard",
+    "source": "calc.test.ts — Standard parenting (default 80-day ARP)",
+    "notes": "Parent B is the ARP and pays Parent A their pro-rata share of BCSO.",
+    "inputs": {
+      "parentAGrossMonthly": 8000,
+      "parentBGrossMonthly": 4000,
+      "numChildren": 2,
+      "parentingType": "standard",
+      "arpForStandard": "parent_b"
+    },
+    "expected": {
+      "combinedAGI": 12000,
+      "presumptiveDirection": "parent_b_to_a"
+    }
+  }
+]

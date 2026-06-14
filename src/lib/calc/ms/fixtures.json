@@ -1,0 +1,33 @@
+[
+  {
+    "id": "MS-1ch-60k",
+    "source": "Miss. Code Ann. § 43-19-101(1) — 14% of monthly AGI",
+    "notes": "$60,000/yr gross, no deductions -> $5,000/mo AGI x 14% = $700.",
+    "inputs": { "obligorAnnualGross": 60000, "numChildren": 1 },
+    "expected": {
+      "monthlyAGI": 5000,
+      "statutoryPercentage": 0.14,
+      "presumptiveMonthly": 700,
+      "proposedFinalMonthly": 700
+    }
+  },
+  {
+    "id": "MS-2ch-60k",
+    "source": "Miss. Code Ann. § 43-19-101(1) — 20% of monthly AGI",
+    "notes": "$60,000/yr gross -> $5,000/mo AGI x 20% = $1,000.",
+    "inputs": { "obligorAnnualGross": 60000, "numChildren": 2 },
+    "expected": { "presumptiveMonthly": 1000, "proposedFinalMonthly": 1000 }
+  },
+  {
+    "id": "MS-1ch-obligee-health",
+    "source": "Miss. Code Ann. § 43-19-101 — base + obligee-provided health add-on",
+    "notes": "$700 base + $200 obligee-provided health premium = $900.",
+    "inputs": {
+      "obligorAnnualGross": 60000,
+      "numChildren": 1,
+      "healthInsuranceProvidedBy": "obligee",
+      "healthInsuranceMonthly": 200
+    },
+    "expected": { "presumptiveMonthly": 700, "proposedFinalMonthly": 900 }
+  }
+]
