@@ -28,11 +28,11 @@ export function SiteHeader() {
           </span>
         </Link>
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          <Link to="/tn" className={stateLinkClass(state === "TN")}>
-            {state === "TN" ? "[Tennessee]" : "Tennessee"}
+          <Link to="/tn" className={stateLinkClass(state?.code === "TN")}>
+            {state?.code === "TN" ? "[Tennessee]" : "Tennessee"}
           </Link>
-          <Link to="/ms" className={stateLinkClass(state === "MS")}>
-            {state === "MS" ? "[Mississippi]" : "Mississippi"}
+          <Link to="/ms" className={stateLinkClass(state?.code === "MS")}>
+            {state?.code === "MS" ? "[Mississippi]" : "Mississippi"}
           </Link>
           <Link
             to="/about"
