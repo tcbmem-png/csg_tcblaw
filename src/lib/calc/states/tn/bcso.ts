@@ -1,3 +1,7 @@
+import {
+  lookupScheduleAmount,
+  type IncomeShareScheduleConfig,
+} from "../../core/schedule";
 import { BCSO_SCHEDULE, SCHEDULE_EFFECTIVE_DATE } from "./data/schedule-2022";
 import { ABOVE_CAP, COMBINED_AGI_CAP } from "./data/constants";
 
@@ -10,50 +14,22 @@ export interface BcsoLookup {
   isShaded: boolean;
 }
 
+/** TN schedule config consumed by the generic core lookup. */
+const TN_SCHEDULE_CONFIG: IncomeShareScheduleConfig = {
+  rows: BCSO_SCHEDULE,
+  cap: COMBINED_AGI_CAP,
+  aboveCap: ABOVE_CAP,
+  convention: "round_up",
+};
+
 /**
  * Look up BCSO per Rule 1240-02-04-.09.
  * - Combined AGI ≤ cap: round UP to next schedule line.
  * - Combined AGI > cap: top-of-schedule + (excess × rate).
+ *
+ * Thin TN adapter over the generic core schedule lookup; the metric logic
+ * lives in src/lib/calc/core/schedule.ts.
  */
 export function lookupBcso(combinedAgi: number, numChildren: number): BcsoLookup {
-  if (numChildren < 1 || numChildren > 5) {
-    throw new Error("numChildren must be 1-5");
-  }
-  if (combinedAgi <= COMBINED_AGI_CAP) {
-    // Binary search for smallest schedule AGI >= combinedAgi
-    let lo = 0;
-    let hi = BCSO_SCHEDULE.length - 1;
-    let foundIdx = -1;
-    while (lo <= hi) {
-      const mid = (lo + hi) >> 1;
-      const rowAgi = BCSO_SCHEDULE[mid][0];
-      if (rowAgi >= combinedAgi) {
-        foundIdx = mid;
-        hi = mid - 1;
-      } else {
-        lo = mid + 1;
-      }
-    }
-    // If combinedAgi is below the smallest schedule row, clamp to first row.
-    if (foundIdx === -1) foundIdx = 0;
-    const row = BCSO_SCHEDULE[foundIdx];
-    const bcso = row[numChildren]; // index 1..5 = bcso for that child count
-    const mask = row[6];
-    const isShaded = ((mask >> (numChildren - 1)) & 1) === 1;
-    return {
-      bcso,
-      source: "schedule",
-      scheduleAgiUsed: row[0],
-      isShaded,
-    };
-  }
-  const cfg = ABOVE_CAP[numChildren as 1 | 2 | 3 | 4 | 5];
-  const excess = combinedAgi - COMBINED_AGI_CAP;
-  const bcso = cfg.bcsoAtCap + excess * cfg.rate;
-  return {
-    bcso,
-    source: "above_cap",
-    scheduleAgiUsed: null,
-    isShaded: false,
-  };
+  return lookupScheduleAmount(TN_SCHEDULE_CONFIG, combinedAgi, numChildren);
 }

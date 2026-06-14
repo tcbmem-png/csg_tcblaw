@@ -9,6 +9,20 @@ import {
   SSR_AMOUNT,
   STATUTORY_PCSO_MAX,
 } from "./data/constants";
+import {
+  tnVariableMultiplier,
+  type TnVariableMultiplierParams,
+} from "../../core/parenting";
+import { selfSupportReserve } from "../../core/low-income";
+
+/** TN parenting-time strategy params, sourced from the TN constants. */
+const TN_PARENTING_PARAMS: TnVariableMultiplierParams = {
+  reductionThreshold: PARENTING_TIME.REDUCTION_THRESHOLD,
+  increaseThreshold: PARENTING_TIME.INCREASE_THRESHOLD,
+  variableMultiplierConstant: PARENTING_TIME.VARIABLE_MULTIPLIER_CONSTANT,
+  equalDays: PARENTING_TIME.EQUAL_DAYS,
+  standardArpDays: 80,
+};
 
 /** Round to nearest whole dollar — Rule .04(11)(a). */
 function r$(n: number): number {
@@ -20,67 +34,6 @@ function directionFromASignedFlow(flowFromA: number): Direction {
   if (flowFromA < 0) return "parent_b_to_a";
   return "none";
 }
-
-/**
- * Compute the net presumptive support based on parenting band.
- * Returns the signed monthly support from Parent A's perspective:
- *   positive => Parent A pays Parent B
- *   negative => Parent B pays Parent A
- */
-function computePresumptive(
-  bcso: number,
-  piA: number,
-  piB: number,
-  band: "standard" | "reduction" | "neutral" | "increase" | "equal",
-  arpDays: number,
-  arpIsA: boolean,
-): { netFromA: number; multiplier: number | null } {
-  const proRataA = bcso * piA;
-  const proRataB = bcso * piB;
-
-  if (band === "neutral" || band === "standard") {
-    // ARP pays PRP their full pro-rata BCSO.
-    if (arpIsA) return { netFromA: proRataA, multiplier: null };
-    return { netFromA: -proRataB, multiplier: null };
-  }
-
-  if (band === "reduction" || band === "equal") {
-    // Rule .04(7)(h)(4) variable multiplier — applies at arpDays ≥ 92.
-    // For 50/50 (equal), Rule .04(7)(b)(2)(i) deems Parent 2 (B) the ARP at
-    // 182.5 days, which yields multiplier = 2.0 and the same formula.
-    // If the result is negative (PRP earns more than ARP), Rule .04(7)(f)
-    // permits PRP→ARP support; we return the signed value and let the
-    // caller derive direction.
-    const multiplier = PARENTING_TIME.VARIABLE_MULTIPLIER_CONSTANT * arpDays;
-    const adjustedBcso = bcso * multiplier;
-    const additional = adjustedBcso - bcso;
-    if (arpIsA) {
-      const prpShareAdditional = additional * piB;
-      const arpFinal = proRataA - prpShareAdditional;
-      return { netFromA: arpFinal, multiplier };
-    } else {
-      const prpShareAdditional = additional * piA;
-      const arpFinal = proRataB - prpShareAdditional;
-      return { netFromA: -arpFinal, multiplier };
-    }
-  }
-
-  // band === "increase"
-  // Rule .04(7)(i): ARP's share increased by (THRESHOLD - ARP_days) / 365.
-  // Using THRESHOLD=68 (matches PARENTING_TIME.INCREASE_THRESHOLD) so the
-  // adjustment cleanly zeroes out at the 68-day boundary instead of carrying
-  // a residual 1/365 step.
-  const daysBelow = PARENTING_TIME.INCREASE_THRESHOLD - arpDays;
-  const increasePct = daysBelow / 365;
-  if (arpIsA) {
-    const adjusted = proRataA + proRataA * increasePct;
-    return { netFromA: adjusted, multiplier: null };
-  } else {
-    const adjusted = proRataB + proRataB * increasePct;
-    return { netFromA: -adjusted, multiplier: null };
-  }
-}
-
 
 /** Sign convention: each helper returns the amount added to Parent A's net outflow.
  * If A pays a third-party expense, B owes A their pro-rata share — that REDUCES A's net outflow,
@@ -170,98 +123,60 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
   }
   const bcso = bcsoLookup.bcso;
 
-  // === Parenting time band ===
-  let arpDays: number;
-  let arpIsA: boolean;
-  let band: "standard" | "reduction" | "neutral" | "increase" | "equal";
-  let arpIdentity: "parent_a" | "parent_b" | "equal";
-
-  if (inputs.parentingType === "equal") {
-    arpDays = PARENTING_TIME.EQUAL_DAYS;
-    arpIsA = false; // Rule .04(7)(b)(2)(i) — Parent B (Parent 2) deemed ARP
-    band = "equal";
-    arpIdentity = "equal";
-  } else if (inputs.parentingType === "standard") {
-    const arp = inputs.arpForStandard ?? "parent_b";
-    arpIsA = arp === "parent_a";
-    arpDays = 80;
-    band = "standard";
-    arpIdentity = arp;
-  } else {
-    // custom
-    const aDays = inputs.parentADays ?? 285;
-    const bDays = inputs.parentBDays ?? 365 - aDays;
-    if (Math.abs(aDays + bDays - 365) > 1.5) {
-      warnings.push(
-        `Parenting days (${aDays} + ${bDays}) do not sum to 365. Adjust before relying on this calculation.`,
-      );
-    }
-    // ARP is the parent with FEWER days. If exactly equal, treat as "equal".
-    if (Math.abs(aDays - bDays) < 0.5) {
-      band = "equal";
-      arpDays = PARENTING_TIME.EQUAL_DAYS;
-      arpIsA = false;
-      arpIdentity = "equal";
-    } else if (aDays < bDays) {
-      arpIsA = true;
-      arpDays = aDays;
-      arpIdentity = "parent_a";
-      band = bandForDays(arpDays);
-    } else {
-      arpIsA = false;
-      arpDays = bDays;
-      arpIdentity = "parent_b";
-      band = bandForDays(arpDays);
-    }
-  }
-
-  const { netFromA: presumptiveFromA, multiplier } = computePresumptive(
-    bcso,
-    piA,
-    piB,
-    band,
-    arpDays,
-    arpIsA,
+  // === Parenting time (core tn_variable_multiplier strategy) ===
+  const parenting = tnVariableMultiplier(
+    {
+      bcso,
+      piA,
+      piB,
+      parentingType: inputs.parentingType,
+      arpForStandard: inputs.arpForStandard,
+      parentADays: inputs.parentADays,
+      parentBDays: inputs.parentBDays,
+    },
+    TN_PARENTING_PARAMS,
   );
+  const band = parenting.band as
+    | "standard"
+    | "reduction"
+    | "neutral"
+    | "increase"
+    | "equal";
+  const arpIdentity = parenting.arpIdentity;
+  const arpIsA = arpIdentity === "parent_a";
+  const multiplier = parenting.multiplier;
+  const presumptiveFromA = parenting.netFromA;
+  warnings.push(...parenting.warnings);
 
-  // === SSR check (Rule .02(25) + .09 shaded area) ===
-  // The shaded-cell test must key off the OBLIGOR's own AGI, not combined AGI:
-  // a combined-AGI cell can clear the threshold while the obligor-alone lookup
-  // is shaded — exactly the case the rule is meant to catch. For above-cap
-  // combined cases the obligor's own income can still be on the schedule, so
-  // we always perform the alt lookup whenever the obligor has positive AGI
-  // within the schedule range.
-  let ssrApplied = false;
-  let ssrNote: string | null = null;
+  // === SSR check (Rule .02(25) + .09 shaded area) — core strategy ===
+  // The shaded-cell test keys off the OBLIGOR's own AGI, not combined AGI: a
+  // combined-AGI cell can clear the threshold while the obligor-alone lookup is
+  // shaded. The metric logic lives in core/low-income/self-support-reserve.ts;
+  // TN supplies the reserve, cap, obligor-only lookup, and the note wording.
   let minimumOrderApplied = false;
-  let presumptiveAfterSsr = presumptiveFromA;
-  let ssrCollapsedToZero = false;
-  let ssrObligorIsA = false;
-  if (Math.abs(presumptiveFromA) > 0) {
-    // Identify obligor (the parent with positive outflow).
-    const obligorIsA = presumptiveFromA > 0;
-    const obligorAgi = obligorIsA ? aAGI : bAGI;
-    if (obligorAgi > 0 && obligorAgi <= COMBINED_AGI_CAP) {
-      const altLookup = lookupBcso(obligorAgi, inputs.numChildren);
-      if (altLookup.isShaded) {
-        // Use lower of pro-rata BCSO or alt BCSO for the obligor.
-        const proRataObligor = Math.abs(presumptiveFromA);
-        const alt = altLookup.bcso;
-        if (alt < proRataObligor) {
-          // Make sure obligor still keeps SSR.
-          const allowed = Math.max(0, obligorAgi - SSR_AMOUNT);
-          const final = Math.min(alt, allowed);
-          presumptiveAfterSsr = obligorIsA ? final : -final;
-          ssrApplied = true;
-          ssrNote = `Self-Support Reserve applied (Rule .02(25)): obligor-only BCSO ($${alt}) used in place of pro-rata BCSO so the obligor retains the $${SSR_AMOUNT}/mo reserve.`;
-          if (final < 1) {
-            ssrCollapsedToZero = true;
-            ssrObligorIsA = obligorIsA;
-          }
-        }
-      }
-    }
-  }
+  const ssr = selfSupportReserve(
+    {
+      presumptiveFromA,
+      aAGI,
+      bAGI,
+      numChildren: inputs.numChildren,
+    },
+    {
+      reserve: SSR_AMOUNT,
+      cap: COMBINED_AGI_CAP,
+      lookup: (agi, n) => {
+        const r = lookupBcso(agi, n);
+        return { bcso: r.bcso, isShaded: r.isShaded };
+      },
+      noteBuilder: (altBcso, reserve) =>
+        `Self-Support Reserve applied (Rule .02(25)): obligor-only BCSO ($${altBcso}) used in place of pro-rata BCSO so the obligor retains the $${reserve}/mo reserve.`,
+    },
+  );
+  const ssrApplied = ssr.applied;
+  const ssrNote = ssr.note;
+  const presumptiveAfterSsr = ssr.presumptiveAfterAdjustment;
+  const ssrCollapsedToZero = ssr.collapsedToZero;
+  const ssrObligorIsA = ssr.obligorIsA;
 
   // === Add-ons (Rule .04(8)) ===
   const addOnHealthFromA = reimbursementFromA(
@@ -555,12 +470,6 @@ export function calculate(inputs: CalcInputs): CalcOutputs {
     scheduleEffectiveDate: SCHEDULE_EFFECTIVE_DATE,
     errors,
   };
-}
-
-function bandForDays(arpDays: number): "reduction" | "neutral" | "increase" {
-  if (arpDays >= PARENTING_TIME.REDUCTION_THRESHOLD) return "reduction";
-  if (arpDays <= PARENTING_TIME.INCREASE_THRESHOLD) return "increase";
-  return "neutral";
 }
 
 function emptyOutputs(opts: {
