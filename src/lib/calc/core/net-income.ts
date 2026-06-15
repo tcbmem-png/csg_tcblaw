@@ -1,45 +1,57 @@
 /**
- * income_shares_net gross→net pre-step (Florida).
+ * income_shares_net gross→net pre-step (Florida, Fla. Stat. § 61.30(3)).
  *
  * FL is the only income_shares_net state: its schedule runs on combined NET
- * income, so each parent's gross must be converted to net (federal income tax,
- * FICA, mandatory union dues, mandatory retirement, health-insurance for the
- * parent, court-ordered pre-existing support, ...) BEFORE combining and looking
- * up the schedule. That conversion is a genuinely new mechanic the core does
- * not yet have.
- *
- * It is STUBBED FAIL-LOUD and named now (harmless), per the core convention:
- * any attempt to run an income_shares_net state throws with a clear message
- * until the real implementation lands with the FL pack — which must specify the
- * ordered deductions and worked fixtures pinning each step's running total
- * (the way AR's pack pinned round_down).
- *
- * NOTE: FL's PARENTING is NOT special — it is the shared_custody_cross_multiply
- * strategy shared with LA/AL (built with those states); FL differs only in the
- * trigger (overnight_threshold thresholdOvernights=73). There is deliberately
- * no gross_up_1_5 strategy.
+ * income, so each parent's gross is converted to net BEFORE combining. The
+ * design decision (2026-06-14) is locked: the USER supplies the deduction
+ * amounts (including actual federal income tax and FICA from their Form
+ * 12.902(e) affidavit) and the ENGINE SUMS them — there is no embedded tax
+ * estimator. § 61.30(3) deduction order: federal income tax, FICA/SECA,
+ * mandatory union dues, mandatory retirement, the obligor's own health
+ * insurance (NOT the child's — that's the § 61.30(8) add-on), court-ordered
+ * support for other children actually paid, and spousal support paid.
  */
 
 export interface NetIncomeConfig {
-  /**
-   * Ordered deduction categories from gross to net (the doctrine spec's
-   * `deductionsToNet`). The real engine will apply these in order; shape may
-   * be refined when the FL pack lands.
-   */
+  /** Ordered deduction category ids (§ 61.30(3)); drives the UI worksheet. */
   deductions: string[];
 }
 
-/**
- * Convert a parent's monthly gross to monthly net for an income_shares_net
- * state. Not implemented yet — fails loud.
- */
+/** Net = gross − Σ(user-supplied deduction amounts), floored at 0. */
 export function grossToNetMonthly(
-  _grossMonthly: number,
-  _config: NetIncomeConfig | undefined,
+  grossMonthly: number,
+  deductionAmounts: readonly number[] = [],
 ): number {
-  throw new Error(
-    "income_shares_net gross→net pre-step is not implemented yet. FL is the " +
-      "only state that needs it; awaiting the FL pack's ordered deductions and " +
-      "worked fixtures. (core/net-income.ts)",
+  const total = deductionAmounts.reduce(
+    (sum, d) => sum + (Number.isFinite(d) ? Math.max(0, d) : 0),
+    0,
   );
+  return Math.max(0, grossMonthly - total);
+}
+
+export interface NetStep {
+  step: number;
+  id: string;
+  deduct: number;
+  runningNet: number;
+}
+
+/**
+ * Step-by-step gross→net running total for the worksheet/UI (and the
+ * running-total fixture). Item order is the § 61.30(3) deduction order.
+ */
+export function grossToNetSteps(
+  grossMonthly: number,
+  items: ReadonlyArray<{ id: string; amount: number }>,
+): { steps: NetStep[]; net: number } {
+  const steps: NetStep[] = [
+    { step: 0, id: "gross", deduct: 0, runningNet: grossMonthly },
+  ];
+  let running = grossMonthly;
+  items.forEach((it, i) => {
+    const deduct = Number.isFinite(it.amount) ? Math.max(0, it.amount) : 0;
+    running = running - deduct;
+    steps.push({ step: i + 1, id: it.id, deduct, runningNet: running });
+  });
+  return { steps, net: Math.max(0, running) };
 }

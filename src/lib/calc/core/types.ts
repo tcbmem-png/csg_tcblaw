@@ -37,6 +37,12 @@ export interface IncomeSharesInputs {
   parentBGrossMonthly: number;
   parentADeductionsMonthly?: number;
   parentBDeductionsMonthly?: number;
+  /**
+   * Ordered user-supplied deduction amounts for income_shares_net states (FL
+   * § 61.30(3)): net = gross − Σ. Ignored by income_shares_gross states.
+   */
+  parentANetDeductions?: number[];
+  parentBNetDeductions?: number[];
   numChildren: number;
   parentingType: "standard" | "equal" | "custom";
   arpForStandard?: "parent_a" | "parent_b";

@@ -11,6 +11,7 @@
 import { selfSupportReserve } from "./self-support-reserve";
 import { payorGrossReserve } from "./payor-gross-reserve";
 import { economicIncentiveReserve } from "./economic-incentive-reserve";
+import { povertyGuidelineReserve } from "./poverty-guideline-reserve";
 
 export const LOW_INCOME_STRATEGIES = {
   // TN's shaded-cell SSR.
@@ -20,6 +21,8 @@ export const LOW_INCOME_STRATEGIES = {
   payor_gross_reserve: payorGrossReserve,
   // AL's economic-incentive SSR + $50 minimum (Rule 32(C)(5)).
   economic_incentive_reserve: economicIncentiveReserve,
+  // FL's lesser-of poverty-guideline cap + principle of payment (§ 61.30(6)(a)).
+  poverty_guideline_reserve: povertyGuidelineReserve,
 } as const;
 
 export type LowIncomeModel = keyof typeof LOW_INCOME_STRATEGIES;
@@ -31,3 +34,5 @@ export { payorGrossReserve } from "./payor-gross-reserve";
 export type { PayorGrossReserveParams } from "./payor-gross-reserve";
 export { economicIncentiveReserve } from "./economic-incentive-reserve";
 export type { EconomicIncentiveReserveParams } from "./economic-incentive-reserve";
+export { povertyGuidelineReserve } from "./poverty-guideline-reserve";
+export type { PovertyGuidelineReserveParams } from "./poverty-guideline-reserve";
