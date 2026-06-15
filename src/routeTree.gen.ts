@@ -24,9 +24,12 @@ import { Route as TnAboutRouteImport } from './routes/tn_.about'
 import { Route as MsHowItWorksRouteImport } from './routes/ms_.how-it-works'
 import { Route as MsAboutRouteImport } from './routes/ms_.about'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as ArHowItWorksRouteImport } from './routes/ar_.how-it-works'
+import { Route as ArAboutRouteImport } from './routes/ar_.about'
 import { Route as TnHowItWorksIncomeRouteImport } from './routes/tn_.how-it-works.income'
 import { Route as MsHowItWorksIncomeRouteImport } from './routes/ms_.how-it-works.income'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ArHowItWorksIncomeRouteImport } from './routes/ar_.how-it-works.income'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -106,6 +109,16 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ArHowItWorksRoute = ArHowItWorksRouteImport.update({
+  id: '/ar_/how-it-works',
+  path: '/ar/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArAboutRoute = ArAboutRouteImport.update({
+  id: '/ar_/about',
+  path: '/ar/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TnHowItWorksIncomeRoute = TnHowItWorksIncomeRouteImport.update({
   id: '/income',
   path: '/income',
@@ -120,6 +133,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ArHowItWorksIncomeRoute = ArHowItWorksIncomeRouteImport.update({
+  id: '/income',
+  path: '/income',
+  getParentRoute: () => ArHowItWorksRoute,
 } as any)
 const LovableEmailTransactionalSendRoute =
   LovableEmailTransactionalSendRouteImport.update({
@@ -150,12 +168,15 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tn': typeof TnRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/ar/about': typeof ArAboutRoute
+  '/ar/how-it-works': typeof ArHowItWorksRouteWithChildren
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/ms/about': typeof MsAboutRoute
   '/ms/how-it-works': typeof MsHowItWorksRouteWithChildren
   '/tn/about': typeof TnAboutRoute
   '/tn/how-it-works': typeof TnHowItWorksRouteWithChildren
   '/tn/why-we-built-this': typeof TnWhyWeBuiltThisRoute
+  '/ar/how-it-works/income': typeof ArHowItWorksIncomeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/ms/how-it-works/income': typeof MsHowItWorksIncomeRoute
   '/tn/how-it-works/income': typeof TnHowItWorksIncomeRoute
@@ -173,12 +194,15 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tn': typeof TnRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/ar/about': typeof ArAboutRoute
+  '/ar/how-it-works': typeof ArHowItWorksRouteWithChildren
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/ms/about': typeof MsAboutRoute
   '/ms/how-it-works': typeof MsHowItWorksRouteWithChildren
   '/tn/about': typeof TnAboutRoute
   '/tn/how-it-works': typeof TnHowItWorksRouteWithChildren
   '/tn/why-we-built-this': typeof TnWhyWeBuiltThisRoute
+  '/ar/how-it-works/income': typeof ArHowItWorksIncomeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/ms/how-it-works/income': typeof MsHowItWorksIncomeRoute
   '/tn/how-it-works/income': typeof TnHowItWorksIncomeRoute
@@ -197,12 +221,15 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tn': typeof TnRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/ar_/about': typeof ArAboutRoute
+  '/ar_/how-it-works': typeof ArHowItWorksRouteWithChildren
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/ms_/about': typeof MsAboutRoute
   '/ms_/how-it-works': typeof MsHowItWorksRouteWithChildren
   '/tn_/about': typeof TnAboutRoute
   '/tn_/how-it-works': typeof TnHowItWorksRouteWithChildren
   '/tn_/why-we-built-this': typeof TnWhyWeBuiltThisRoute
+  '/ar_/how-it-works/income': typeof ArHowItWorksIncomeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/ms_/how-it-works/income': typeof MsHowItWorksIncomeRoute
   '/tn_/how-it-works/income': typeof TnHowItWorksIncomeRoute
@@ -222,12 +249,15 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/tn'
     | '/unsubscribe'
+    | '/ar/about'
+    | '/ar/how-it-works'
     | '/email/unsubscribe'
     | '/ms/about'
     | '/ms/how-it-works'
     | '/tn/about'
     | '/tn/how-it-works'
     | '/tn/why-we-built-this'
+    | '/ar/how-it-works/income'
     | '/lovable/email/suppression'
     | '/ms/how-it-works/income'
     | '/tn/how-it-works/income'
@@ -245,12 +275,15 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/tn'
     | '/unsubscribe'
+    | '/ar/about'
+    | '/ar/how-it-works'
     | '/email/unsubscribe'
     | '/ms/about'
     | '/ms/how-it-works'
     | '/tn/about'
     | '/tn/how-it-works'
     | '/tn/why-we-built-this'
+    | '/ar/how-it-works/income'
     | '/lovable/email/suppression'
     | '/ms/how-it-works/income'
     | '/tn/how-it-works/income'
@@ -268,12 +301,15 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/tn'
     | '/unsubscribe'
+    | '/ar_/about'
+    | '/ar_/how-it-works'
     | '/email/unsubscribe'
     | '/ms_/about'
     | '/ms_/how-it-works'
     | '/tn_/about'
     | '/tn_/how-it-works'
     | '/tn_/why-we-built-this'
+    | '/ar_/how-it-works/income'
     | '/lovable/email/suppression'
     | '/ms_/how-it-works/income'
     | '/tn_/how-it-works/income'
@@ -292,6 +328,8 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TnRoute: typeof TnRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  ArAboutRoute: typeof ArAboutRoute
+  ArHowItWorksRoute: typeof ArHowItWorksRouteWithChildren
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   MsAboutRoute: typeof MsAboutRoute
   MsHowItWorksRoute: typeof MsHowItWorksRouteWithChildren
@@ -411,6 +449,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ar_/how-it-works': {
+      id: '/ar_/how-it-works'
+      path: '/ar/how-it-works'
+      fullPath: '/ar/how-it-works'
+      preLoaderRoute: typeof ArHowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ar_/about': {
+      id: '/ar_/about'
+      path: '/ar/about'
+      fullPath: '/ar/about'
+      preLoaderRoute: typeof ArAboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tn_/how-it-works/income': {
       id: '/tn_/how-it-works/income'
       path: '/income'
@@ -431,6 +483,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/lovable/email/suppression'
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/ar_/how-it-works/income': {
+      id: '/ar_/how-it-works/income'
+      path: '/income'
+      fullPath: '/ar/how-it-works/income'
+      preLoaderRoute: typeof ArHowItWorksIncomeRouteImport
+      parentRoute: typeof ArHowItWorksRoute
     }
     '/lovable/email/transactional/send': {
       id: '/lovable/email/transactional/send'
@@ -455,6 +514,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface ArHowItWorksRouteChildren {
+  ArHowItWorksIncomeRoute: typeof ArHowItWorksIncomeRoute
+}
+
+const ArHowItWorksRouteChildren: ArHowItWorksRouteChildren = {
+  ArHowItWorksIncomeRoute: ArHowItWorksIncomeRoute,
+}
+
+const ArHowItWorksRouteWithChildren = ArHowItWorksRoute._addFileChildren(
+  ArHowItWorksRouteChildren,
+)
 
 interface MsHowItWorksRouteChildren {
   MsHowItWorksIncomeRoute: typeof MsHowItWorksIncomeRoute
@@ -490,6 +561,8 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TnRoute: TnRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  ArAboutRoute: ArAboutRoute,
+  ArHowItWorksRoute: ArHowItWorksRouteWithChildren,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   MsAboutRoute: MsAboutRoute,
   MsHowItWorksRoute: MsHowItWorksRouteWithChildren,

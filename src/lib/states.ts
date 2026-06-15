@@ -79,7 +79,7 @@ export const STATES: StateEntry[] = [
     name: "Arkansas",
     model: "Income Shares Model",
     cite: "Ark. Sup. Ct. Admin. Order No. 10",
-    status: "coming_soon",
+    status: "available",
     route: "/ar",
     tile: [4, 5],
   },

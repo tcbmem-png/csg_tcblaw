@@ -26,13 +26,14 @@ describe("states registry", () => {
     }
   });
 
-  it("TN and MS are available", () => {
+  it("TN, MS, AR are available", () => {
     expect(getStateByCode("TN")?.status).toBe("available");
     expect(getStateByCode("MS")?.status).toBe("available");
+    expect(getStateByCode("AR")?.status).toBe("available");
   });
 
-  it("AR, LA, AL, GA, FL are coming_soon", () => {
-    for (const c of ["AR", "LA", "AL", "GA", "FL"]) {
+  it("LA, AL, GA, FL are coming_soon", () => {
+    for (const c of ["LA", "AL", "GA", "FL"]) {
       expect(getStateByCode(c)?.status, c).toBe("coming_soon");
     }
   });
@@ -51,19 +52,19 @@ describe("detectState", () => {
     expect(detectState("/about")).toBeNull();
   });
 
-  it("does not match coming_soon AR (no route resolution to a calculator)", () => {
-    // AR has a stub route so it WILL resolve — that's intended.
+  it("matches AR (now an available calculator)", () => {
     expect(detectState("/ar")?.code).toBe("AR");
+    expect(detectState("/ar/how-it-works")?.code).toBe("AR");
   });
 });
 
 describe("STATE_SITEMAP_ENTRIES", () => {
-  it("includes /tn and /ms and excludes coming_soon/planned", () => {
+  it("includes available states (/tn, /ms, /ar) and excludes coming_soon/planned", () => {
     const paths = STATE_SITEMAP_ENTRIES.map((e) => e.path);
     expect(paths).toContain("/tn");
     expect(paths).toContain("/ms");
-    expect(paths).not.toContain("/ar");
+    expect(paths).toContain("/ar");
     expect(paths).not.toContain("/fl");
-    expect(STATE_SITEMAP_ENTRIES).toHaveLength(2);
+    expect(STATE_SITEMAP_ENTRIES).toHaveLength(3);
   });
 });
