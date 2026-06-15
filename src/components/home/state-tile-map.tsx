@@ -232,6 +232,12 @@ function DetailPanel({ state }: { state: StateEntry | null }) {
           {state.cite}
         </p>
       )}
+      {state.status === "available" && state.reviewStatus === "under_review" && (
+        <p className="mt-2 text-xs leading-relaxed text-primary">
+          <span className="font-mono uppercase tracking-widest">Being verified</span>
+          {state.reviewNote ? ` — ${state.reviewNote}` : ""}
+        </p>
+      )}
       <div className="mt-3 text-sm">
         {state.status === "available" && state.route && (
           <a

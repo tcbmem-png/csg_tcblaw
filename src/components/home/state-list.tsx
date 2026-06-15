@@ -31,6 +31,20 @@ export function StateList() {
                   ({s.cite})
                 </span>
               )}
+              {s.reviewStatus === "under_review" && (
+                <span className="ml-2 inline-flex items-center gap-1 align-middle font-mono text-[10px] uppercase tracking-widest text-primary">
+                  <span
+                    aria-hidden
+                    className="inline-block h-1.5 w-1.5 rounded-full bg-primary"
+                  />
+                  Being verified
+                </span>
+              )}
+              {s.reviewStatus === "under_review" && s.reviewNote && (
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  {s.reviewNote}
+                </p>
+              )}
             </li>
           ))}
         </ul>
