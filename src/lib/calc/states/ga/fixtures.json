@@ -1,0 +1,229 @@
+[
+  {
+    "id": "GA-baseline-1child-ordinary-visitation",
+    "source": "Oracle-validated PTA; $8,000/1ch = $1,150. NC=A, 90/275 days.",
+    "notes": "cross_credit: NC share 718.75; adjustment -652.35; PTA share 66.40.",
+    "inputs": {
+      "parentAGrossMonthly": 5000,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 90,
+      "parentBDays": 275
+    },
+    "expected": {
+      "combinedAGI": 8000,
+      "piA": 0.625,
+      "piB": 0.375,
+      "bcso": 1150,
+      "allInMonthly": 66.4,
+      "allInDirection": "parent_a_to_b"
+    }
+  },
+  {
+    "id": "GA-multichild-2-addons-heavy",
+    "source": "$8,000/2ch = $1,723; Schedule D add-ons prorated. NC=A, 90/275.",
+    "notes": "PTA share 99.48 + obligor share of add-ons (0.625 x 600 = 375) = 474.48.",
+    "inputs": {
+      "parentAGrossMonthly": 5000,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 2,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 90,
+      "parentBDays": 275,
+      "addOns": [
+        { "id": "health_insurance", "monthly": 200, "paidBy": "parent_b" },
+        { "id": "work_related_childcare", "monthly": 400, "paidBy": "parent_b" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 8000,
+      "piA": 0.625,
+      "piB": 0.375,
+      "bcso": 1723,
+      "allInMonthly": 474.48,
+      "allInDirection": "parent_a_to_b"
+    }
+  },
+  {
+    "id": "GA-equal-5050-income-disparity",
+    "source": "Oracle-validated; $10,000/1ch = $1,285; 182.5/182.5, 60/40 income.",
+    "notes": "Equal time does not zero support: PTA share 642.50.",
+    "inputs": {
+      "parentAGrossMonthly": 6000,
+      "parentBGrossMonthly": 4000,
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 182.5,
+      "parentBDays": 182.5
+    },
+    "expected": {
+      "combinedAGI": 10000,
+      "piA": 0.6,
+      "piB": 0.4,
+      "bcso": 1285,
+      "allInMonthly": 642.5,
+      "allInDirection": "parent_a_to_b"
+    }
+  },
+  {
+    "id": "GA-high-income-above-40k-cap",
+    "source": "$40,000 top-row anchor (1ch = $3,222); above-cap discretionary. NC=A, 80/285.",
+    "notes": "BCSO frozen at top row; PTA share 129.11.",
+    "inputs": {
+      "parentAGrossMonthly": 50000,
+      "parentBGrossMonthly": 2500,
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 80,
+      "parentBDays": 285
+    },
+    "expected": {
+      "combinedAGI": 52500,
+      "piA": 0.9524,
+      "piB": 0.0476,
+      "bcso": 3222,
+      "bcsoSource": "above_cap",
+      "allInMonthly": 129.11,
+      "allInDirection": "parent_a_to_b"
+    }
+  },
+  {
+    "id": "GA-imputation-voluntary-underemployment",
+    "source": "$8,500/1ch = $1,186; A imputed. NC=A, 85/280.",
+    "notes": "Imputation pre-resolved into grossA. PTA share 57.31.",
+    "inputs": {
+      "parentAGrossMonthly": 5500,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 85,
+      "parentBDays": 280
+    },
+    "expected": {
+      "combinedAGI": 8500,
+      "piA": 0.6471,
+      "piB": 0.3529,
+      "bcso": 1186,
+      "allInMonthly": 57.31,
+      "allInDirection": "parent_a_to_b"
+    }
+  },
+  {
+    "id": "GA-low-income-adjustment-applies",
+    "source": "$5,000/1ch = $887; obligor AGI $2,000 (< $2,450 termination). Cap $381 does NOT bind (presumptive lower).",
+    "notes": "Low-income (p) cap considered but presumptive 35.54 < cap 381 -> order is the presumptive.",
+    "inputs": {
+      "parentAGrossMonthly": 2000,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 80,
+      "parentBDays": 285
+    },
+    "expected": {
+      "combinedAGI": 5000,
+      "piA": 0.4,
+      "piB": 0.6,
+      "bcso": 887,
+      "allInMonthly": 35.54,
+      "allInDirection": "parent_a_to_b"
+    }
+  },
+  {
+    "id": "GA-low-income-below-1500-percentage-cap",
+    "source": "$3,700/1ch = $683; obligor AGI $1,200 (<= $1,500) -> percent cap 0.19 x 1200 = $228, does NOT bind.",
+    "notes": "Below-$1,500 branch: cap 228 > presumptive 27.37 -> order is the presumptive.",
+    "inputs": {
+      "parentAGrossMonthly": 1200,
+      "parentBGrossMonthly": 2500,
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 80,
+      "parentBDays": 285
+    },
+    "expected": {
+      "combinedAGI": 3700,
+      "piA": 0.3243,
+      "piB": 0.6757,
+      "bcso": 683,
+      "allInMonthly": 27.37,
+      "allInDirection": "parent_a_to_b"
+    }
+  },
+  {
+    "id": "GA-deviation-extraordinary-educational",
+    "source": "$12,000/2ch = $2,176; +$300 educational deviation with written findings. NC=A, 100/265.",
+    "notes": "PTA share 175.03 + $300 deviation = 475.03.",
+    "inputs": {
+      "parentAGrossMonthly": 7000,
+      "parentBGrossMonthly": 5000,
+      "numChildren": 2,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 100,
+      "parentBDays": 265,
+      "directDeviations": [
+        { "id": "extraordinary_educational_expenses", "amount": 300, "direction": "increase" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 12000,
+      "piA": 0.5833,
+      "piB": 0.4167,
+      "bcso": 2176,
+      "allInMonthly": 475.03,
+      "allInDirection": "parent_a_to_b",
+      "deviationsTotalFromA": 300
+    }
+  },
+  {
+    "id": "GA-3child-no-courtordered-parenting-time",
+    "source": "$6,000/3ch = $1,826; no court-ordered parenting time -> no adjustment, NC pays full share.",
+    "notes": "No PTA: obligor share 1217.33 = bcso x 0.6667.",
+    "inputs": {
+      "parentAGrossMonthly": 4000,
+      "parentBGrossMonthly": 2000,
+      "numChildren": 3,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 6000,
+      "piA": 0.6667,
+      "piB": 0.3333,
+      "bcso": 1826,
+      "allInMonthly": 1217.33,
+      "allInDirection": "parent_a_to_b"
+    }
+  },
+  {
+    "id": "GA-equal-time-large-income-gap-2child",
+    "source": "$11,000/2ch = $2,052; 182.5/182.5, 73/27 income. NC=A (higher earner).",
+    "notes": "Equal time, large gap: PTA share 1026.",
+    "inputs": {
+      "parentAGrossMonthly": 8000,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 2,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 182.5,
+      "parentBDays": 182.5
+    },
+    "expected": {
+      "combinedAGI": 11000,
+      "piA": 0.7273,
+      "piB": 0.2727,
+      "bcso": 2052,
+      "allInMonthly": 1026,
+      "allInDirection": "parent_a_to_b"
+    }
+  }
+]
