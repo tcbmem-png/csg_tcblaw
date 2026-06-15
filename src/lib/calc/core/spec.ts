@@ -10,11 +10,7 @@ import type { ParentingModel } from "./parenting";
 import type { LowIncomeModel } from "./low-income";
 import type { NetIncomeConfig } from "./net-income";
 
-export type FinalRounding =
-  | "nearest_dollar"
-  | "half_up"
-  | "round_down"
-  | "none";
+export type FinalRounding = "nearest_dollar" | "half_up" | "round_down" | "nearest_cent" | "none";
 
 export interface IncomeSharesSpec {
   code: string;
@@ -30,10 +26,12 @@ export interface IncomeSharesSpec {
   rounding: {
     finalOrder: FinalRounding;
     /**
-     * Round each parent's income-share percentage before applying it.
-     * "nearest_1pct" => AL Rule 32(C)(3). Omit for full precision (TN/AR/LA).
+     * Round each parent's income-share percentage before applying it
+     * (the State worksheet computes Line 5 from the displayed, rounded share).
+     * "nearest_1pct" => AL Rule 32(C)(3); "nearest_0.01pct" => GA/LA (round the
+     * percent to two decimals, e.g. 95.24%). Omit for full precision (AR/FL/TN).
      */
-    incomeShare?: "nearest_1pct";
+    incomeShare?: "nearest_1pct" | "nearest_0.01pct";
   };
 }
 
@@ -53,6 +51,8 @@ export function roundFinal(n: number, mode: FinalRounding): number {
       return Math.floor(n);
     case "half_up":
       return Math.sign(n) * Math.floor(Math.abs(n) + 0.5);
+    case "nearest_cent":
+      return Math.round(n * 100) / 100;
     case "none":
       return n;
   }
