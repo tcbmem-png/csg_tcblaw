@@ -54,7 +54,7 @@ function Index() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
+      <section id="calculators" className="mx-auto max-w-6xl px-6 py-16 scroll-mt-20">
         {/* Mobile: list first (tap targets), map second. md+: map first, list second. */}
         <div className="grid gap-10 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <div className="order-2 md:order-1">
