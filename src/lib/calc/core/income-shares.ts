@@ -60,13 +60,8 @@ export function incomeShares(
   const warnings: string[] = [];
   const errors: string[] = [];
 
-  if (
-    inputs.numChildren < 1 ||
-    inputs.numChildren > spec.schedule.maxChildren
-  ) {
-    errors.push(
-      `Number of children must be between 1 and ${spec.schedule.maxChildren}.`,
-    );
+  if (inputs.numChildren < 1 || inputs.numChildren > spec.schedule.maxChildren) {
+    errors.push(`Number of children must be between 1 and ${spec.schedule.maxChildren}.`);
   }
 
   // income_shares_net (FL) runs a gross→net pre-step before combining. It is
@@ -76,39 +71,28 @@ export function incomeShares(
   let aAGI: number;
   let bAGI: number;
   if (spec.model === "income_shares_net") {
-    aAGI = grossToNetMonthly(
-      inputs.parentAGrossMonthly,
-      inputs.parentANetDeductions ?? [],
-    );
-    bAGI = grossToNetMonthly(
-      inputs.parentBGrossMonthly,
-      inputs.parentBNetDeductions ?? [],
-    );
+    aAGI = grossToNetMonthly(inputs.parentAGrossMonthly, inputs.parentANetDeductions ?? []);
+    bAGI = grossToNetMonthly(inputs.parentBGrossMonthly, inputs.parentBNetDeductions ?? []);
   } else {
-    aAGI = Math.max(
-      0,
-      inputs.parentAGrossMonthly - (inputs.parentADeductionsMonthly ?? 0),
-    );
-    bAGI = Math.max(
-      0,
-      inputs.parentBGrossMonthly - (inputs.parentBDeductionsMonthly ?? 0),
-    );
+    aAGI = Math.max(0, inputs.parentAGrossMonthly - (inputs.parentADeductionsMonthly ?? 0));
+    bAGI = Math.max(0, inputs.parentBGrossMonthly - (inputs.parentBDeductionsMonthly ?? 0));
   }
   const combinedAGI = aAGI + bAGI;
   if (combinedAGI <= 0) {
-    return emptyOutputs(
-      [...errors, "Combined AGI must be greater than zero."],
-      warnings,
-    );
+    return emptyOutputs([...errors, "Combined AGI must be greater than zero."], warnings);
   }
 
   let piA = aAGI / combinedAGI;
   let piB = bAGI / combinedAGI;
   // Some states round each parent's income-share percentage before applying it
-  // (AL Rule 32(C)(3): nearest 1%); the complement is derived so the shares
-  // still sum to 1. Default (TN/AR/LA) carries full precision.
+  // (AL Rule 32(C)(3): nearest 1%; GA/LA: nearest 0.01% — the State worksheet
+  // computes Line 5 from the rounded percent shown, e.g. 95.24%). The complement
+  // is derived so the shares still sum to 1. Default (AR/FL/TN) full precision.
   if (spec.rounding.incomeShare === "nearest_1pct") {
     piA = Math.round(piA * 100) / 100;
+    piB = 1 - piA;
+  } else if (spec.rounding.incomeShare === "nearest_0.01pct") {
+    piA = Math.round(piA * 10000) / 10000;
     piB = 1 - piA;
   }
 
@@ -146,18 +130,11 @@ export function incomeShares(
     const aOwes = piA * bcsoChildrenWithB;
     const bOwes = piB * bcsoChildrenWithA;
     presumptiveFromA = aOwes - bOwes;
-    arpIdentity =
-      presumptiveFromA > 0
-        ? "parent_a"
-        : presumptiveFromA < 0
-          ? "parent_b"
-          : "equal";
+    arpIdentity = presumptiveFromA > 0 ? "parent_a" : presumptiveFromA < 0 ? "parent_b" : "equal";
     parentingBand = "split_custody";
     variableMultiplier = null;
   } else {
-    const parentingStrategy = PARENTING_STRATEGIES[
-      spec.parenting.model
-    ] as ParentingStrategy;
+    const parentingStrategy = PARENTING_STRATEGIES[spec.parenting.model] as ParentingStrategy;
     const parenting = parentingStrategy(
       {
         bcso,
@@ -184,9 +161,7 @@ export function incomeShares(
   let suppressAddOns = false;
   let bcsoReported = bcso;
   if (spec.lowIncome && !suppressLowIncome) {
-    const lowIncomeStrategy = LOW_INCOME_STRATEGIES[
-      spec.lowIncome.model
-    ] as LowIncomeStrategy;
+    const lowIncomeStrategy = LOW_INCOME_STRATEGIES[spec.lowIncome.model] as LowIncomeStrategy;
     const li = lowIncomeStrategy(
       { presumptiveFromA, aAGI, bAGI, numChildren: inputs.numChildren },
       spec.lowIncome.params,
@@ -214,8 +189,7 @@ export function incomeShares(
       deviationsTotalFromA += splitProRataNetFromA(d.monthly, d.paidBy, piA, piB);
     }
     // Direct deviations adjust the order in the payor→payee direction.
-    const payorSign =
-      Math.sign(presumptiveFromA + addOnsTotalFromA) || Math.sign(presumptiveFromA);
+    const payorSign = Math.sign(presumptiveFromA + addOnsTotalFromA) || Math.sign(presumptiveFromA);
     for (const d of inputs.directDeviations ?? []) {
       const delta = (d.direction === "increase" ? 1 : -1) * d.amount * payorSign;
       deviationsTotalFromA += delta;
@@ -255,10 +229,7 @@ export function incomeShares(
     ssrApplied,
     minimumOrderApplied,
     addOnsTotalFromA: roundFinal(addOnsTotalFromA, spec.rounding.finalOrder),
-    deviationsTotalFromA: roundFinal(
-      deviationsTotalFromA,
-      spec.rounding.finalOrder,
-    ),
+    deviationsTotalFromA: roundFinal(deviationsTotalFromA, spec.rounding.finalOrder),
     allInMonthlyFromA,
     allInMonthly: Math.abs(allInMonthlyFromA),
     allInDirection: directionFromASignedFlow(allInMonthlyFromA),

@@ -23,11 +23,7 @@ import type {
   LowIncomeDeviationTableParams,
   LowIncomeDeviationTableRow,
 } from "../../core/low-income";
-import {
-  GA_BCSO_SCHEDULE,
-  GA_SCHEDULE_CAP,
-  GA_SCHEDULE_MAX_CHILDREN,
-} from "./schedule";
+import { GA_BCSO_SCHEDULE, GA_SCHEDULE_CAP, GA_SCHEDULE_MAX_CHILDREN } from "./schedule";
 import lowIncomeTable from "./low-income-table.json";
 
 export const GA_SCHEDULE_CONFIG: IncomeShareScheduleConfig = {
@@ -62,6 +58,9 @@ export const GA_INCOME_SHARES_SPEC: IncomeSharesSpec = {
     params: GA_LOW_INCOME_PARAMS,
   },
   minimumOrder: null,
-  // GA carries cents; the statute prescribes no separate final-order rounding.
-  rounding: { finalOrder: "none" },
+  // GA matches the State worksheet's rounding: the pro-rata income share is
+  // rounded to 0.01% (two decimals of percent, e.g. 95.24%) before Line 5, and
+  // money carries to the cent. Confirmed against the live calculator across the
+  // 1-child sweep and the high-income (95.24/4.76, cap-engaged) case.
+  rounding: { finalOrder: "nearest_cent", incomeShare: "nearest_0.01pct" },
 };
