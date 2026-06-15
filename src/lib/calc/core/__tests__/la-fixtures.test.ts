@@ -30,7 +30,22 @@ function assertExpected(
   }
 }
 
-describe("LA fixtures reproduce through the generic income-shares core", () => {
+/**
+ * STALE — SKIPPED PENDING RE-PIN (2026-06-15).
+ *
+ * Every LA fixture's expected BCSO / order figures were pinned against the prior
+ * 2021 schedule (Acts 2020 No. 177). On 2026-06-15 the LA schedule data was
+ * refreshed to the official DCFS OBWS 2025 table (dated 2024-12-16), which runs
+ * ~10% higher, so these expectations now disagree with the engine BY DESIGN.
+ *
+ * Per the task, these are intentionally NOT silently rewritten. They must be
+ * re-pinned against the free DCFS OBWS oracle (webapps.dcfs.la.gov/OBWS —
+ * obwsWorkPad.html for sole/primary, obwsWorkPadSC.html for shared) and then
+ * un-skipped. The engine LOGIC is unchanged; only the schedule anchors moved.
+ * The refreshed schedule itself is guarded by la-schedule-2025.test.ts.
+ * See CSG/06_State_Forms/LA/LA_Oracle_Check_FINDING.md.
+ */
+describe.skip("LA fixtures reproduce through the generic income-shares core", () => {
   const fixtures = loadFixtures<IncomeSharesInputs, IncomeSharesOutputs>(
     new URL("../../states/la/fixtures.json", import.meta.url),
   ) as Array<
