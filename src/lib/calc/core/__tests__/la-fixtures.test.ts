@@ -31,26 +31,23 @@ function assertExpected(
 }
 
 /**
- * STALE — SKIPPED PENDING RE-PIN (2026-06-15).
- *
- * Every LA fixture's expected BCSO / order figures were pinned against the prior
- * 2021 schedule (Acts 2020 No. 177). On 2026-06-15 the LA schedule data was
- * refreshed to the official DCFS OBWS 2025 table (dated 2024-12-16), which runs
- * ~10% higher, so these expectations now disagree with the engine BY DESIGN.
- *
- * Per the task, these are intentionally NOT silently rewritten. They must be
- * re-pinned against the free DCFS OBWS oracle (webapps.dcfs.la.gov/OBWS —
- * obwsWorkPad.html for sole/primary, obwsWorkPadSC.html for shared) and then
- * un-skipped. The engine LOGIC is unchanged; only the schedule anchors moved.
+ * Re-pinned 2026-06-16 against the live DCFS OBWS oracle (Worksheet A:
+ * obwsWorkPad.html; Worksheet B: obwsWorkPadSC.html) on the 2025 schedule.
+ * The earlier expectations were pinned to the 2021 schedule + full-precision
+ * shares and were skipped pending this re-pin. All nine active fixtures now
+ * reproduce to the cent via the plain income-shares product with LA's
+ * shareRounding (0.01%) + nearest_cent order. The split-custody fixture stays
+ * deferred (notUiExposed; the OBWS has no split mode, so no oracle to pin to).
  * The refreshed schedule itself is guarded by la-schedule-2025.test.ts.
- * See CSG/06_State_Forms/LA/LA_Oracle_Check_FINDING.md.
+ * See CSG/06_State_Forms/LA/LA_OBWS_repin_oracle.md.
  */
-describe.skip("LA fixtures reproduce through the generic income-shares core", () => {
+describe("LA fixtures reproduce through the generic income-shares core", () => {
   const fixtures = loadFixtures<IncomeSharesInputs, IncomeSharesOutputs>(
     new URL("../../states/la/fixtures.json", import.meta.url),
   ) as Array<
     Fixture<IncomeSharesInputs, IncomeSharesOutputs> & {
       tolerance?: Record<string, number>;
+      deferred?: boolean;
     }
   >;
 
@@ -59,11 +56,9 @@ describe.skip("LA fixtures reproduce through the generic income-shares core", ()
   });
 
   for (const fx of fixtures) {
-    it(`${fx.id}`, () => {
-      const out = incomeShares(
-        LA_INCOME_SHARES_SPEC,
-        fx.inputs as IncomeSharesInputs,
-      );
+    const run = fx.deferred ? it.skip : it;
+    run(`${fx.id}`, () => {
+      const out = incomeShares(LA_INCOME_SHARES_SPEC, fx.inputs as IncomeSharesInputs);
       expect(out.errors, "errors").toEqual([]);
       assertExpected(
         out as unknown as Record<string, unknown>,

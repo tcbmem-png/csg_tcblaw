@@ -23,11 +23,7 @@
 import type { IncomeSharesSpec } from "../../core/spec";
 import type { IncomeShareScheduleConfig } from "../../core/schedule";
 import type { SharedCustodyCrossMultiplyParams } from "../../core/parenting";
-import {
-  LA_BCSO_SCHEDULE,
-  LA_SCHEDULE_CAP,
-  LA_SCHEDULE_MAX_CHILDREN,
-} from "./schedule";
+import { LA_BCSO_SCHEDULE, LA_SCHEDULE_CAP, LA_SCHEDULE_MAX_CHILDREN } from "./schedule";
 
 export const LA_SCHEDULE_CONFIG: IncomeShareScheduleConfig = {
   rows: LA_BCSO_SCHEDULE,
@@ -58,5 +54,7 @@ export const LA_INCOME_SHARES_SPEC: IncomeSharesSpec = {
   // (9:315(B)(1)); not a separate strategy or minimum-order statute.
   lowIncome: null,
   minimumOrder: null,
-  rounding: { finalOrder: "half_up" },
+  // DCFS OBWS convention: pro-rata share rounded to 0.01% (the displayed
+  // percent, e.g. 57.14%) before allocation, order carried to the cent.
+  rounding: { finalOrder: "nearest_cent", incomeShare: "nearest_0.01pct" },
 };

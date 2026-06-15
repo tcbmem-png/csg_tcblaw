@@ -11,7 +11,10 @@
 // Tuple form: [rowIncome, ch1, ch2, ch3, ch4, ch5, ch6]
 //   rowIncome = the chart row's combined adjusted monthly gross (combinedMin).
 //   Lookup convention is nearest_50 (snap to the nearest $50 row).
-//   The lowest row ($0 floor / $1,050) carries the schedule's minimum amounts.
+//   Below the schedule's first tabulated row ($1,050), the State sets the basic
+//   obligation at 4% of combined income, flat across all child counts — captured
+//   live at $50 increments ([0]->0, [50]->2, ... [1000]->40); the tabulated
+//   table proper begins at [1050]->43/43/44/44/45/45.
 import type { BcsoRow } from "../../core/schedule";
 import rows from "./schedule.rows.json";
 
@@ -21,5 +24,5 @@ export const LA_SCHEDULE_MAX_CHILDREN = 6;
 // above $50,000 is discretionary (R.S. 9:315.13(B)(1) / Falterman).
 export const LA_SCHEDULE_CAP = 50000;
 
-// 981 rows, 1-6 children.
+// 1001 rows, 1-6 children (20 sub-$1,050 4%-of-combined floor rows + the table).
 export const LA_BCSO_SCHEDULE: readonly BcsoRow[] = rows;

@@ -1,8 +1,8 @@
 [
   {
     "id": "LA-baseline-1child",
-    "source": "Hand-derived from La. R.S. 9:315.19 schedule ($7,000/1 = $1,022) + Worksheet A (9:315.8).",
-    "notes": "Standard custody; obligor A (nondomiciliary) pays income share of BCSO.",
+    "source": "LIVE DCFS OBWS (Worksheet A, 2026-06-16, 2025 schedule): 4000/3000, 1ch -> BCSO 1127, AP 57.14% -> recommended 643.97.",
+    "notes": "Standard custody; plain product round(57.14% x 1127) with share rounded to 0.01% and order to the cent.",
     "inputs": {
       "parentAGrossMonthly": 4000,
       "parentBGrossMonthly": 3000,
@@ -14,8 +14,8 @@
       "combinedAGI": 7000,
       "piA": 0.5714,
       "piB": 0.4286,
-      "bcso": 1022,
-      "allInMonthly": 584,
+      "bcso": 1127,
+      "allInMonthly": 643.97,
       "allInDirection": "parent_a_to_b",
       "ssrApplied": false,
       "minimumOrderApplied": false
@@ -23,8 +23,8 @@
   },
   {
     "id": "LA-multichild-addons-treatiseExA",
-    "source": "LA Mini-Treatise v2 Worked Example A (authoritative; $8,000/2 = $1,670).",
-    "notes": "Add-ons paid by domiciliary B; obligor A reimburses income share of (BCSO + add-ons). 0.625 x (1670+600) = 1418.75 -> $1,419.",
+    "source": "LIVE DCFS OBWS (Worksheet A, 2026-06-16): 5000/3000, 2ch, health 200 + childcare 400 -> BCSO 1845, AP 62.50% -> recommended 1528.13.",
+    "notes": "Add-ons paid by domiciliary B; obligor A reimburses share of (BCSO + add-ons). round(0.625 x (1845+600)) = round(1528.125) = 1528.13. Confirms plain product (the withdrawn remainder rule would give 1528.12).",
     "inputs": {
       "parentAGrossMonthly": 5000,
       "parentBGrossMonthly": 3000,
@@ -40,8 +40,8 @@
       "combinedAGI": 8000,
       "piA": 0.625,
       "piB": 0.375,
-      "bcso": 1670,
-      "allInMonthly": 1419,
+      "bcso": 1845,
+      "allInMonthly": 1528.13,
       "allInDirection": "parent_a_to_b",
       "ssrApplied": false,
       "minimumOrderApplied": false
@@ -49,9 +49,8 @@
   },
   {
     "id": "LA-selfemployed-addback-treatiseExB",
-    "source": "LA Mini-Treatise v2 Worked Example B (authoritative; $13,250/2 = $2,213). SE add-backs pre-resolved into grossMonthly.",
-    "notes": "[VERIFY-2] rounding order: treatise reports $2,177 (share rounded to 77.4% first); exact full-precision half-up = $2,176. ±$1 allowed until pinned to an official Worksheet B.",
-    "tolerance": { "allInMonthly": 1 },
+    "source": "LIVE DCFS OBWS (Worksheet A, 2026-06-16): 10250/3000, 2ch, health 200 + childcare 400 -> BCSO 2441, AP 77.36% -> recommended 2352.52. SE add-backs pre-resolved into grossMonthly.",
+    "notes": "Exact to the cent with 0.01% share rounding (resolves the prior [VERIFY-2] +/-$1). round(0.7736 x (2441+600)) = 2352.52.",
     "inputs": {
       "parentAGrossMonthly": 10250,
       "parentBGrossMonthly": 3000,
@@ -67,8 +66,8 @@
       "combinedAGI": 13250,
       "piA": 0.7736,
       "piB": 0.2264,
-      "bcso": 2213,
-      "allInMonthly": 2177,
+      "bcso": 2441,
+      "allInMonthly": 2352.52,
       "allInDirection": "parent_a_to_b",
       "ssrApplied": false,
       "minimumOrderApplied": false
@@ -76,9 +75,8 @@
   },
   {
     "id": "LA-abovecap-treatiseExC",
-    "source": "LA Mini-Treatise v2 Worked Example C (authoritative; at-cap $40,000/1 = $2,816 floor). Above-cap additions discretionary (Falterman).",
-    "notes": "[VERIFY-2] rounding order: treatise reports floor share $2,681 (95.2% rounded); exact half-up = $2,682. ±$1 allowed until pinned. Combined $52,500 > $40,000 cap -> top-row floor.",
-    "tolerance": { "allInMonthly": 1 },
+    "source": "LIVE DCFS OBWS (Worksheet A, 2026-06-16): 50000/2500, 1ch -> combined 52,500 caps at the $50,000 top row -> BCSO 3737, AP 95.24% -> recommended 3559.12.",
+    "notes": "Above-cap (Falterman) top-row floor. Exact to the cent with 0.01% share rounding (resolves the prior [VERIFY-2] +/-$1). round(0.9524 x 3737) = 3559.12.",
     "inputs": {
       "parentAGrossMonthly": 50000,
       "parentBGrossMonthly": 2500,
@@ -90,9 +88,9 @@
       "combinedAGI": 52500,
       "piA": 0.9524,
       "piB": 0.0476,
-      "bcso": 2816,
+      "bcso": 3737,
       "bcsoSource": "above_cap",
-      "allInMonthly": 2681,
+      "allInMonthly": 3559.12,
       "allInDirection": "parent_a_to_b",
       "ssrApplied": false,
       "minimumOrderApplied": false
@@ -100,8 +98,8 @@
   },
   {
     "id": "LA-shared-custody-treatiseExD",
-    "source": "LA Mini-Treatise v2 Worked Example D (authoritative; shared 50/50, $10,000/1 = $1,220, 1.5x cross-multiplied offset).",
-    "notes": "Shared custody (9:315.9): 1.5x = $1,830; A owes 0.6x1830x0.5=549, B owes 0.4x1830x0.5=366; offset 549-366 = $183. Ceiling (732) does not bind. timeShare 50/50 carried via parentADays/parentBDays.",
+    "source": "LIVE DCFS OBWS (Worksheet B, 2026-06-16): 6000/4000, 1ch, 50/50 -> BCSO 1362 (SC 1.5x = 2043) -> recommended 204.30.",
+    "notes": "Shared custody (9:315.9): 1.5x = 2043; AP 60% owes 0.6x2043x0.5 = 612.90, AR 40% owes 0.4x2043x0.5 = 408.60; offset 204.30. Ceiling does not bind. 50/50 via parentADays/parentBDays.",
     "inputs": {
       "parentAGrossMonthly": 6000,
       "parentBGrossMonthly": 4000,
@@ -114,8 +112,8 @@
       "combinedAGI": 10000,
       "piA": 0.6,
       "piB": 0.4,
-      "bcso": 1220,
-      "allInMonthly": 183,
+      "bcso": 1362,
+      "allInMonthly": 204.3,
       "allInDirection": "parent_a_to_b",
       "ssrApplied": false,
       "minimumOrderApplied": false
@@ -123,8 +121,8 @@
   },
   {
     "id": "LA-imputation-treatiseExE",
-    "source": "LA Mini-Treatise v2 Worked Example E (authoritative; imputed $9,000/$3,000, $12,000/1 = $1,367).",
-    "notes": "Imputation pre-resolved: obligor A's gross is the imputed $9,000. Pack flags.imputed has no engine field and is not asserted.",
+    "source": "LIVE DCFS OBWS (Worksheet A, 2026-06-16): imputed 9000/3000, 1ch -> BCSO 1543, AP 75.00% -> recommended 1157.25.",
+    "notes": "Imputation pre-resolved: obligor A's gross is the imputed 9000. round(0.75 x 1543) = 1157.25.",
     "inputs": {
       "parentAGrossMonthly": 9000,
       "parentBGrossMonthly": 3000,
@@ -136,8 +134,8 @@
       "combinedAGI": 12000,
       "piA": 0.75,
       "piB": 0.25,
-      "bcso": 1367,
-      "allInMonthly": 1025,
+      "bcso": 1543,
+      "allInMonthly": 1157.25,
       "allInDirection": "parent_a_to_b",
       "ssrApplied": false,
       "minimumOrderApplied": false
@@ -145,8 +143,8 @@
   },
   {
     "id": "LA-lowincome-ssr-floor",
-    "source": "Hand-derived; schedule lowest row ($0-$950 = $100 self-sufficiency floor across all children).",
-    "notes": "The $100 floor is built into the schedule data (9:315(B)(1)), NOT an engine strategy, so flags.ssr/flags.minimum do not map to ssrApplied/minimumOrderApplied engine state and are NOT asserted. bcso=100 and finalOrder=56 (obligor's 55.56% share, half-up) prove the floor is hit.",
+    "source": "LIVE DCFS OBWS (Worksheet A, 2026-06-16): 500/400, 1ch -> sub-$1,050 floor BCSO = round(900 x 0.04) = 36, AP 55.56% -> recommended 20.00.",
+    "notes": "Below the schedule's first tabulated row ($1,050) the State sets BCSO = 4% of combined income, flat across all child counts. round(0.5556 x 36) = 20.00. (Replaced the prior flat [0,1049]=43 placeholder row.)",
     "inputs": {
       "parentAGrossMonthly": 500,
       "parentBGrossMonthly": 400,
@@ -158,15 +156,15 @@
       "combinedAGI": 900,
       "piA": 0.5556,
       "piB": 0.4444,
-      "bcso": 100,
-      "allInMonthly": 56,
+      "bcso": 36,
+      "allInMonthly": 20.0,
       "allInDirection": "parent_a_to_b"
     }
   },
   {
     "id": "LA-addons-heavy-3child",
-    "source": "Hand-derived ($8,000/3 = $2,020) + health $300 + childcare $500 + extraordinary medical $200; equal incomes.",
-    "notes": "Equal incomes but A is the nondomiciliary obligor. 0.5 x (2020 + 1000) = $1,510.",
+    "source": "LIVE DCFS OBWS (Worksheet A, 2026-06-16): 4000/4000, 3ch, health 300 + childcare 500 + uninsured-med 200 -> BCSO 2234, AP 50.00% -> recommended 1617.00.",
+    "notes": "Equal incomes but A is the nondomiciliary obligor. round(0.5 x (2234 + 1000)) = 1617.00.",
     "inputs": {
       "parentAGrossMonthly": 4000,
       "parentBGrossMonthly": 4000,
@@ -183,8 +181,8 @@
       "combinedAGI": 8000,
       "piA": 0.5,
       "piB": 0.5,
-      "bcso": 2020,
-      "allInMonthly": 1510,
+      "bcso": 2234,
+      "allInMonthly": 1617.0,
       "allInDirection": "parent_a_to_b",
       "ssrApplied": false,
       "minimumOrderApplied": false
@@ -192,8 +190,8 @@
   },
   {
     "id": "LA-deviation-downward",
-    "source": "Hand-derived ($8,000/1 = $1,094, obligor 75% = $821 presumptive), court deviates -$150 with 9:315.1(B) findings.",
-    "notes": "Direct downward deviation of $150. 821 - 150 = $671.",
+    "source": "LIVE DCFS OBWS (Worksheet A, 2026-06-16): 6000/2000, 1ch -> BCSO 1210, AP 75.00% -> base 907.50; court deviates -150 (9:315.1(B)) -> 757.50.",
+    "notes": "round(0.75 x 1210) = 907.50 presumptive; direct downward deviation -150 -> 757.50.",
     "inputs": {
       "parentAGrossMonthly": 6000,
       "parentBGrossMonthly": 2000,
@@ -208,8 +206,8 @@
       "combinedAGI": 8000,
       "piA": 0.75,
       "piB": 0.25,
-      "bcso": 1094,
-      "allInMonthly": 671,
+      "bcso": 1210,
+      "allInMonthly": 757.5,
       "allInDirection": "parent_a_to_b",
       "deviationsTotalFromA": -150,
       "ssrApplied": false,
@@ -218,8 +216,9 @@
   },
   {
     "id": "LA-split-custody",
-    "source": "Hand-derived split custody (9:315.10): 1 child with A, 2 children with B; combined $9,000.",
-    "notes": "Per-group worksheet + offset: A owes 0.6667 x bcso($9,000/2=1773)=1182; B owes 0.3333 x bcso($9,000/1=1164)=388; net A->B = $794. Pack carries bcsoGroup1/bcsoGroup2 (per-group), which have no single-bcso engine field, so bcso is NOT asserted.",
+    "deferred": true,
+    "source": "DEFERRED (notUiExposed): split custody (9:315.10) is not exposed in the UI and the DCFS OBWS has no split mode, so there is no live oracle to re-pin against.",
+    "notes": "Not asserted (test skips deferred fixtures). The 2021-era 794 figure is stale under the 2025 schedule; leave unpinned until a split-custody oracle exists.",
     "inputs": {
       "parentAGrossMonthly": 6000,
       "parentBGrossMonthly": 3000,
@@ -231,10 +230,7 @@
       "combinedAGI": 9000,
       "piA": 0.6667,
       "piB": 0.3333,
-      "allInMonthly": 794,
-      "allInDirection": "parent_a_to_b",
-      "ssrApplied": false,
-      "minimumOrderApplied": false
+      "allInDirection": "parent_a_to_b"
     }
   }
 ]

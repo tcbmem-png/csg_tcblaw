@@ -117,9 +117,9 @@ export const STATES: StateEntry[] = [
     status: "available",
     route: "/la",
     tile: [4, 6],
-    reviewStatus: "under_review",
-    reviewNote:
-      "Louisiana updated its support schedule for 2025; we just caught that ours was out of date and are re-verifying every figure against the State's calculator. Numbers may still shift slightly.",
+    // 2025 DCFS OBWS schedule in place; all nine active fixtures re-pinned and
+    // confirmed to the cent against the live OBWS calculator (share rounding
+    // 0.01%, sub-$1,050 4%-of-combined floor). Banner cleared (verified).
   },
   {
     code: "MS",
