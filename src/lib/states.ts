@@ -149,7 +149,7 @@ export const STATES: StateEntry[] = [
     tile: [7, 6],
     reviewStatus: "under_review",
     reviewNote:
-      "We found a parenting-time calculation that disagrees with Georgia's official worksheet by a wide margin and are correcting it against the State's own tool. Treat any result here — especially with shared parenting time — as provisional until this banner comes down.",
+      "Georgia's parenting-time adjustment is being corrected — it disagrees with the State's official worksheet by a wide margin. Results in cases with court-ordered parenting time may be inaccurate. Do not rely on this result until this banner comes down.",
   },
 
   // Row 7

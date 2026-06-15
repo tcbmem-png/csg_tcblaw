@@ -12,8 +12,11 @@ export function ReviewBanner({ code }: { code: string }) {
   if (!state || state.reviewStatus !== "under_review" || !state.reviewNote) {
     return null;
   }
+  // NOTE: intentionally printable (no `no-print`). For under-review states the
+  // banner carries an accuracy warning (e.g. GA's "do not rely on this result"),
+  // so it must ride any printed/"save as PDF" worksheet, not just the screen.
   return (
-    <div className="border-b border-rule bg-cream no-print">
+    <div className="border-b border-rule bg-cream">
       <div className="mx-auto max-w-6xl px-6 pt-5">
         <div
           role="status"
