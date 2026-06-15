@@ -51,6 +51,9 @@ export function StateTileMap() {
           ? `${s.name} — coming soon`
           : `${s.name} — planned`;
 
+      const underReview =
+        s.status === "available" && s.reviewStatus === "under_review";
+
       const rect = (
         <g
           style={{
@@ -85,6 +88,17 @@ export function StateTileMap() {
           >
             {s.code}
           </text>
+          {underReview && (
+            <circle
+              cx={x + TILE - 7}
+              cy={y + 7}
+              r={3.5}
+              fill="var(--primary)"
+              stroke="var(--background)"
+              strokeWidth={1.25}
+              style={{ pointerEvents: "none" }}
+            />
+          )}
         </g>
       );
 
@@ -161,6 +175,17 @@ function Legend() {
           <span>{it.label}</span>
         </span>
       ))}
+      <span className="inline-flex items-center gap-2">
+        <span
+          aria-hidden
+          className="inline-block h-2 w-2 rounded-full"
+          style={{
+            background: "var(--primary)",
+            boxShadow: "0 0 0 1px var(--background)",
+          }}
+        />
+        <span>Being verified</span>
+      </span>
     </div>
   );
 }
