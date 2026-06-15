@@ -130,7 +130,8 @@ export const STATES: StateEntry[] = [
     name: "Georgia",
     model: "Income Shares Model",
     cite: "O.C.G.A. § 19-6-15",
-    status: "coming_soon",
+    status: "available",
+    route: "/ga",
     tile: [7, 6],
   },
 

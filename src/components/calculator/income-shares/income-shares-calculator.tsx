@@ -80,6 +80,8 @@ export function IncomeSharesCalculator({
   const maxChildren = spec.schedule.maxChildren;
   const netMode = spec.model === "income_shares_net";
   const netDeductionIds = spec.netIncome?.deductions ?? [];
+  // cross_credit (GA) designates a noncustodial parent in every parenting mode.
+  const crossCredit = spec.parenting.model === "cross_credit";
   const [tab, setTab] = useState<Tab>("inputs");
   const [f, setF] = useState<FormState>({
     grossA: "",
@@ -317,10 +319,12 @@ export function IncomeSharesCalculator({
                   )}
                 </fieldset>
 
-                {f.parentingType === "standard" && (
+                {(f.parentingType === "standard" || crossCredit) && (
                   <label className="mt-4 block text-sm">
                     <span className="font-medium text-ink">
-                      Paying (non-residential) parent
+                      {crossCredit
+                        ? "Noncustodial parent (obligor)"
+                        : "Paying (non-residential) parent"}
                     </span>
                     <select
                       className="mt-1 block w-full rounded border border-rule bg-background px-3 py-2 text-sm"

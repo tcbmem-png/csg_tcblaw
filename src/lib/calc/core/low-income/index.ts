@@ -12,6 +12,7 @@ import { selfSupportReserve } from "./self-support-reserve";
 import { payorGrossReserve } from "./payor-gross-reserve";
 import { economicIncentiveReserve } from "./economic-incentive-reserve";
 import { povertyGuidelineReserve } from "./poverty-guideline-reserve";
+import { lowIncomeDeviationTable } from "./low-income-deviation-table";
 
 export const LOW_INCOME_STRATEGIES = {
   // TN's shaded-cell SSR.
@@ -23,6 +24,8 @@ export const LOW_INCOME_STRATEGIES = {
   economic_incentive_reserve: economicIncentiveReserve,
   // FL's lesser-of poverty-guideline cap + principle of payment (§ 61.30(6)(a)).
   poverty_guideline_reserve: povertyGuidelineReserve,
+  // GA's lesser-of (p)-table cap (O.C.G.A. § 19-6-15(i.1)).
+  low_income_deviation_table: lowIncomeDeviationTable,
 } as const;
 
 export type LowIncomeModel = keyof typeof LOW_INCOME_STRATEGIES;
@@ -36,3 +39,8 @@ export { economicIncentiveReserve } from "./economic-incentive-reserve";
 export type { EconomicIncentiveReserveParams } from "./economic-incentive-reserve";
 export { povertyGuidelineReserve } from "./poverty-guideline-reserve";
 export type { PovertyGuidelineReserveParams } from "./poverty-guideline-reserve";
+export { lowIncomeDeviationTable } from "./low-income-deviation-table";
+export type {
+  LowIncomeDeviationTableParams,
+  LowIncomeDeviationTableRow,
+} from "./low-income-deviation-table";
