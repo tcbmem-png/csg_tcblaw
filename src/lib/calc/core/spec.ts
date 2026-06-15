@@ -27,7 +27,14 @@ export interface IncomeSharesSpec {
   lowIncome: { model: LowIncomeModel; params: unknown } | null;
   /** Minimum order floor applied to the presumptive amount, or null. */
   minimumOrder: number | null;
-  rounding: { finalOrder: FinalRounding };
+  rounding: {
+    finalOrder: FinalRounding;
+    /**
+     * Round each parent's income-share percentage before applying it.
+     * "nearest_1pct" => AL Rule 32(C)(3). Omit for full precision (TN/AR/LA).
+     */
+    incomeShare?: "nearest_1pct";
+  };
 }
 
 export interface PercentageSpec {

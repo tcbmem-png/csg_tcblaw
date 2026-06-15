@@ -42,6 +42,12 @@ export interface ParentingResult {
   arpDays: number;
   /** Non-fatal notices (e.g. days not summing to 365). */
   warnings: string[];
+  /**
+   * Suppress the low-income strategy and minimum-order floor. Shared-custody
+   * worksheets that already account for both households set this (e.g. AL
+   * Rule 32(C)(7)(e): SSR, $50 minimum, and zero-dollar don't apply on CS-42-S).
+   */
+  suppressLowIncome?: boolean;
 }
 
 export type ParentingStrategy<P = unknown> = (

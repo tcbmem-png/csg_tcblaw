@@ -96,8 +96,15 @@ export function incomeShares(
     );
   }
 
-  const piA = aAGI / combinedAGI;
-  const piB = bAGI / combinedAGI;
+  let piA = aAGI / combinedAGI;
+  let piB = bAGI / combinedAGI;
+  // Some states round each parent's income-share percentage before applying it
+  // (AL Rule 32(C)(3): nearest 1%); the complement is derived so the shares
+  // still sum to 1. Default (TN/AR/LA) carries full precision.
+  if (spec.rounding.incomeShare === "nearest_1pct") {
+    piA = Math.round(piA * 100) / 100;
+    piB = 1 - piA;
+  }
 
   let lookup;
   try {
@@ -113,6 +120,7 @@ export function incomeShares(
   let arpIdentity: IncomeSharesOutputs["arpIdentity"];
   let parentingBand: string;
   let variableMultiplier: number | null;
+  let suppressLowIncome = false;
 
   if (inputs.splitCustody) {
     // Each parent is domiciliary of some children; run a schedule lookup per
@@ -161,6 +169,7 @@ export function incomeShares(
     arpIdentity = parenting.arpIdentity;
     parentingBand = parenting.band;
     variableMultiplier = parenting.multiplier;
+    if (parenting.suppressLowIncome) suppressLowIncome = true;
   }
 
   // --- Low-income strategy ---
@@ -168,7 +177,7 @@ export function incomeShares(
   let minimumOrderApplied = false;
   let suppressAddOns = false;
   let bcsoReported = bcso;
-  if (spec.lowIncome) {
+  if (spec.lowIncome && !suppressLowIncome) {
     const lowIncomeStrategy = LOW_INCOME_STRATEGIES[
       spec.lowIncome.model
     ] as LowIncomeStrategy;
@@ -210,7 +219,7 @@ export function incomeShares(
   let allInFromA = presumptiveFromA + addOnsTotalFromA + deviationsTotalFromA;
 
   // --- Minimum-order floor (applied to the presumptive magnitude) ---
-  if (spec.minimumOrder != null) {
+  if (spec.minimumOrder != null && !suppressLowIncome) {
     const absPresumptive = Math.abs(presumptiveFromA);
     if (absPresumptive > 0 && absPresumptive < spec.minimumOrder) {
       const adjust = spec.minimumOrder - absPresumptive;
