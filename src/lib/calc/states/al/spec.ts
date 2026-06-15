@@ -22,11 +22,7 @@ import type { IncomeSharesSpec } from "../../core/spec";
 import type { IncomeShareScheduleConfig } from "../../core/schedule";
 import type { SharedCustodyCrossMultiplyParams } from "../../core/parenting";
 import type { EconomicIncentiveReserveParams } from "../../core/low-income";
-import {
-  AL_BCSO_SCHEDULE,
-  AL_SCHEDULE_CAP,
-  AL_SCHEDULE_MAX_CHILDREN,
-} from "./schedule";
+import { AL_BCSO_SCHEDULE, AL_SCHEDULE_CAP, AL_SCHEDULE_MAX_CHILDREN } from "./schedule";
 
 export const AL_SCHEDULE_CONFIG: IncomeShareScheduleConfig = {
   rows: AL_BCSO_SCHEDULE,
@@ -45,7 +41,10 @@ const AL_PARENTING_PARAMS: SharedCustodyCrossMultiplyParams = {
   boundary: "none",
 };
 
-const AL_SSR_PARAMS: EconomicIncentiveReserveParams = {
+// Exported so the CS-42 form field map can reproduce the SSR display lines
+// (Income Available, Max Recommended After SSR) without re-declaring the
+// statutory constants — single source of truth.
+export const AL_SSR_PARAMS: EconomicIncentiveReserveParams = {
   reserve: 981,
   incentivePct: 0.85,
   minimumOrder: 50,
