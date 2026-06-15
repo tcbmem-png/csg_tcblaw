@@ -11,10 +11,14 @@
  *    a CEILING (capped at the obligor's domiciliary amount — 9:315.9(A)(7)).
  *  - split custody (9:315.10): per-group worksheet + offset, via the core
  *    orchestrator's splitCustody input.
- *  - above $40,000 the top row is a discretionary floor (Falterman); no
- *    marginal formula.
- *  - the $100 self-sufficiency floor is built into the schedule's lowest row,
- *    so there is no separate low-income strategy or minimum-order floor.
+ *  - above $50,000 (the 2025 table's top row) that row is a discretionary floor
+ *    (Falterman); no marginal formula.
+ *  - the self-sufficiency floor is built into the schedule's lowest row, so
+ *    there is no separate low-income strategy or minimum-order floor.
+ *
+ * Schedule data refreshed 2026-06-15 to the DCFS OBWS 2025 table (dated
+ * 2024-12-16); the prior 2021 table understated every order by ~10%. See
+ * CSG/06_State_Forms/LA/LA_Oracle_Check_FINDING.md.
  */
 import type { IncomeSharesSpec } from "../../core/spec";
 import type { IncomeShareScheduleConfig } from "../../core/schedule";
@@ -29,7 +33,7 @@ export const LA_SCHEDULE_CONFIG: IncomeShareScheduleConfig = {
   rows: LA_BCSO_SCHEDULE,
   maxChildren: LA_SCHEDULE_MAX_CHILDREN,
   cap: LA_SCHEDULE_CAP,
-  // La. R.S. 9:315.13(B)(1) / Falterman: above $40,000 the highest tabulated
+  // La. R.S. 9:315.13(B)(1) / Falterman: above $50,000 the highest tabulated
   // amount is a floor; additions are discretionary on needs findings.
   aboveCap: { behavior: "discretionary_floor" },
   convention: "nearest_50",
