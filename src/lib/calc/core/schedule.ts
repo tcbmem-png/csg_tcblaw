@@ -21,6 +21,7 @@ export type BcsoRow = readonly number[];
 export type ScheduleLookupConvention =
   | "round_up"
   | "round_down"
+  | "nearest_50"
   | "nearest_bracket";
 
 /** Above-the-chart behavior. */
@@ -78,14 +79,19 @@ function findRowIndex(
     }
     return foundIdx === -1 ? 0 : foundIdx;
   }
-  if (convention === "round_down") {
+  if (convention === "round_down" || convention === "nearest_50") {
+    // nearest_50: snap to the nearest $50 mark first (LA/AL schedules are
+    // tabulated at $50 increments, stored as contiguous brackets keyed by their
+    // start), then locate the bracket. round_down: locate the bracket directly.
+    const target =
+      convention === "nearest_50" ? Math.round(income / 50) * 50 : income;
     // Largest row whose income <= target (clamp to first row if below).
     let lo = 0;
     let hi = rows.length - 1;
     let foundIdx = 0;
     while (lo <= hi) {
       const mid = (lo + hi) >> 1;
-      if (rows[mid][0] <= income) {
+      if (rows[mid][0] <= target) {
         foundIdx = mid;
         lo = mid + 1;
       } else {

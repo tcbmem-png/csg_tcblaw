@@ -60,8 +60,13 @@ export function incomeShares(
   const warnings: string[] = [];
   const errors: string[] = [];
 
-  if (inputs.numChildren < 1 || inputs.numChildren > 5) {
-    errors.push("Number of children must be between 1 and 5.");
+  if (
+    inputs.numChildren < 1 ||
+    inputs.numChildren > spec.schedule.maxChildren
+  ) {
+    errors.push(
+      `Number of children must be between 1 and ${spec.schedule.maxChildren}.`,
+    );
   }
 
   // income_shares_net (FL) runs a gross→net pre-step before combining. It is
@@ -102,24 +107,61 @@ export function incomeShares(
   }
   const bcso = lookup.bcso;
 
-  // --- Parenting-time strategy ---
-  const parentingStrategy = PARENTING_STRATEGIES[
-    spec.parenting.model
-  ] as ParentingStrategy;
-  const parenting = parentingStrategy(
-    {
-      bcso,
-      piA,
-      piB,
-      parentingType: inputs.parentingType,
-      arpForStandard: inputs.arpForStandard,
-      parentADays: inputs.parentADays,
-      parentBDays: inputs.parentBDays,
-    },
-    spec.parenting.params,
-  );
-  warnings.push(...parenting.warnings);
-  let presumptiveFromA = parenting.netFromA;
+  // --- Presumptive support: split custody (separate group worksheets) or the
+  //     state's parenting-time strategy. ---
+  let presumptiveFromA: number;
+  let arpIdentity: IncomeSharesOutputs["arpIdentity"];
+  let parentingBand: string;
+  let variableMultiplier: number | null;
+
+  if (inputs.splitCustody) {
+    // Each parent is domiciliary of some children; run a schedule lookup per
+    // group and offset (e.g. LA La. R.S. 9:315.10). A is the nondomiciliary
+    // obligor for the children living with B, and vice versa.
+    const { parentAChildren, parentBChildren } = inputs.splitCustody;
+    const bcsoChildrenWithB = lookupScheduleAmount(
+      spec.schedule,
+      combinedAGI,
+      parentBChildren,
+    ).bcso;
+    const bcsoChildrenWithA = lookupScheduleAmount(
+      spec.schedule,
+      combinedAGI,
+      parentAChildren,
+    ).bcso;
+    const aOwes = piA * bcsoChildrenWithB;
+    const bOwes = piB * bcsoChildrenWithA;
+    presumptiveFromA = aOwes - bOwes;
+    arpIdentity =
+      presumptiveFromA > 0
+        ? "parent_a"
+        : presumptiveFromA < 0
+          ? "parent_b"
+          : "equal";
+    parentingBand = "split_custody";
+    variableMultiplier = null;
+  } else {
+    const parentingStrategy = PARENTING_STRATEGIES[
+      spec.parenting.model
+    ] as ParentingStrategy;
+    const parenting = parentingStrategy(
+      {
+        bcso,
+        piA,
+        piB,
+        parentingType: inputs.parentingType,
+        arpForStandard: inputs.arpForStandard,
+        parentADays: inputs.parentADays,
+        parentBDays: inputs.parentBDays,
+      },
+      spec.parenting.params,
+    );
+    warnings.push(...parenting.warnings);
+    presumptiveFromA = parenting.netFromA;
+    arpIdentity = parenting.arpIdentity;
+    parentingBand = parenting.band;
+    variableMultiplier = parenting.multiplier;
+  }
 
   // --- Low-income strategy ---
   let ssrApplied = false;
@@ -190,9 +232,9 @@ export function incomeShares(
     bcsoSource: lookup.source,
     scheduleAgiUsed: lookup.scheduleAgiUsed,
     scheduleIsShaded: lookup.isShaded,
-    arpIdentity: parenting.arpIdentity,
-    parentingBand: parenting.band,
-    variableMultiplier: parenting.multiplier,
+    arpIdentity,
+    parentingBand,
+    variableMultiplier,
     netPresumptiveSupport: Math.abs(presumptiveRounded),
     presumptiveDirection: directionFromASignedFlow(presumptiveRounded),
     ssrApplied,

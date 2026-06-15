@@ -12,10 +12,12 @@
  */
 import { tnVariableMultiplier } from "./tn-variable-multiplier";
 import { offsetDualWorksheet } from "./offset-dual-worksheet";
+import { sharedCustodyCrossMultiply } from "./shared-custody-cross-multiply";
 
 export const PARENTING_STRATEGIES = {
   tn_variable_multiplier: tnVariableMultiplier,
   offset_dual_worksheet: offsetDualWorksheet,
+  shared_custody_cross_multiply: sharedCustodyCrossMultiply,
 } as const;
 
 export type ParentingModel = keyof typeof PARENTING_STRATEGIES;
@@ -25,3 +27,5 @@ export { tnVariableMultiplier } from "./tn-variable-multiplier";
 export type { TnVariableMultiplierParams } from "./tn-variable-multiplier";
 export { offsetDualWorksheet } from "./offset-dual-worksheet";
 export type { OffsetDualWorksheetParams } from "./offset-dual-worksheet";
+export { sharedCustodyCrossMultiply } from "./shared-custody-cross-multiply";
+export type { SharedCustodyCrossMultiplyParams } from "./shared-custody-cross-multiply";

@@ -48,6 +48,12 @@ export interface IncomeSharesInputs {
   deviations?: TransferLine[];
   /** Direct (flat-amount) deviations applied in the payor→payee direction. */
   directDeviations?: DirectDeviation[];
+  /**
+   * Split custody: each parent is domiciliary of some children. A separate
+   * schedule lookup is run per group and the two obligations are offset
+   * (e.g. LA La. R.S. 9:315.10). Mutually exclusive with the parenting strategy.
+   */
+  splitCustody?: { parentAChildren: number; parentBChildren: number };
 }
 
 export interface IncomeSharesOutputs {
