@@ -39,10 +39,28 @@ interface FormState {
   medicalPaidBy: PaidBy;
   deviation: string;
   deviationDir: "increase" | "decrease";
+  /** Per-parent net-mode deduction amounts, keyed by deduction id. */
+  dedA: Record<string, string>;
+  dedB: Record<string, string>;
 }
 
 const A_LABEL = "Parent A";
 const B_LABEL = "Parent B";
+
+/** Humanized labels for the income_shares_net deduction ids (FL § 61.30(3)). */
+const DEDUCTION_LABELS: Record<string, string> = {
+  federal_income_tax: "Federal income tax (actual, from return/affidavit)",
+  fica_or_self_employment_tax: "FICA / self-employment tax (actual)",
+  mandatory_union_dues: "Mandatory union dues",
+  mandatory_retirement: "Mandatory retirement",
+  health_insurance_obligor_not_children:
+    "Health insurance — this parent only (not the children's)",
+  court_ordered_support_other_children_actually_paid:
+    "Court-ordered support for other children (actually paid)",
+  spousal_support_paid: "Spousal support paid",
+};
+const dedLabel = (id: string): string =>
+  DEDUCTION_LABELS[id] ?? id.replace(/_/g, " ");
 
 const num = (s: string): number => {
   const n = Number(s.replace(/[^0-9.]/g, ""));
@@ -60,6 +78,8 @@ export function IncomeSharesCalculator({
   meta: IncomeSharesStateMeta;
 }) {
   const maxChildren = spec.schedule.maxChildren;
+  const netMode = spec.model === "income_shares_net";
+  const netDeductionIds = spec.netIncome?.deductions ?? [];
   const [tab, setTab] = useState<Tab>("inputs");
   const [f, setF] = useState<FormState>({
     grossA: "",
@@ -77,6 +97,8 @@ export function IncomeSharesCalculator({
     medicalPaidBy: "split_pro_rata",
     deviation: "",
     deviationDir: "increase",
+    dedA: {},
+    dedB: {},
   });
   const set = (patch: Partial<FormState>) => setF((p) => ({ ...p, ...patch }));
 
@@ -100,9 +122,13 @@ export function IncomeSharesCalculator({
             },
           ]
         : [];
+    const netDeds = (ded: Record<string, string>) =>
+      netDeductionIds.map((id) => num(ded[id] ?? ""));
     return {
       parentAGrossMonthly: num(f.grossA),
       parentBGrossMonthly: num(f.grossB),
+      parentANetDeductions: netMode ? netDeds(f.dedA) : undefined,
+      parentBNetDeductions: netMode ? netDeds(f.dedB) : undefined,
       numChildren: f.numChildren,
       parentingType: f.parentingType,
       arpForStandard: f.payor,
@@ -111,7 +137,7 @@ export function IncomeSharesCalculator({
       addOns,
       directDeviations,
     };
-  }, [f]);
+  }, [f, netMode, netDeductionIds]);
 
   const out = useMemo(() => incomeShares(spec, inputs), [spec, inputs]);
   const hasIncome = inputs.parentAGrossMonthly + inputs.parentBGrossMonthly > 0;
@@ -186,25 +212,59 @@ export function IncomeSharesCalculator({
 
           {tab === "inputs" ? (
             <div className="space-y-8">
-              <Section title="Income">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <MoneyField
-                    label={`${A_LABEL} — monthly gross`}
-                    value={f.grossA}
-                    onChange={(v) => set({ grossA: v })}
-                  />
-                  <MoneyField
-                    label={`${B_LABEL} — monthly gross`}
-                    value={f.grossB}
-                    onChange={(v) => set({ grossB: v })}
-                  />
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Enter each parent's adjusted gross monthly income. Imputed or
-                  self-employment income should already be resolved to a monthly
-                  figure.
-                </p>
-              </Section>
+              {netMode ? (
+                <Section title="Income (net = gross − deductions)">
+                  <p className="mb-4 text-xs text-muted-foreground">
+                    Florida runs the schedule on combined <strong>net</strong>{" "}
+                    income. Enter each parent's gross, then the actual monthly
+                    deductions from their financial affidavit (Form 12.902(e)) —
+                    including their actual federal income tax and FICA. The
+                    calculator sums them; it does not estimate tax.
+                  </p>
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <NetParentIncome
+                      label={A_LABEL}
+                      gross={f.grossA}
+                      onGross={(v) => set({ grossA: v })}
+                      deductionIds={netDeductionIds}
+                      ded={f.dedA}
+                      onDed={(id, v) =>
+                        set({ dedA: { ...f.dedA, [id]: v } })
+                      }
+                    />
+                    <NetParentIncome
+                      label={B_LABEL}
+                      gross={f.grossB}
+                      onGross={(v) => set({ grossB: v })}
+                      deductionIds={netDeductionIds}
+                      ded={f.dedB}
+                      onDed={(id, v) =>
+                        set({ dedB: { ...f.dedB, [id]: v } })
+                      }
+                    />
+                  </div>
+                </Section>
+              ) : (
+                <Section title="Income">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <MoneyField
+                      label={`${A_LABEL} — monthly gross`}
+                      value={f.grossA}
+                      onChange={(v) => set({ grossA: v })}
+                    />
+                    <MoneyField
+                      label={`${B_LABEL} — monthly gross`}
+                      value={f.grossB}
+                      onChange={(v) => set({ grossB: v })}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Enter each parent's adjusted gross monthly income. Imputed or
+                    self-employment income should already be resolved to a
+                    monthly figure.
+                  </p>
+                </Section>
+              )}
 
               <Section title="Children & parenting">
                 <label className="block text-sm">
@@ -527,6 +587,53 @@ function MoneyField({
         />
       </div>
     </label>
+  );
+}
+
+function NetParentIncome({
+  label,
+  gross,
+  onGross,
+  deductionIds,
+  ded,
+  onDed,
+}: {
+  label: string;
+  gross: string;
+  onGross: (v: string) => void;
+  deductionIds: string[];
+  ded: Record<string, string>;
+  onDed: (id: string, v: string) => void;
+}) {
+  const net = Math.max(
+    0,
+    num(gross) - deductionIds.reduce((s, id) => s + num(ded[id] ?? ""), 0),
+  );
+  return (
+    <div className="rounded border border-rule p-4">
+      <p className="text-sm font-medium text-ink">{label}</p>
+      <div className="mt-2">
+        <MoneyField
+          label="Gross monthly income"
+          value={gross}
+          onChange={onGross}
+        />
+      </div>
+      <div className="mt-3 space-y-2">
+        {deductionIds.map((id) => (
+          <MoneyField
+            key={id}
+            label={dedLabel(id)}
+            value={ded[id] ?? ""}
+            onChange={(v) => onDed(id, v)}
+          />
+        ))}
+      </div>
+      <p className="mt-3 flex items-baseline justify-between border-t border-rule pt-2 text-sm">
+        <span className="font-medium text-ink">Net monthly income</span>
+        <span className="font-mono text-ink">{money(net)}</span>
+      </p>
+    </div>
   );
 }
 

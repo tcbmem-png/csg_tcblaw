@@ -141,7 +141,8 @@ export const STATES: StateEntry[] = [
     name: "Florida",
     model: "Income Shares Model",
     cite: "Fla. Stat. § 61.30",
-    status: "coming_soon",
+    status: "available",
+    route: "/fl",
     tile: [8, 7],
   },
 ];

@@ -1,0 +1,261 @@
+[
+  {
+    "id": "FL-baseline-1child-subThreshold",
+    "source": "Hand-derived; $8,000 NET row, 1 child = 1290. Sub-20% parenting (no gross-up).",
+    "notes": "Net supplied directly (parentANetDeductions []). 60 overnights < 73 -> A pays full income share. 806.25 -> $806.",
+    "inputs": {
+      "parentAGrossMonthly": 5000,
+      "parentBGrossMonthly": 3000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 60,
+      "parentBDays": 305
+    },
+    "expected": {
+      "combinedAGI": 8000,
+      "piA": 0.625,
+      "piB": 0.375,
+      "bcso": 1290,
+      "allInMonthly": 806,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "FL-addons-heavy-2child",
+    "source": "Treatise Example A; $8,000 NET row, 2 children = 2004. Childcare 75% reduction OFF (full $400).",
+    "notes": "Add-ons paid by majority parent B; obligor A owes 0.625 x (2004 + 600). 1627.5 -> $1628 (nearest_dollar [VERIFY]).",
+    "inputs": {
+      "parentAGrossMonthly": 5000,
+      "parentBGrossMonthly": 3000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 2,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 60,
+      "parentBDays": 305,
+      "addOns": [
+        { "id": "work_related_childcare", "monthly": 400, "paidBy": "parent_b" },
+        { "id": "health_insurance", "monthly": 200, "paidBy": "parent_b" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 8000,
+      "piA": 0.625,
+      "piB": 0.375,
+      "bcso": 2004,
+      "allInMonthly": 1628,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "FL-selfEmployed-addbacks-2child",
+    "source": "Treatise Example B; $9,700 NET row, 2 children = 2206. Net pre-resolved post add-backs/SECA.",
+    "notes": "Share 0.6907; obligor owes share of BCSO + $600 add-ons. ~1938.",
+    "inputs": {
+      "parentAGrossMonthly": 6700,
+      "parentBGrossMonthly": 3000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 2,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 60,
+      "parentBDays": 305,
+      "addOns": [
+        { "id": "work_related_childcare", "monthly": 400, "paidBy": "parent_b" },
+        { "id": "health_insurance", "monthly": 200, "paidBy": "parent_b" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 9700,
+      "piA": 0.6907,
+      "piB": 0.3093,
+      "bcso": 2206,
+      "allInMonthly": 1938,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "FL-aboveCap-1child",
+    "source": "Treatise Example C; § 61.30(6)(b) marginal 5% (1 child), $10,000 row = 1437.",
+    "notes": "Combined NET $42,000 > $10,000: BCSO = 1437 + 0.05 x 32000 = 3037; obligor 0.9524 -> $2,892.",
+    "inputs": {
+      "parentAGrossMonthly": 40000,
+      "parentBGrossMonthly": 2000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 30,
+      "parentBDays": 335
+    },
+    "expected": {
+      "combinedAGI": 42000,
+      "piA": 0.9524,
+      "piB": 0.0476,
+      "bcso": 3037,
+      "bcsoSource": "above_cap",
+      "allInMonthly": 2892,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "FL-grossUp-cliff-below-72overnights",
+    "source": "Cliff gate (just below 73). $10,000 NET row, 1 child = 1437. 72/365 = 19.7% < 20%: NO gross-up.",
+    "notes": "Below the cliff A pays full income share 0.6 x 1437 = $862.",
+    "inputs": {
+      "parentAGrossMonthly": 6000,
+      "parentBGrossMonthly": 4000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 72,
+      "parentBDays": 293
+    },
+    "expected": {
+      "combinedAGI": 10000,
+      "piA": 0.6,
+      "piB": 0.4,
+      "bcso": 1437,
+      "allInMonthly": 862,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "FL-grossUp-cliff-at-73overnights",
+    "source": "Cliff gate (exactly 73 = 20%). § 61.30(11)(b). Transfer reproduces at $862.20.",
+    "notes": "Gross-up mandatory: 1.5x = 2155.5; A 0.6x2155.5x(292/365) - B 0.4x2155.5x(73/365) = 1034.64 - 172.44 = 862.20 -> $862.",
+    "inputs": {
+      "parentAGrossMonthly": 6000,
+      "parentBGrossMonthly": 4000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "custom",
+      "parentADays": 73,
+      "parentBDays": 292
+    },
+    "expected": {
+      "combinedAGI": 10000,
+      "piA": 0.6,
+      "piB": 0.4,
+      "bcso": 1437,
+      "allInMonthly": 862,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "FL-grossUp-above-100overnights",
+    "source": "Cliff gate (above, 100 overnights = 27.4%). Transfer reproduces at $702.75.",
+    "notes": "1.5x cross-multiply: 0.6x2155.5x(265/365) - 0.4x2155.5x(100/365) = 938.97 - 236.22 = 702.75 -> $703.",
+    "inputs": {
+      "parentAGrossMonthly": 6000,
+      "parentBGrossMonthly": 4000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "custom",
+      "parentADays": 100,
+      "parentBDays": 265
+    },
+    "expected": {
+      "combinedAGI": 10000,
+      "piA": 0.6,
+      "piB": 0.4,
+      "bcso": 1437,
+      "allInMonthly": 703,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "FL-grossUp-equal-5050-1child",
+    "source": "Treatise Example D; 182.5/182.5 = 50/50, 60/40 income. Transfer reproduces at $215.55.",
+    "notes": "Equal time does not zero support: 0.6x2155.5x0.5 - 0.4x2155.5x0.5 = 646.65 - 431.10 = 215.55 -> $216.",
+    "inputs": {
+      "parentAGrossMonthly": 6000,
+      "parentBGrossMonthly": 4000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "custom",
+      "parentADays": 182.5,
+      "parentBDays": 182.5
+    },
+    "expected": {
+      "combinedAGI": 10000,
+      "piA": 0.6,
+      "piB": 0.4,
+      "bcso": 1437,
+      "allInMonthly": 216,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "FL-lowIncome-poverty-cap-1child",
+    "source": "Treatise Example E variant; § 61.30(6)(a)2 with pinned 2026 poverty $1,330/mo. Authoritative for the 90% cap arithmetic.",
+    "notes": "Obligor A net $1,500; prong (ii) = 0.9 x (1500 - 1330) = $153; lesser of that and income-share -> $153.",
+    "inputs": {
+      "parentAGrossMonthly": 1500,
+      "parentBGrossMonthly": 2800,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 0,
+      "parentBDays": 365
+    },
+    "expected": {
+      "combinedAGI": 4300,
+      "allInMonthly": 153,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": true,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "FL-lowIncome-principle-of-payment-floor",
+    "source": "Treatise Example E; obligor net below poverty -> prong (ii) negative -> nominal principle-of-payment order. FL has no flat floor.",
+    "notes": "Obligor A net $700 < $1,330: 0.9 x (700 - 1330) < 0 -> $0; nominal case-by-case order.",
+    "inputs": {
+      "parentAGrossMonthly": 700,
+      "parentBGrossMonthly": 2800,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 0,
+      "parentBDays": 365
+    },
+    "expected": {
+      "combinedAGI": 3500,
+      "allInMonthly": 0,
+      "ssrApplied": true,
+      "minimumOrderApplied": true
+    }
+  }
+]

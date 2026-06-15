@@ -22,6 +22,7 @@ export type ScheduleLookupConvention =
   | "round_up"
   | "round_down"
   | "nearest_50"
+  | "interpolate_linear"
   | "nearest_bracket";
 
 /** Above-the-chart behavior. */
@@ -117,6 +118,40 @@ export function lookupScheduleAmount(
     throw new Error(`numChildren must be 1-${cfg.maxChildren}`);
   }
   if (combinedAgi <= cfg.cap) {
+    // interpolate_linear (FL § 61.30(6)): proportionally interpolate the
+    // obligation between the bracketing $50 rows. Exact-$50 incomes return the
+    // tabulated value unchanged; only between-row incomes are interpolated.
+    if (cfg.convention === "interpolate_linear") {
+      const rows = cfg.rows;
+      // floor = largest rowIncome <= income (clamp to first row if below).
+      let lo = 0;
+      let hi = rows.length - 1;
+      let floorIdx = 0;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (rows[mid][0] <= combinedAgi) {
+          floorIdx = mid;
+          lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
+      }
+      const floorRow = rows[floorIdx];
+      const ceilRow = rows[floorIdx + 1];
+      let bcso = floorRow[numChildren];
+      if (ceilRow && combinedAgi > floorRow[0]) {
+        const frac =
+          (combinedAgi - floorRow[0]) / (ceilRow[0] - floorRow[0]);
+        bcso = floorRow[numChildren] +
+          frac * (ceilRow[numChildren] - floorRow[numChildren]);
+      }
+      return {
+        bcso,
+        source: "schedule",
+        scheduleAgiUsed: combinedAgi,
+        isShaded: false,
+      };
+    }
     const idx = findRowIndex(cfg.rows, combinedAgi, cfg.convention);
     const row = cfg.rows[idx];
     const bcso = row[numChildren]; // index 1..maxChildren = amount for k children

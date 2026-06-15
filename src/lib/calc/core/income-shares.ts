@@ -76,8 +76,14 @@ export function incomeShares(
   let aAGI: number;
   let bAGI: number;
   if (spec.model === "income_shares_net") {
-    aAGI = grossToNetMonthly(inputs.parentAGrossMonthly, spec.netIncome);
-    bAGI = grossToNetMonthly(inputs.parentBGrossMonthly, spec.netIncome);
+    aAGI = grossToNetMonthly(
+      inputs.parentAGrossMonthly,
+      inputs.parentANetDeductions ?? [],
+    );
+    bAGI = grossToNetMonthly(
+      inputs.parentBGrossMonthly,
+      inputs.parentBNetDeductions ?? [],
+    );
   } else {
     aAGI = Math.max(
       0,
