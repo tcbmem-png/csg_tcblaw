@@ -103,7 +103,8 @@ export const STATES: StateEntry[] = [
     name: "Louisiana",
     model: "Income Shares Model",
     cite: "La. R.S. § 9:315 et seq.",
-    status: "coming_soon",
+    status: "available",
+    route: "/la",
     tile: [4, 6],
   },
   {
