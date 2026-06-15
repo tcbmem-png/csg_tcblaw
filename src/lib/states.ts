@@ -147,9 +147,10 @@ export const STATES: StateEntry[] = [
     status: "available",
     route: "/ga",
     tile: [7, 6],
-    reviewStatus: "under_review",
-    reviewNote:
-      "Georgia's parenting-time adjustment has been corrected and matches the State's official worksheet for the validated single-child case. Multi-child, high-income, and equal-time cases are still being confirmed against the State calculator. Treat results in those cases as provisional until this banner comes down.",
+    // Parenting-time adjustment corrected and confirmed against the State
+    // calculator across the 1-child sweep, the high-income (95.24/4.76, cap)
+    // case, and the 2-child equal-days boundary; share-rounding matches the
+    // State worksheet. Banner cleared (verified).
   },
 
   // Row 7
