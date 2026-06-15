@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { CONSTANTS_EFFECTIVE_DATE } from "@/lib/calc/data/constants";
-import { detectState } from "@/lib/states";
+
 
 
 const GITHUB_URL = "https://github.com/tcbmem-png/csg_tcblaw";
