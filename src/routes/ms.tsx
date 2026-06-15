@@ -22,6 +22,7 @@ import {
   parseSideParam,
 } from "@/lib/calc/ms/share";
 import { deriveMoment } from "@/lib/calc/ms/moment";
+import { ReviewBanner } from "@/components/review-banner";
 
 export const Route = createFileRoute("/ms")({
   head: () => ({
@@ -126,6 +127,7 @@ function MSCalculatorPage() {
 
   return (
     <div>
+      <ReviewBanner code="MS" />
       <div className="border-b border-rule bg-cream no-print">
         <div className="mx-auto max-w-6xl px-6 pt-4">
           <Link

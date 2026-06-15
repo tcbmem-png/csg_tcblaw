@@ -5,6 +5,13 @@
 
 export type StateStatus = "available" | "coming_soon" | "planned";
 
+/**
+ * Verification posture for an "available" calculator. Defaults to "verified".
+ * Setting "under_review" surfaces a banner on /xx and a small marker on the
+ * homepage tile + list. Single field, no per-state code paths.
+ */
+export type StateReviewStatus = "verified" | "under_review";
+
 export interface StateEntry {
   /** USPS 2-letter code, uppercase. */
   code: string;
@@ -19,6 +26,10 @@ export interface StateEntry {
   route?: string;
   /** [col, row] in the 11x8 tile grid. */
   tile: [number, number];
+  /** Verification posture for available calculators. Defaults to "verified". */
+  reviewStatus?: StateReviewStatus;
+  /** Plain-English note shown on the /xx banner when under_review. */
+  reviewNote?: string;
 }
 
 export const TILE_COLS = 11;
@@ -106,6 +117,9 @@ export const STATES: StateEntry[] = [
     status: "available",
     route: "/la",
     tile: [4, 6],
+    reviewStatus: "under_review",
+    reviewNote:
+      "Louisiana updated its support schedule for 2025; we just caught that ours was out of date and are re-verifying every figure against the State's calculator. Numbers may still shift slightly.",
   },
   {
     code: "MS",
@@ -133,6 +147,9 @@ export const STATES: StateEntry[] = [
     status: "available",
     route: "/ga",
     tile: [7, 6],
+    reviewStatus: "under_review",
+    reviewNote:
+      "We found a parenting-time calculation that disagrees with Georgia's official worksheet by a wide margin and are correcting it against the State's own tool. Treat any result here — especially with shared parenting time — as provisional until this banner comes down.",
   },
 
   // Row 7

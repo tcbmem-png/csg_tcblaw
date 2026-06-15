@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { incomeShares } from "@/lib/calc/core/income-shares";
 import type { IncomeSharesSpec } from "@/lib/calc/core/spec";
 import type { IncomeSharesInputs } from "@/lib/calc/core/types";
+import { ReviewBanner } from "@/components/review-banner";
 
 /**
  * Generic income-shares calculator UI, driven entirely by a StateSpec through
@@ -153,6 +154,7 @@ export function IncomeSharesCalculator({
 
   return (
     <div>
+      <ReviewBanner code={meta.code} />
       <div className="border-b border-rule bg-cream no-print">
         <div className="mx-auto max-w-6xl px-6 pt-4">
           <a

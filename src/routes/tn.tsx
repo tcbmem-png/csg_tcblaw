@@ -19,6 +19,7 @@ import {
   encodeShare,
   type CaseCaption,
 } from "@/lib/calc/share";
+import { ReviewBanner } from "@/components/review-banner";
 
 export const Route = createFileRoute("/tn")({
   head: () => ({
@@ -94,6 +95,7 @@ function TNCalculatorPage() {
 
   return (
     <div>
+      <ReviewBanner code="TN" />
       <div className="border-b border-rule bg-cream no-print">
         <div className="mx-auto max-w-6xl px-6 pt-4">
           <Link

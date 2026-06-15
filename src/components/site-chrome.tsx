@@ -124,6 +124,19 @@ export function SiteFooter() {
               </a>
             </div>
             <div className="mt-3 text-muted-foreground">
+              These calculators are open source and in active verification
+              against each state's own official tools. Found a wrong number?{" "}
+              <a
+                href="https://github.com/tcbmem-png/csg_tcblaw/issues"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="underline decoration-rule underline-offset-2 hover:text-primary hover:decoration-primary"
+              >
+                Tell us
+              </a>
+              .
+            </div>
+            <div className="mt-3 text-muted-foreground">
               Not legal advice. For estimates only. Consult a licensed
               attorney in your state for guidance on your specific case.
             </div>
