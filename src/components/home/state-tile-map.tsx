@@ -167,10 +167,14 @@ function Legend() {
 
 function DetailPanel({ state }: { state: StateEntry | null }) {
   if (!state) {
+    const liveCount = STATES.filter((s) => s.status === "available").length;
+    const comingCount = STATES.filter((s) => s.status === "coming_soon").length;
     return (
       <div className="min-h-[112px] rounded-lg border border-dashed border-rule bg-cream/60 p-5 text-sm text-muted-foreground">
-        Hover or focus a state tile for details. Tennessee and Mississippi
-        calculators are live; five Southeast states are next.
+        Hover or focus a state tile for details. {liveCount}{" "}
+        {liveCount === 1 ? "calculator is" : "calculators are"} live.{" "}
+        {comingCount} more across the Southeast{" "}
+        {comingCount === 1 ? "is" : "are"} next.
       </div>
     );
   }

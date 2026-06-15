@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { CONSTANTS_EFFECTIVE_DATE } from "@/lib/calc/data/constants";
-import { detectState } from "@/lib/states";
+
 
 
 const GITHUB_URL = "https://github.com/tcbmem-png/csg_tcblaw";
@@ -8,13 +8,8 @@ const FIRM_URL = "https://tcblaw.org";
 
 export function SiteHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const state = detectState(pathname);
-
-  const stateLinkClass = (active: boolean) =>
-    "transition-colors " +
-    (active
-      ? "text-primary font-medium"
-      : "text-muted-foreground hover:text-primary");
+  const onHome = pathname === "/";
+  const calculatorsHref = onHome ? "#calculators" : "/#calculators";
 
   return (
     <header className="border-b border-rule bg-background no-print">
@@ -28,12 +23,12 @@ export function SiteHeader() {
           </span>
         </Link>
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          <Link to="/tn" className={stateLinkClass(state?.code === "TN")}>
-            {state?.code === "TN" ? "[Tennessee]" : "Tennessee"}
-          </Link>
-          <Link to="/ms" className={stateLinkClass(state?.code === "MS")}>
-            {state?.code === "MS" ? "[Mississippi]" : "Mississippi"}
-          </Link>
+          <a
+            href={calculatorsHref}
+            className="text-muted-foreground transition-colors hover:text-primary"
+          >
+            Calculators
+          </a>
           <Link
             to="/about"
             className="text-muted-foreground transition-colors hover:text-primary"
