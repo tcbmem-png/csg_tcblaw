@@ -9,10 +9,7 @@ import { GA_INCOME_SHARES_SPEC } from "../../states/ga/spec";
  * arithmetic carries cents and the pack's worked figures are to 2 decimals.
  * Shares are checked to 4 decimals. The PTA fixtures are oracle-validated.
  */
-function assertExpected(
-  actual: Record<string, unknown>,
-  expected: Record<string, unknown>,
-) {
+function assertExpected(actual: Record<string, unknown>, expected: Record<string, unknown>) {
   for (const [key, want] of Object.entries(expected)) {
     const got = actual[key];
     if (typeof want === "number") {
@@ -29,16 +26,13 @@ describe("GA fixtures reproduce through the generic income-shares core", () => {
     new URL("../../states/ga/fixtures.json", import.meta.url),
   );
 
-  it("loaded all 10 GA fixtures", () => {
-    expect(fixtures.length).toBe(10);
+  it("loaded all 13 GA fixtures", () => {
+    expect(fixtures.length).toBe(13);
   });
 
   for (const fx of fixtures) {
     it(`${fx.id}`, () => {
-      const out = incomeShares(
-        GA_INCOME_SHARES_SPEC,
-        fx.inputs as IncomeSharesInputs,
-      );
+      const out = incomeShares(GA_INCOME_SHARES_SPEC, fx.inputs as IncomeSharesInputs);
       expect(out.errors, "errors").toEqual([]);
       assertExpected(
         out as unknown as Record<string, unknown>,

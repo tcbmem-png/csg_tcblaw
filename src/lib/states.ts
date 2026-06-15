@@ -149,7 +149,7 @@ export const STATES: StateEntry[] = [
     tile: [7, 6],
     reviewStatus: "under_review",
     reviewNote:
-      "Georgia's parenting-time adjustment is being corrected — it disagrees with the State's official worksheet by a wide margin. Results in cases with court-ordered parenting time may be inaccurate. Do not rely on this result until this banner comes down.",
+      "Georgia's parenting-time adjustment has been corrected and matches the State's official worksheet for the validated single-child case. Multi-child, high-income, and equal-time cases are still being confirmed against the State calculator. Treat results in those cases as provisional until this banner comes down.",
   },
 
   // Row 7
@@ -165,8 +165,7 @@ export const STATES: StateEntry[] = [
   },
 ];
 
-export const GITHUB_ISSUES_URL =
-  "https://github.com/tcbmem-png/csg_tcblaw/issues";
+export const GITHUB_ISSUES_URL = "https://github.com/tcbmem-png/csg_tcblaw/issues";
 
 export function getStateByCode(code: string): StateEntry | undefined {
   const upper = code.toUpperCase();

@@ -1,8 +1,30 @@
 [
   {
+    "id": "GA-pta-sweep-60-1child",
+    "source": "LIVE ORACLE (GA Commission calc, Worksheet 698904, 2026-06-16): $8,000/1ch, NC=A 60/305 -> Line 6 -19.41, Line 8/10 699.34, Line 16 ~$699.",
+    "notes": "cross_credit (corrected): NC share 718.75; adjustment -19.41; PTA share 699.34. Low end of the oracle sweep — range coverage that was missing when the transposition hid.",
+    "inputs": {
+      "parentAGrossMonthly": 5000,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 60,
+      "parentBDays": 305
+    },
+    "expected": {
+      "combinedAGI": 8000,
+      "piA": 0.625,
+      "piB": 0.375,
+      "bcso": 1150,
+      "allInMonthly": 699.34,
+      "allInDirection": "parent_a_to_b"
+    }
+  },
+  {
     "id": "GA-baseline-1child-ordinary-visitation",
-    "source": "Oracle-validated PTA; $8,000/1ch = $1,150. NC=A, 90/275 days.",
-    "notes": "cross_credit: NC share 718.75; adjustment -652.35; PTA share 66.40.",
+    "source": "LIVE ORACLE (GA Commission calc, Worksheet 698904, 2026-06-16): $8,000/1ch, NC=A 90/275 -> Line 6 -66.40, Line 8/10 652.35, Line 16 $652.",
+    "notes": "cross_credit (corrected): NC share 718.75; adjustment -66.40; PTA share 652.35. Pre-fix the engine transposed these (emitted 66.40 as the order).",
     "inputs": {
       "parentAGrossMonthly": 5000,
       "parentBGrossMonthly": 3000,
@@ -17,14 +39,58 @@
       "piA": 0.625,
       "piB": 0.375,
       "bcso": 1150,
-      "allInMonthly": 66.4,
+      "allInMonthly": 652.35,
+      "allInDirection": "parent_a_to_b"
+    }
+  },
+  {
+    "id": "GA-pta-sweep-120-1child",
+    "source": "LIVE ORACLE (GA Commission calc, Worksheet 698904, 2026-06-16): $8,000/1ch, NC=A 120/245 -> Line 6 -165.32, Line 8/10 553.43, Line 16 ~$553.",
+    "notes": "cross_credit (corrected): NC share 718.75; adjustment -165.32; PTA share 553.43. Mid-range oracle sweep point.",
+    "inputs": {
+      "parentAGrossMonthly": 5000,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 120,
+      "parentBDays": 245
+    },
+    "expected": {
+      "combinedAGI": 8000,
+      "piA": 0.625,
+      "piB": 0.375,
+      "bcso": 1150,
+      "allInMonthly": 553.43,
+      "allInDirection": "parent_a_to_b"
+    }
+  },
+  {
+    "id": "GA-pta-sweep-182-1child",
+    "source": "LIVE ORACLE (GA Commission calc, Worksheet 698904, 2026-06-16): $8,000/1ch, NC=A 182/183 -> Line 6 -571.06, Line 8/10 147.69, Line 16 ~$148.",
+    "notes": "cross_credit (corrected): NC share 718.75; adjustment -571.06; PTA share 147.69. Near-equal high end of the oracle sweep.",
+    "inputs": {
+      "parentAGrossMonthly": 5000,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 1,
+      "parentingType": "custom",
+      "arpForStandard": "parent_a",
+      "parentADays": 182,
+      "parentBDays": 183
+    },
+    "expected": {
+      "combinedAGI": 8000,
+      "piA": 0.625,
+      "piB": 0.375,
+      "bcso": 1150,
+      "allInMonthly": 147.69,
       "allInDirection": "parent_a_to_b"
     }
   },
   {
     "id": "GA-multichild-2-addons-heavy",
-    "source": "$8,000/2ch = $1,723; Schedule D add-ons prorated. NC=A, 90/275.",
-    "notes": "PTA share 99.48 + obligor share of add-ons (0.625 x 600 = 375) = 474.48.",
+    "source": "CORRECTED-ENGINE, PENDING LIVE-ORACLE: $8,000/2ch = $1,723; Schedule D add-ons prorated. NC=A, 90/275.",
+    "notes": "FLAG: re-pinned to corrected cross_credit output, not yet confirmed on the live GA calculator (2-child case). PTA share 977.39 + obligor add-ons (0.625 x 600 = 375) = 1352.40.",
     "inputs": {
       "parentAGrossMonthly": 5000,
       "parentBGrossMonthly": 3000,
@@ -43,14 +109,14 @@
       "piA": 0.625,
       "piB": 0.375,
       "bcso": 1723,
-      "allInMonthly": 474.48,
+      "allInMonthly": 1352.40,
       "allInDirection": "parent_a_to_b"
     }
   },
   {
     "id": "GA-equal-5050-income-disparity",
-    "source": "Oracle-validated; $10,000/1ch = $1,285; 182.5/182.5, 60/40 income.",
-    "notes": "Equal time does not zero support: PTA share 642.50.",
+    "source": "CORRECTED-ENGINE, PENDING LIVE-ORACLE: $10,000/1ch = $1,285; 182.5/182.5, 60/40 income.",
+    "notes": "FLAG: re-pinned to corrected cross_credit output, not yet confirmed on the live GA calculator (equal-5050 case). Equal time -> higher earner pays half the share gap: (771 - 514)/2 = 128.50.",
     "inputs": {
       "parentAGrossMonthly": 6000,
       "parentBGrossMonthly": 4000,
@@ -65,14 +131,14 @@
       "piA": 0.6,
       "piB": 0.4,
       "bcso": 1285,
-      "allInMonthly": 642.5,
+      "allInMonthly": 128.5,
       "allInDirection": "parent_a_to_b"
     }
   },
   {
     "id": "GA-high-income-above-40k-cap",
-    "source": "$40,000 top-row anchor (1ch = $3,222); above-cap discretionary. NC=A, 80/285.",
-    "notes": "BCSO frozen at top row; PTA share 129.11.",
+    "source": "CORRECTED-ENGINE, PENDING LIVE-ORACLE: $40,000 top-row anchor (1ch = $3,222); above-cap discretionary. NC=A, 80/285.",
+    "notes": "FLAG: re-pinned to corrected cross_credit output, not yet confirmed on the live GA calculator (high-income case). BCSO frozen at top row; PTA share 2939.46.",
     "inputs": {
       "parentAGrossMonthly": 50000,
       "parentBGrossMonthly": 2500,
@@ -88,14 +154,14 @@
       "piB": 0.0476,
       "bcso": 3222,
       "bcsoSource": "above_cap",
-      "allInMonthly": 129.11,
+      "allInMonthly": 2939.46,
       "allInDirection": "parent_a_to_b"
     }
   },
   {
     "id": "GA-imputation-voluntary-underemployment",
-    "source": "$8,500/1ch = $1,186; A imputed. NC=A, 85/280.",
-    "notes": "Imputation pre-resolved into grossA. PTA share 57.31.",
+    "source": "CORRECTED-ENGINE, PENDING LIVE-ORACLE: $8,500/1ch = $1,186; A imputed. NC=A, 85/280.",
+    "notes": "FLAG: re-pinned to corrected cross_credit output, not yet confirmed on the live GA calculator (off-sweep income/share). Imputation pre-resolved into grossA. PTA share 710.10.",
     "inputs": {
       "parentAGrossMonthly": 5500,
       "parentBGrossMonthly": 3000,
@@ -110,14 +176,14 @@
       "piA": 0.6471,
       "piB": 0.3529,
       "bcso": 1186,
-      "allInMonthly": 57.31,
+      "allInMonthly": 710.10,
       "allInDirection": "parent_a_to_b"
     }
   },
   {
     "id": "GA-low-income-adjustment-applies",
-    "source": "$5,000/1ch = $887; obligor AGI $2,000 (< $2,450 termination). Cap $381 does NOT bind (presumptive lower).",
-    "notes": "Low-income (p) cap considered but presumptive 35.54 < cap 381 -> order is the presumptive.",
+    "source": "CORRECTED-ENGINE, PENDING LIVE-ORACLE: $5,000/1ch = $887; obligor AGI $2,000 (< $2,450 termination). Cap $381 does NOT bind (presumptive lower).",
+    "notes": "FLAG: re-pinned to corrected cross_credit output, not yet confirmed on the live GA calculator. Low-income (p) cap considered but presumptive 319.26 < cap 381 -> order is the presumptive.",
     "inputs": {
       "parentAGrossMonthly": 2000,
       "parentBGrossMonthly": 3000,
@@ -132,14 +198,14 @@
       "piA": 0.4,
       "piB": 0.6,
       "bcso": 887,
-      "allInMonthly": 35.54,
+      "allInMonthly": 319.26,
       "allInDirection": "parent_a_to_b"
     }
   },
   {
     "id": "GA-low-income-below-1500-percentage-cap",
-    "source": "$3,700/1ch = $683; obligor AGI $1,200 (<= $1,500) -> percent cap 0.19 x 1200 = $228, does NOT bind.",
-    "notes": "Below-$1,500 branch: cap 228 > presumptive 27.37 -> order is the presumptive.",
+    "source": "CORRECTED-ENGINE, PENDING LIVE-ORACLE: $3,700/1ch = $683; obligor AGI $1,200 (<= $1,500) -> percent cap 0.19 x 1200 = $228, does NOT bind.",
+    "notes": "FLAG: re-pinned to corrected cross_credit output, not yet confirmed on the live GA calculator. Below-$1,500 branch: cap 228 > presumptive 194.14 -> order is the presumptive.",
     "inputs": {
       "parentAGrossMonthly": 1200,
       "parentBGrossMonthly": 2500,
@@ -154,14 +220,14 @@
       "piA": 0.3243,
       "piB": 0.6757,
       "bcso": 683,
-      "allInMonthly": 27.37,
+      "allInMonthly": 194.14,
       "allInDirection": "parent_a_to_b"
     }
   },
   {
     "id": "GA-deviation-extraordinary-educational",
-    "source": "$12,000/2ch = $2,176; +$300 educational deviation with written findings. NC=A, 100/265.",
-    "notes": "PTA share 175.03 + $300 deviation = 475.03.",
+    "source": "CORRECTED-ENGINE, PENDING LIVE-ORACLE: $12,000/2ch = $2,176; +$300 educational deviation with written findings. NC=A, 100/265.",
+    "notes": "FLAG: re-pinned to corrected cross_credit output, not yet confirmed on the live GA calculator (2-child case). PTA share 1094.30 + $300 deviation = 1394.30.",
     "inputs": {
       "parentAGrossMonthly": 7000,
       "parentBGrossMonthly": 5000,
@@ -179,7 +245,7 @@
       "piA": 0.5833,
       "piB": 0.4167,
       "bcso": 2176,
-      "allInMonthly": 475.03,
+      "allInMonthly": 1394.30,
       "allInDirection": "parent_a_to_b",
       "deviationsTotalFromA": 300
     }
@@ -187,7 +253,7 @@
   {
     "id": "GA-3child-no-courtordered-parenting-time",
     "source": "$6,000/3ch = $1,826; no court-ordered parenting time -> no adjustment, NC pays full share.",
-    "notes": "No PTA: obligor share 1217.33 = bcso x 0.6667.",
+    "notes": "No PTA (unaffected by the cross_credit fix): obligor share 1217.33 = bcso x 0.6667.",
     "inputs": {
       "parentAGrossMonthly": 4000,
       "parentBGrossMonthly": 2000,
@@ -206,8 +272,8 @@
   },
   {
     "id": "GA-equal-time-large-income-gap-2child",
-    "source": "$11,000/2ch = $2,052; 182.5/182.5, 73/27 income. NC=A (higher earner).",
-    "notes": "Equal time, large gap: PTA share 1026.",
+    "source": "CORRECTED-ENGINE, PENDING LIVE-ORACLE: $11,000/2ch = $2,052; 182.5/182.5, 73/27 income. NC=A (higher earner).",
+    "notes": "FLAG: re-pinned to corrected cross_credit output, not yet confirmed on the live GA calculator (2-child equal-time case). Equal time, large gap: PTA share 466.36 = (1492.42 - 559.64)/2.",
     "inputs": {
       "parentAGrossMonthly": 8000,
       "parentBGrossMonthly": 3000,
@@ -222,7 +288,7 @@
       "piA": 0.7273,
       "piB": 0.2727,
       "bcso": 2052,
-      "allInMonthly": 1026,
+      "allInMonthly": 466.36,
       "allInDirection": "parent_a_to_b"
     }
   }
