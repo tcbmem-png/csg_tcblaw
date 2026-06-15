@@ -1,0 +1,240 @@
+[
+  {
+    "id": "AL-baseline-2child-addons",
+    "source": "AL Mini-Treatise Example A (BCSO $1,519 confirmed). Authoritative.",
+    "notes": "Income share rounded to nearest 1% (Rule 32(C)(3)): 0.625 -> 0.63. Add-ons paid by custodial B; obligor A owes 0.63 x (BCSO + add-ons).",
+    "inputs": {
+      "parentAGrossMonthly": 5000,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 2,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a",
+      "addOns": [
+        { "id": "health_insurance", "monthly": 133, "paidBy": "parent_b" },
+        { "id": "work_related_childcare", "monthly": 400, "paidBy": "parent_b" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 8000,
+      "piA": 0.63,
+      "piB": 0.37,
+      "bcso": 1519,
+      "bcsoSource": "schedule",
+      "allInMonthly": 1293,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AL-self-employed-addback-2child",
+    "source": "AL Mini-Treatise Example B (BCSO $1,839 at $11,550 row). Authoritative. SE add-backs pre-resolved into grossMonthly.",
+    "notes": "nearest_50: 11542 -> 11550 row. Share 0.74.",
+    "inputs": {
+      "parentAGrossMonthly": 8542,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 2,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a",
+      "addOns": [
+        { "id": "health_insurance", "monthly": 100, "paidBy": "parent_b" },
+        { "id": "work_related_childcare", "monthly": 400, "paidBy": "parent_b" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 11542,
+      "piA": 0.74,
+      "piB": 0.26,
+      "bcso": 1839,
+      "allInMonthly": 1731,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AL-above-schedule-1child",
+    "source": "AL Mini-Treatise Example C (cap BCSO $2,456). Authoritative for the at-cap reference; above-cap discretionary under Dyas.",
+    "notes": "Combined $52,500 > $30,000 cap. BCSO frozen at the top-row $2,456; finalOrder = at-cap pro-rata reference (0.95). Court may set higher on Dyas needs findings.",
+    "inputs": {
+      "parentAGrossMonthly": 50000,
+      "parentBGrossMonthly": 2500,
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 52500,
+      "piA": 0.95,
+      "piB": 0.05,
+      "bcso": 2456,
+      "bcsoSource": "above_cap",
+      "allInMonthly": 2333,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AL-shared50-custody-1child",
+    "source": "AL Mini-Treatise Example D / Rule 32(C)(7) CS-42-S (BCSO $1,155). Authoritative (corrects treatise $174 slip; correct diff $347).",
+    "notes": "SPCA half_credit: 1.5x = 1732.5; each parent credited half; higher-share parent pays the difference = (0.6-0.4) x 1732.5 -> $347. SSR/$50-min suppressed on CS-42-S.",
+    "inputs": {
+      "parentAGrossMonthly": 6000,
+      "parentBGrossMonthly": 4000,
+      "numChildren": 1,
+      "parentingType": "equal"
+    },
+    "expected": {
+      "combinedAGI": 10000,
+      "piA": 0.6,
+      "piB": 0.4,
+      "bcso": 1155,
+      "allInMonthly": 347,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AL-low-income-ssr-minimum-1child",
+    "source": "AL Mini-Treatise Example E (BCSO $640). SSR mechanic Rule 32(C)(5). Authoritative.",
+    "notes": "Obligor gross $750 < $981 reserve: line11 = 0, line12 = 0; order capped to 0, then $50 minimum applies. Pack gives shares 0.21/0.79.",
+    "inputs": {
+      "parentAGrossMonthly": 750,
+      "parentBGrossMonthly": 2800,
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 3550,
+      "piA": 0.21,
+      "piB": 0.79,
+      "bcso": 640,
+      "allInMonthly": 50,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": true,
+      "minimumOrderApplied": true
+    }
+  },
+  {
+    "id": "AL-multichild-3children",
+    "source": "Hand-derived; $8,000/3ch = $1,782 confirmed against the official table.",
+    "notes": "Share 0.6875 -> 0.69.",
+    "inputs": {
+      "parentAGrossMonthly": 5500,
+      "parentBGrossMonthly": 2500,
+      "numChildren": 3,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 8000,
+      "piA": 0.69,
+      "piB": 0.31,
+      "bcso": 1782,
+      "allInMonthly": 1230,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AL-imputation-2child",
+    "source": "Hand-derived; $6,000/2ch = $1,271. Custodial parent imputed to $2,000 (Rule 32(B)(5)).",
+    "notes": "Imputation pre-resolved: B's gross is the imputed $2,000. Share 0.67.",
+    "inputs": {
+      "parentAGrossMonthly": 4000,
+      "parentBGrossMonthly": 2000,
+      "numChildren": 2,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 6000,
+      "piA": 0.67,
+      "piB": 0.33,
+      "bcso": 1271,
+      "allInMonthly": 852,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AL-addons-heavy-2child",
+    "source": "Hand-derived; $9,000/2ch = $1,593. Both add-ons paid by custodial B.",
+    "notes": "Total obligation = 1593 + 800 + 300 = 2693; obligor owes 0.67 x 2693 = 1804.",
+    "inputs": {
+      "parentAGrossMonthly": 6000,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 2,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a",
+      "addOns": [
+        { "id": "work_related_childcare", "monthly": 800, "paidBy": "parent_b" },
+        { "id": "health_insurance", "monthly": 300, "paidBy": "parent_b" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 9000,
+      "piA": 0.67,
+      "piB": 0.33,
+      "bcso": 1593,
+      "allInMonthly": 1804,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AL-deviation-extended-visitation-1child",
+    "source": "Hand-derived; $7,000/1ch = $925. Downward deviation under Rule 32(A)(1)(a) (extended visitation), CS-43 findings.",
+    "notes": "Baseline 0.64 x 925 = 592; -$59 direct deviation = $533.",
+    "inputs": {
+      "parentAGrossMonthly": 4500,
+      "parentBGrossMonthly": 2500,
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a",
+      "directDeviations": [
+        { "id": "shared_or_excess_parenting_time", "amount": 59, "direction": "decrease" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 7000,
+      "piA": 0.64,
+      "piB": 0.36,
+      "bcso": 925,
+      "allInMonthly": 533,
+      "allInDirection": "parent_a_to_b",
+      "deviationsTotalFromA": -59,
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "AL-preexisting-support-alimony-deduction-1child",
+    "source": "Hand-derived; demonstrates the AL-specific deduction of preexisting child support / periodic alimony actually paid from gross.",
+    "notes": "Father gross $6,000 - $800 preexisting child support = $5,200 adjusted (parentADeductionsMonthly). Combined $8,200; share 0.63.",
+    "inputs": {
+      "parentAGrossMonthly": 6000,
+      "parentADeductionsMonthly": 800,
+      "parentBGrossMonthly": 3000,
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 8200,
+      "piA": 0.63,
+      "piB": 0.37,
+      "bcso": 1036,
+      "allInMonthly": 653,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  }
+]

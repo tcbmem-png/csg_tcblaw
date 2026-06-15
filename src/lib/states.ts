@@ -121,7 +121,8 @@ export const STATES: StateEntry[] = [
     name: "Alabama",
     model: "Income Shares Model",
     cite: "Ala. R. Jud. Admin. 32",
-    status: "coming_soon",
+    status: "available",
+    route: "/al",
     tile: [6, 6],
   },
   {

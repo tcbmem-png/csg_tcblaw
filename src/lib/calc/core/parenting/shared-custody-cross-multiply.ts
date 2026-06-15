@@ -75,11 +75,26 @@ export const sharedCustodyCrossMultiply: ParentingStrategy<
     };
   }
 
+  // --- AL half_credit (Rule 32(C)(7), CS-42-S) ---
+  // Gross the BCSO up by the multiplier; each parent's adjusted obligation is
+  // their income share of the adjusted amount; each is credited HALF of the
+  // adjusted obligation; the higher-adjusted parent pays the difference. The
+  // half-credit is equal for both parents, so it cancels in the offset and the
+  // net is simply the difference of the two income-share obligations.
+  // SSR / $50 minimum / zero-dollar do NOT apply on CS-42-S → suppressLowIncome.
   if (p.creditMethod === "half_credit") {
-    throw new Error(
-      "shared_custody_cross_multiply: creditMethod 'half_credit' (AL) is not " +
-        "implemented yet — awaiting the AL pack's worked fixtures to pin it.",
-    );
+    const adjusted = bcso * p.multiplier;
+    const netFromA = piA * adjusted - piB * adjusted;
+    return {
+      netFromA,
+      multiplier: p.multiplier,
+      arpIdentity:
+        netFromA > 0 ? "parent_a" : netFromA < 0 ? "parent_b" : "equal",
+      band: "shared_custody",
+      arpDays: Math.min(input.parentADays ?? 0, input.parentBDays ?? 0),
+      warnings,
+      suppressLowIncome: true,
+    };
   }
   if (p.boundary === "floor") {
     throw new Error(
@@ -119,5 +134,6 @@ export const sharedCustodyCrossMultiply: ParentingStrategy<
     band: "shared_custody",
     arpDays: Math.min(aDays, bDays),
     warnings,
+    suppressLowIncome: true,
   };
 };
