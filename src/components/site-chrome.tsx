@@ -61,6 +61,16 @@ export function SiteHeader() {
 const APP_VERSION = "v1.0.0";
 
 export function SiteFooter() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const activeState = detectState(pathname);
+  const stateBadge =
+    activeState && activeState.scheduleEffectiveDate
+      ? {
+          label: `${activeState.code} Schedule`,
+          value: `eff. ${activeState.scheduleEffectiveDate}`,
+        }
+      : { label: "Current state schedules", value: null as string | null };
+
   return (
     <footer className="border-t border-rule bg-cream no-print">
       <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-muted-foreground">
@@ -84,8 +94,10 @@ export function SiteFooter() {
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-md border border-rule bg-background px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-ink">
-                <span className="text-muted-foreground">TN Schedule</span>
-                <span>eff. {CONSTANTS_EFFECTIVE_DATE}</span>
+                <span className={stateBadge.value ? "text-muted-foreground" : ""}>
+                  {stateBadge.label}
+                </span>
+                {stateBadge.value ? <span>{stateBadge.value}</span> : null}
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-md border border-rule bg-background px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-ink">
                 <span className="text-muted-foreground">App</span>
