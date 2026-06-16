@@ -120,6 +120,18 @@ export const STATES: StateEntry[] = [
     tile: [4, 5],
     modelKey: "income_shares",
     verifyStatus: "in_verification",
+    scheduleEffectiveDate: "2020-07-01",
+  },
+  {
+    code: "TN",
+    name: "Tennessee",
+    model: "Income Shares Model",
+    cite: "Tenn. Comp. R. & Regs. 1240-02-04",
+    status: "available",
+    route: "/tn",
+    tile: [5, 5],
+    modelKey: "income_shares",
+    scheduleEffectiveDate: "2021-10-01",
   },
   {
     code: "TN",
