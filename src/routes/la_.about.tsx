@@ -34,7 +34,7 @@ function About() {
         9:315 et seq.), an income-shares model. The Schedule of Basic Child
         Support Obligations is loaded from the official Department of Children
         and Family Services publication of the R.S. 9:315.19 table, as amended
-        by Acts 2020, No. 177 (effective January 1, 2021).
+        by [2025 LA schedule citation — confirm].
       </p>
       <ul className="mt-3 list-disc space-y-1 pl-6 text-sm">
         <li>
@@ -92,8 +92,8 @@ function About() {
 
       <h2 className="mt-8 font-serif text-2xl">Other states</h2>
       <p className="mt-3">
-        Tennessee, Mississippi, Arkansas, and other states are available on the{" "}
-        <a href="/" className="underline">state picker</a>.
+        Calculators for seven Southeastern states are on the{" "}
+        <a href="/" className="underline">state picker</a>, with more planned.
       </p>
 
       <h2 className="mt-8 font-serif text-2xl">Disclaimer</h2>

@@ -85,8 +85,8 @@ function About() {
 
       <h2 className="mt-8 font-serif text-2xl">Other states</h2>
       <p className="mt-3">
-        Tennessee, Mississippi, Arkansas, Louisiana, Alabama, and other states
-        are available on the <a href="/" className="underline">state picker</a>.
+        Calculators for seven Southeastern states are on the{" "}
+        <a href="/" className="underline">state picker</a>, with more planned.
       </p>
 
       <h2 className="mt-8 font-serif text-2xl">Disclaimer</h2>
