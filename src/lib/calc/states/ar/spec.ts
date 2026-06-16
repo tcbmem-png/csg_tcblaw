@@ -8,25 +8,20 @@
  * 2020-07-01, amended 2022-04-14); Ark. Code Ann. § 9-12-312, §§ 9-14-101 et seq.
  *
  * Three AR specifics, all handled by registered core pieces:
- *  - schedule lookup rounds DOWN to the $50 row (convention "round_down"),
- *    while the FINAL order rounds half-up — two separate roundings.
+ *  - schedule lookup rounds DOWN to the $50 row (convention "round_down"); the
+ *    income share rounds to 0.01% (incomeShare "nearest_0.01pct"); and the FINAL
+ *    order also rounds DOWN to the dollar (finalOrder "round_down", AO 10 § III).
+ *    All three are live-confirmed on the AOC calculator (AR_convention_findings.md).
  *  - above the $30,000 chart the obligation is discretionary with the top row
  *    as a floor (AboveCap "discretionary_floor"); no marginal formula (Parnell).
  *  - low-income SSR (payor gross < $900) recomputes from the payor's gross
  *    alone, drops add-ons, and floors at the $125 minimum ("payor_gross_reserve").
  */
 import type { IncomeSharesSpec } from "../../core/spec";
-import {
-  lookupScheduleAmount,
-  type IncomeShareScheduleConfig,
-} from "../../core/schedule";
+import { lookupScheduleAmount, type IncomeShareScheduleConfig } from "../../core/schedule";
 import type { OffsetDualWorksheetParams } from "../../core/parenting";
 import type { PayorGrossReserveParams } from "../../core/low-income";
-import {
-  AR_BCSO_SCHEDULE,
-  AR_SCHEDULE_CAP,
-  AR_SCHEDULE_MAX_CHILDREN,
-} from "./schedule";
+import { AR_BCSO_SCHEDULE, AR_SCHEDULE_CAP, AR_SCHEDULE_MAX_CHILDREN } from "./schedule";
 
 export const AR_SCHEDULE_CONFIG: IncomeShareScheduleConfig = {
   rows: AR_BCSO_SCHEDULE,
@@ -49,8 +44,7 @@ const AR_PARENTING_PARAMS: OffsetDualWorksheetParams = {
 const AR_SSR_PARAMS: PayorGrossReserveParams = {
   triggerThreshold: 900,
   minimumOrder: 125,
-  lookup: (income, n) =>
-    lookupScheduleAmount(AR_SCHEDULE_CONFIG, income, n).bcso,
+  lookup: (income, n) => lookupScheduleAmount(AR_SCHEDULE_CONFIG, income, n).bcso,
   noteBuilder: (base, threshold) =>
     `Self-Support Reserve applied (AO 10 § II(3)): payor monthly gross is below $${threshold}, so the obligation is computed from the payor's gross alone ($${base}); the three add-ons are dropped and the $125 minimum order applies.`,
 };
@@ -66,5 +60,8 @@ export const AR_INCOME_SHARES_SPEC: IncomeSharesSpec = {
   // The $125 minimum is part of the SSR mechanic (payor gross < $900), not a
   // magnitude floor on any small order — so the generic minimumOrder is null.
   minimumOrder: null,
-  rounding: { finalOrder: "half_up" },
+  // AR AOC calculator conventions (live-confirmed, AR_convention_findings.md):
+  // each parent's income share rounds to 0.01% before applying (Line 5), and the
+  // final order rounds DOWN to the dollar (AO 10 § III), not half-up.
+  rounding: { finalOrder: "round_down", incomeShare: "nearest_0.01pct" },
 };

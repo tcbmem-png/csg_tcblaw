@@ -2,7 +2,7 @@
   {
     "id": "AR-baseline-2child",
     "source": "AR Mini-Treatise Example A (+ Review §1.6 rounding fix); chart value confirmed. Authoritative.",
-    "notes": "Standard visitation (90 overnights < 141). Add-ons both paid by residential parent B. finalOrder is half-up ($1,247), distinct from the schedule round-down.",
+    "notes": "Standard visitation (90 overnights < 141). Add-ons both paid by residential parent B. Live AOC calc: share rounded to 0.01%, order rounds DOWN to the dollar -> 0.625 x (1395+600) = 1246.875 -> $1,246.",
     "inputs": {
       "parentAGrossMonthly": 5000,
       "parentBGrossMonthly": 3000,
@@ -20,7 +20,7 @@
       "piB": 0.375,
       "bcso": 1395,
       "bcsoSource": "schedule",
-      "allInMonthly": 1247,
+      "allInMonthly": 1246,
       "allInDirection": "parent_a_to_b",
       "ssrApplied": false,
       "minimumOrderApplied": false
@@ -29,7 +29,7 @@
   {
     "id": "AR-self-employed-2child",
     "source": "AR Mini-Treatise Example B as corrected by Review §1.1 (SE-FICA + add-backs). Authoritative.",
-    "notes": "grossA is the already-computed monthly SE gross (111000 - 8492 FICA, /12). round_down 11542 -> 11500 row. Engine uses exact share -> $1,654 (treatise's $1,653 used a truncated 74.0%).",
+    "notes": "grossA is the already-computed monthly SE gross (111000 - 8492 FICA, /12). round_down 11542 -> 11500 row. Share rounded to 0.01% (74.01%); obligor Line 5 = round(0.7401 x 1635) = 1210.06 (live AOC); order rounds down to $1,654.",
     "inputs": {
       "parentAGrossMonthly": 8542,
       "parentBGrossMonthly": 3000,
@@ -78,7 +78,7 @@
   {
     "id": "AR-shared-5050-1child",
     "source": "AR Mini-Treatise Example D; chart value $1,074 confirmed; AR straight offset, NO 1.5x. Authoritative.",
-    "notes": "Approx 50/50 (183/182). Offset: BCSO x shareA - BCSO x shareB = 644.40 - 429.60 = 214.80 -> $215 half-up. Higher earner (A) pays.",
+    "notes": "Approx 50/50 (183/182). Offset: BCSO x shareA - BCSO x shareB = 644.40 - 429.60 = 214.80 -> $214 round-down. Higher earner (A) pays.",
     "inputs": {
       "parentAGrossMonthly": 6000,
       "parentBGrossMonthly": 4000,
@@ -90,7 +90,7 @@
       "piA": 0.6,
       "piB": 0.4,
       "bcso": 1074,
-      "allInMonthly": 215,
+      "allInMonthly": 214,
       "allInDirection": "parent_a_to_b",
       "ssrApplied": false,
       "minimumOrderApplied": false
@@ -106,9 +106,7 @@
       "numChildren": 1,
       "parentingType": "standard",
       "arpForStandard": "parent_a",
-      "addOns": [
-        { "id": "health_insurance", "monthly": 150, "paidBy": "parent_b" }
-      ]
+      "addOns": [{ "id": "health_insurance", "monthly": 150, "paidBy": "parent_b" }]
     },
     "expected": {
       "combinedAGI": 3550,
@@ -161,7 +159,7 @@
       "piA": 0.5,
       "piB": 0.5,
       "bcso": 815,
-      "allInMonthly": 408,
+      "allInMonthly": 407,
       "allInDirection": "parent_a_to_b",
       "ssrApplied": false,
       "minimumOrderApplied": false
@@ -183,7 +181,7 @@
       "piA": 0.5833,
       "piB": 0.4167,
       "bcso": 2242,
-      "allInMonthly": 1308,
+      "allInMonthly": 1307,
       "allInDirection": "parent_a_to_b",
       "ssrApplied": false,
       "minimumOrderApplied": false
@@ -192,23 +190,21 @@
   {
     "id": "AR-deviation-private-school-2child",
     "source": "Hand-derived from Treatise Example A base; deviation under AO 10 § II(2)(a), requires written findings.",
-    "notes": "Presumptive (no add-ons) Line13 = $872; +$300 educational-expenses deviation (direct, increase) = $1,172.",
+    "notes": "Presumptive (no add-ons) Line 13 = $871 (round-down of 0.625 x 1395 = 871.875); +$300 educational-expenses deviation (direct, increase) = $1,171.",
     "inputs": {
       "parentAGrossMonthly": 5000,
       "parentBGrossMonthly": 3000,
       "numChildren": 2,
       "parentingType": "standard",
       "arpForStandard": "parent_a",
-      "directDeviations": [
-        { "id": "educational_expenses", "amount": 300, "direction": "increase" }
-      ]
+      "directDeviations": [{ "id": "educational_expenses", "amount": 300, "direction": "increase" }]
     },
     "expected": {
       "combinedAGI": 8000,
       "piA": 0.625,
       "piB": 0.375,
       "bcso": 1395,
-      "allInMonthly": 1172,
+      "allInMonthly": 1171,
       "allInDirection": "parent_a_to_b",
       "deviationsTotalFromA": 300,
       "ssrApplied": false,
