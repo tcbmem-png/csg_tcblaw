@@ -78,9 +78,9 @@ export function SiteFooter() {
               >
                 Open-source
               </a>{" "}
-              implementations of the Tennessee (Rule 1240-02-04) and
-              Mississippi (Miss. Code Ann. § 43-19-101) child support
-              guidelines.
+              implementations of state child support guidelines —
+              Tennessee, Mississippi, Arkansas, Alabama, Louisiana, Georgia,
+              and Florida, with more planned.
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-md border border-rule bg-background px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-ink">

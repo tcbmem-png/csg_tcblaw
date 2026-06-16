@@ -69,22 +69,53 @@ function Index() {
       <section className="border-t border-rule bg-cream">
         <div className="mx-auto max-w-3xl px-6 py-16">
           <p className="font-mono text-xs uppercase tracking-widest text-primary">
+            Why every state has one of these
+          </p>
+          <div className="mt-6 space-y-5 text-[15px] leading-relaxed text-ink/90">
+            <p>
+              None of it is an accident. In 1975 the federal government built
+              the child support enforcement program. In 1984 it told the
+              states to write guidelines. In 1988 the Family Support Act made
+              those guidelines a rebuttable presumption — the number the
+              guideline produces is the number the court starts from, and a
+              judge can depart from it only with a written finding that it
+              would be unjust. The same law put the guidelines on a clock:
+              every state must review them at least once every four years.
+            </p>
+            <p>
+              That four-year clock is why the numbers move — quietly, a state
+              at a time. It's why a calculator has to be checked against each
+              state's current official tool, not last cycle's. We do that in
+              the open. When we found our Louisiana figures running on a
+              superseded schedule, we said so and fixed it; the corrected
+              states carry a mark, and their detail says what changed.
+            </p>
+            <p>
+              Most states share one model — income shares. A few use a
+              percentage of one parent's income. Three use the Melson
+              formula. The law is mostly good. The tools that deliver it
+              mostly aren't. That's the gap this closes.
+            </p>
+          </div>
+
+          <p className="mt-10 font-mono text-xs uppercase tracking-widest text-primary">
             Why this exists
           </p>
           <div className="mt-6 space-y-5 text-[15px] leading-relaxed text-ink/90">
             <p>
-              Tennessee's child support calculation lives inside a
-              macro-enabled Excel file that not every computer can run.
-              Mississippi's calculation is mechanically simple but rarely
-              produces a shared worksheet a chancellor can read. Both states
-              have good law on the books. Both have practitioners who do
-              excellent work. Neither has tooling that matches the law.
+              Across the seven states live today — Tennessee, Mississippi,
+              Arkansas, Alabama, Louisiana, Georgia, and Florida — the
+              official tools range from a macro-enabled Excel file that not
+              every computer can run to mechanically simple calculations that
+              rarely produce a shared worksheet a court can read. The law is
+              on the books. Practitioners do excellent work. The tooling
+              hasn't kept up.
             </p>
             <p>
               These calculators are an attempt to close that gap. Every
               dollar number traces back to the rule that authorizes it.
-              Every worksheet is structured the way a chancellor expects to
-              see it. Every line of code is{" "}
+              Every worksheet is structured the way a court expects to see
+              it. Every line of code is{" "}
               <a
                 href={GITHUB_URL}
                 target="_blank"
@@ -107,10 +138,8 @@ function Index() {
                 TCB Law, PLLC
               </a>
               , but it is not a TCB Law product. Civic legal infrastructure
-              should not be proprietary. If a Mississippi chancery
-              practitioner finds the deviation worksheet inadequate for
-              cases they handle, or a Tennessee family lawyer catches an
-              interpretation of the rules that needs correcting,{" "}
+              should not be proprietary. If you spot an interpretation of
+              the rules that needs correcting in any of the live states,{" "}
               <a
                 href={GITHUB_ISSUES_URL}
                 target="_blank"
