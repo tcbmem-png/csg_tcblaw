@@ -225,7 +225,7 @@ function Legend() {
             style={{
               background: `${MODEL_COLORS.income_shares.solid}`,
               backgroundImage:
-                "repeating-linear-gradient(135deg, rgba(250,250,247,0) 0 4px, rgba(250,250,247,.62) 4px 6.5px)",
+                "repeating-linear-gradient(135deg, rgba(250,250,247,0) 0 6px, rgba(250,250,247,.22) 6px 7px)",
             }}
           />
           In verification
