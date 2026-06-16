@@ -34,7 +34,7 @@ function About() {
         9:315 et seq.), an income-shares model. The Schedule of Basic Child
         Support Obligations is loaded from the official Department of Children
         and Family Services publication of the R.S. 9:315.19 table, as amended
-        by [2025 LA schedule citation — confirm].
+        by Acts 2024, No. 86 (eff. Jan. 1, 2025).
       </p>
       <ul className="mt-3 list-disc space-y-1 pl-6 text-sm">
         <li>
