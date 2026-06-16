@@ -145,13 +145,13 @@ export function StateTileMap() {
           <defs>
             <pattern
               id={HATCH_ID}
-              width="9.19"
-              height="9.19"
+              width="8.49"
+              height="8.49"
               patternUnits="userSpaceOnUse"
               patternTransform="rotate(135)"
             >
-              <rect width="9.19" height="9.19" fill="rgba(250,250,247,0)" />
-              <rect width="2.5" height="9.19" fill="rgba(250,250,247,0.62)" />
+              <rect width="8.49" height="8.49" fill="rgba(250,250,247,0)" />
+              <rect width="1" height="8.49" fill="rgba(250,250,247,0.22)" />
             </pattern>
           </defs>
           <style>{`
