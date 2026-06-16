@@ -133,16 +133,6 @@ export const STATES: StateEntry[] = [
     modelKey: "income_shares",
     scheduleEffectiveDate: "2021-10-01",
   },
-  {
-    code: "TN",
-    name: "Tennessee",
-    model: "Income Shares Model",
-    cite: "Tenn. Comp. R. & Regs. 1240-02-04",
-    status: "available",
-    route: "/tn",
-    tile: [5, 5],
-    modelKey: "income_shares",
-  },
   { code: "NC", name: "North Carolina", status: "planned", tile: [6, 5], modelKey: "income_shares" },
   { code: "SC", name: "South Carolina", status: "planned", tile: [7, 5], modelKey: "income_shares" },
 
