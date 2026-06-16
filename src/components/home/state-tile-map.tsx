@@ -4,7 +4,9 @@ import {
   TILE_COLS,
   TILE_ROWS,
   GITHUB_ISSUES_URL,
+  modelLabel,
   type StateEntry,
+  type StateModel,
 } from "@/lib/states";
 
 const TILE = 44;
@@ -14,21 +16,23 @@ const PAD = 8;
 const VIEW_W = TILE_COLS * STRIDE - GAP + PAD * 2;
 const VIEW_H = TILE_ROWS * STRIDE - GAP + PAD * 2;
 
-const FILL: Record<StateEntry["status"], string> = {
-  available: "var(--state-available)",
-  coming_soon: "var(--state-coming)",
-  planned: "var(--state-planned)",
-};
-const TEXT: Record<StateEntry["status"], string> = {
-  available: "var(--state-available-foreground)",
-  coming_soon: "var(--state-coming-foreground)",
-  planned: "var(--state-planned-foreground)",
+// Model hues × status lightness. One harmonized family on cream.
+const MODEL_COLORS: Record<
+  StateModel,
+  { solid: string; pale: string; onSolid: string; onPale: string }
+> = {
+  income_shares: { solid: "#B8442A", pale: "#EFDCD4", onSolid: "#FAFAF7", onPale: "#7A2A18" },
+  percentage:    { solid: "#2E6B70", pale: "#DBE6E6", onSolid: "#FAFAF7", onPale: "#1C4A4E" },
+  melson:        { solid: "#6E4660", pale: "#E7DCE3", onSolid: "#FAFAF7", onPale: "#4A3144" },
 };
 
-function hrefFor(s: StateEntry): string | null {
-  if (s.status === "available" && s.route) return s.route;
-  if (s.status === "coming_soon") return s.route ?? GITHUB_ISSUES_URL;
-  return null;
+const HATCH_ID = "tile-hatch";
+
+function tileFill(s: StateEntry): { fill: string; text: string } {
+  const c = MODEL_COLORS[s.modelKey];
+  return s.status === "available"
+    ? { fill: c.solid, text: c.onSolid }
+    : { fill: c.pale, text: c.onPale };
 }
 
 export function StateTileMap() {
@@ -42,17 +46,16 @@ export function StateTileMap() {
       const y = PAD + row * STRIDE;
       const cx = x + TILE / 2;
       const cy = y + TILE / 2;
-      const interactive = s.status !== "planned";
-      const href = hrefFor(s);
+      const interactive = s.status === "available";
+      const href = interactive ? s.route ?? null : null;
+      const { fill, text } = tileFill(s);
+      const corrected = !!s.correction;
+      const inVerification = s.verifyStatus === "in_verification";
+      const label = modelLabel(s);
       const ariaLabel =
         s.status === "available"
-          ? `${s.name} — open calculator`
-          : s.status === "coming_soon"
-          ? `${s.name} — coming soon`
-          : `${s.name} — planned`;
-
-      const underReview =
-        s.status === "available" && s.reviewStatus === "under_review";
+          ? `${s.name} — ${label} · ${inVerification ? "available, in verification" : corrected ? "verified, recently corrected" : "verified"}`
+          : `${s.name} — ${label} · planned`;
 
       const rect = (
         <g
@@ -60,11 +63,7 @@ export function StateTileMap() {
             transformOrigin: `${cx}px ${cy}px`,
             transition: "transform 120ms ease-out",
           }}
-          className={
-            interactive
-              ? "tile-interactive cursor-pointer"
-              : "tile-inert"
-          }
+          className={interactive ? "tile-interactive cursor-pointer" : "tile-inert"}
         >
           <rect
             x={x}
@@ -73,8 +72,20 @@ export function StateTileMap() {
             height={TILE}
             rx={6}
             ry={6}
-            fill={FILL[s.status]}
+            fill={fill}
           />
+          {inVerification && (
+            <rect
+              x={x}
+              y={y}
+              width={TILE}
+              height={TILE}
+              rx={6}
+              ry={6}
+              fill={`url(#${HATCH_ID})`}
+              style={{ pointerEvents: "none" }}
+            />
+          )}
           <text
             x={cx}
             y={cy}
@@ -83,19 +94,17 @@ export function StateTileMap() {
             fontFamily="ui-monospace, 'JetBrains Mono', Menlo, monospace"
             fontSize={14}
             fontWeight={600}
-            fill={TEXT[s.status]}
+            fill={text}
             style={{ pointerEvents: "none", userSelect: "none" }}
           >
             {s.code}
           </text>
-          {underReview && (
-            <circle
-              cx={x + TILE - 7}
-              cy={y + 7}
-              r={3.5}
-              fill="var(--primary)"
-              stroke="var(--background)"
-              strokeWidth={1.25}
+          {corrected && (
+            <polygon
+              points={`${x + TILE - 16},${y} ${x + TILE},${y} ${x + TILE},${y + 16}`}
+              fill="#7A1F2B"
+              stroke="#FAFAF7"
+              strokeWidth={1}
               style={{ pointerEvents: "none" }}
             />
           )}
@@ -110,16 +119,8 @@ export function StateTileMap() {
       };
 
       if (interactive && href) {
-        const external = href.startsWith("http");
         return (
-          <a
-            key={s.code}
-            href={href}
-            aria-label={ariaLabel}
-            target={external ? "_blank" : undefined}
-            rel={external ? "noreferrer noopener" : undefined}
-            {...handlers}
-          >
+          <a key={s.code} href={href} aria-label={ariaLabel} {...handlers}>
             {rect}
           </a>
         );
@@ -141,6 +142,18 @@ export function StateTileMap() {
           aria-label="United States child support calculator coverage map"
           className="block w-full h-auto"
         >
+          <defs>
+            <pattern
+              id={HATCH_ID}
+              width="9.19"
+              height="9.19"
+              patternUnits="userSpaceOnUse"
+              patternTransform="rotate(135)"
+            >
+              <rect width="9.19" height="9.19" fill="rgba(250,250,247,0)" />
+              <rect width="2.5" height="9.19" fill="rgba(250,250,247,0.62)" />
+            </pattern>
+          </defs>
           <style>{`
             .tile-interactive:hover, .tile-interactive:focus { transform: scale(1.15); outline: none; }
             a:focus-visible .tile-interactive { transform: scale(1.15); }
@@ -157,35 +170,75 @@ export function StateTileMap() {
   );
 }
 
-function Legend() {
-  const items: { label: string; status: StateEntry["status"] }[] = [
-    { label: "Available now", status: "available" },
-    { label: "Coming soon", status: "coming_soon" },
-    { label: "Planned", status: "planned" },
-  ];
+function Swatch({ model }: { model: StateModel }) {
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-      {items.map((it) => (
-        <span key={it.status} className="inline-flex items-center gap-2">
+    <span
+      aria-hidden
+      className="inline-block h-3 w-3 rounded-sm"
+      style={{ background: MODEL_COLORS[model].solid }}
+    />
+  );
+}
+
+function Legend() {
+  return (
+    <div className="mt-4 space-y-2 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-primary">Model</span>
+        <span className="inline-flex items-center gap-2"><Swatch model="income_shares" /> Income shares</span>
+        <span className="inline-flex items-center gap-2"><Swatch model="percentage" /> Percentage of income</span>
+        <span className="inline-flex items-center gap-2"><Swatch model="melson" /> Melson formula</span>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-primary">Status</span>
+        <span className="inline-flex items-center gap-2">
           <span
             aria-hidden
             className="inline-block h-3 w-3 rounded-sm"
-            style={{ background: FILL[it.status] }}
+            style={{ background: MODEL_COLORS.income_shares.solid }}
           />
-          <span>{it.label}</span>
+          Available · verified
         </span>
-      ))}
-      <span className="inline-flex items-center gap-2">
-        <span
-          aria-hidden
-          className="inline-block h-2 w-2 rounded-full"
-          style={{
-            background: "var(--primary)",
-            boxShadow: "0 0 0 1px var(--background)",
-          }}
-        />
-        <span>Being verified</span>
-      </span>
+        <span className="inline-flex items-center gap-2">
+          <span
+            aria-hidden
+            className="relative inline-block h-3 w-3 overflow-hidden rounded-sm"
+            style={{ background: MODEL_COLORS.income_shares.solid }}
+          >
+            <span
+              aria-hidden
+              className="absolute right-0 top-0"
+              style={{
+                width: 0,
+                height: 0,
+                borderTop: "6px solid #7A1F2B",
+                borderLeft: "6px solid transparent",
+              }}
+            />
+          </span>
+          Recently corrected
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span
+            aria-hidden
+            className="inline-block h-3 w-3 rounded-sm"
+            style={{
+              background: `${MODEL_COLORS.income_shares.solid}`,
+              backgroundImage:
+                "repeating-linear-gradient(135deg, rgba(250,250,247,0) 0 4px, rgba(250,250,247,.62) 4px 6.5px)",
+            }}
+          />
+          In verification
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span
+            aria-hidden
+            className="inline-block h-3 w-3 rounded-sm"
+            style={{ background: MODEL_COLORS.income_shares.pale }}
+          />
+          Planned
+        </span>
+      </div>
     </div>
   );
 }
@@ -193,30 +246,33 @@ function Legend() {
 function DetailPanel({ state }: { state: StateEntry | null }) {
   if (!state) {
     const liveCount = STATES.filter((s) => s.status === "available").length;
-    const comingCount = STATES.filter((s) => s.status === "coming_soon").length;
     return (
       <div className="min-h-[112px] rounded-lg border border-dashed border-rule bg-cream/60 p-5 text-sm text-muted-foreground">
-        Hover or focus a state tile for details. {liveCount}{" "}
-        {liveCount === 1 ? "calculator is" : "calculators are"} live.{" "}
-        {comingCount} more across the Southeast{" "}
-        {comingCount === 1 ? "is" : "are"} next.
+        Hover or focus a state tile for details. {liveCount} calculators are
+        live across the Southeast. More states are planned.
       </div>
     );
   }
 
-  const statusLabel =
-    state.status === "available"
-      ? "Available now"
-      : state.status === "coming_soon"
-      ? "Coming soon"
-      : "Planned";
+  const label = modelLabel(state);
+  const corrected = !!state.correction;
+  const inVerification = state.verifyStatus === "in_verification";
+
+  let statusLine: string;
+  if (state.status === "available") {
+    if (inVerification) statusLine = "Available · in verification";
+    else if (corrected) statusLine = "Verified · recently corrected";
+    else statusLine = "Verified";
+  } else {
+    statusLine = "Planned";
+  }
 
   return (
     <div className="min-h-[112px] rounded-lg border border-rule bg-background p-5">
       <div className="flex items-baseline justify-between gap-3">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
-            {statusLabel}
+            {statusLine}
           </p>
           <h3 className="mt-1 font-serif text-xl text-ink">{state.name}</h3>
         </div>
@@ -224,45 +280,39 @@ function DetailPanel({ state }: { state: StateEntry | null }) {
           {state.code}
         </span>
       </div>
-      {state.model && (
-        <p className="mt-2 text-sm text-ink/90">{state.model}</p>
-      )}
+      <p className="mt-2 text-sm text-ink/90">{label}</p>
       {state.cite && (
         <p className="mt-1 font-mono text-xs text-muted-foreground">
           {state.cite}
         </p>
       )}
-      {state.status === "available" && state.reviewStatus === "under_review" && (
-        <p className="mt-2 text-xs leading-relaxed text-primary">
-          <span className="font-mono uppercase tracking-widest">Being verified</span>
-          {state.reviewNote ? ` — ${state.reviewNote}` : ""}
+      {corrected && (
+        <p className="mt-2 text-xs leading-relaxed text-ink/80">
+          {state.correction}
+        </p>
+      )}
+      {inVerification && (
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+          Numbers are being reconciled against the state's own official tool.
         </p>
       )}
       <div className="mt-3 text-sm">
-        {state.status === "available" && state.route && (
+        {state.status === "available" && state.route ? (
           <a
             href={state.route}
             className="font-medium text-primary underline decoration-rule underline-offset-2 hover:decoration-primary"
           >
             Open the {state.name} calculator →
           </a>
-        )}
-        {state.status === "coming_soon" && (
+        ) : (
           <a
-            href={state.route ?? GITHUB_ISSUES_URL}
-            target={state.route ? undefined : "_blank"}
-            rel={state.route ? undefined : "noreferrer noopener"}
-            className="font-medium text-primary underline decoration-rule underline-offset-2 hover:decoration-primary"
+            href={GITHUB_ISSUES_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="text-muted-foreground underline decoration-rule underline-offset-2 hover:text-primary hover:decoration-primary"
           >
-            {state.route
-              ? `See the ${state.name} roadmap →`
-              : "Coming soon — file an issue →"}
+            Planned — follow progress on GitHub →
           </a>
-        )}
-        {state.status === "planned" && (
-          <span className="text-muted-foreground">
-            Planned. Status will update here when work begins.
-          </span>
         )}
       </div>
     </div>
