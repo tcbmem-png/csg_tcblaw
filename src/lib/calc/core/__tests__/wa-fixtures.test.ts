@@ -9,9 +9,10 @@ import { WA_INCOME_SHARES_SPEC } from "../../states/wa/spec";
  * 1014, eff 1/1/2026). All 11 fixtures byte-checked against the live open WSCSS
  * calculator (fortress.wa.gov) 2026-06-16; see CSG/01_States/WA/WA_ByteCheck_Log.md.
  *
- * GATED: WA_StateSpec.json meta.lastVerified is null until Taylor signs off; the
- * spec is not user-exposed (no route) until then. These tests guard the engine
- * math now so the gate is the only thing left.
+ * VERIFIED: WA_StateSpec.json meta.lastVerified = 2026-06-16 (Taylor's sign-off).
+ * The engine is merge-cleared; WA's public calculator tile/route stays dark until
+ * the cited worksheet ships (status "planned" in src/lib/states.ts, no route).
+ * These tests guard the engine math.
  *
  * The fixtures exercise WA's structural firsts: per-child table (valuesArePerChild,
  * total BCSO = cell x N), nearest_100 lookup (<=49 down / >=50 up), 3-decimal

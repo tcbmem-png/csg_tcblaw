@@ -2,12 +2,15 @@
  * Washington runtime spec — income_shares_NET, Ch. 26.19 RCW (Washington State
  * Child Support Schedule), economic table RCW 26.19.020, as amended by EHB 1014
  * (Laws of 2025 ch. 272), effective 1/1/2026. Translated from the verified pack
- * (CSG/01_States/WA/WA_StateSpec.json); not re-derived.
+ * (CSG/01_States/WA/WA_StateSpec.json, lastVerified 2026-06-16 — Taylor's
+ * sign-off on WA_ByteCheck_Log.md, all 11 fixtures byte-checked against the live
+ * open WSCSS calculator); not re-derived.
  *
- * GATED: meta.lastVerified is null in the doctrine pack — WA must NOT merge or
- * deploy until Taylor sets it against WA_ByteCheck_Log.md. This engine reproduces
- * all 11 fixtures (byte-checked against the live open WSCSS calculator), but it
- * is not user-exposed (no route) until the gate clears.
+ * PUBLIC SURFACE HELD DARK: the engine is verified and merge-cleared, but WA must
+ * NOT surface as a standalone public calculator tile/route until the cited,
+ * independently-checked worksheet ships. Keep WA `status: "planned"` in
+ * src/lib/states.ts and add no src/routes/wa.tsx until then; its public surface
+ * is the worksheet, not a bare calculator.
  *
  * WA's structural firsts vs. the existing income-shares states:
  *  - PER-CHILD economic table (schedule.valuesArePerChild): the cell is the
