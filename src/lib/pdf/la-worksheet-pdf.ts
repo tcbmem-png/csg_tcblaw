@@ -17,6 +17,7 @@ import {
   h1,
   small,
   row,
+  headerRow,
   captionLine,
   footerNote,
   drawText,
@@ -178,7 +179,7 @@ export function renderLaWorksheetPdf(
   ctx.pdf.strokeRect(MARGIN, ctx.y, ROW_W, boxTop - ctx.y, RULE, 1);
   ctx.y -= 6;
 
-  for (const l of m.lines) row(ctx, l);
+  for (const l of m.lines) (l.header ? headerRow : row)(ctx, l);
   ctx.y -= 8;
   drawText(ctx, m.summary, MARGIN, ctx.y - 12, { size: 13, bold: true });
   ctx.y -= 18;

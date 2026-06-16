@@ -156,6 +156,45 @@ export function row(ctx: Ctx, r: WorksheetLine) {
   ctx.y -= h;
 }
 
+const COL_W = COL3_RIGHT - COL2_RIGHT; // per-parent column width (~90pt)
+const HEADER_PAD = 6;
+
+/**
+ * Header row for reproduce worksheets. Column labels (parent names) can be
+ * wider than their ~90pt column, so — unlike a data row — we wrap each label
+ * within its column and bottom-align the lines, right-anchored to match the
+ * data cells below. Prevents adjacent headers from colliding (e.g. the
+ * "Custodial Pare" + "Non-Custodial Parent" overrun on LA Worksheet A).
+ */
+export function headerRow(ctx: Ctx, r: WorksheetLine) {
+  const size = 9;
+  const lineH = 11;
+  const cells = [
+    { text: r.col1, right: COL1_RIGHT },
+    { text: r.col2, right: COL2_RIGHT },
+    { text: r.combined, right: COL3_RIGHT },
+  ]
+    .filter((c) => c.text)
+    .map((c) => ({ right: c.right, lines: wrapText(c.text as string, size, COL_W - HEADER_PAD) }));
+  const maxLines = Math.max(1, ...cells.map((c) => c.lines.length));
+  const h = maxLines * lineH + 5;
+  ensure(ctx, h);
+  const top = ctx.y;
+  ctx.pdf.fillRect(MARGIN, top - h, ROW_W, h, HEAD_BG);
+  ctx.pdf.line(MARGIN, top - h, PAGE_W - MARGIN, top - h, RULE, 0.5);
+  const bottom = top - h + 5; // baseline of the bottom line
+  if (r.label) drawText(ctx, r.label, COL_LABEL_X, bottom, { bold: true });
+  for (const c of cells) {
+    c.lines.forEach((ln, idx) => {
+      drawTextRight(ctx, ln, c.right, bottom + (c.lines.length - 1 - idx) * lineH, {
+        size,
+        bold: true,
+      });
+    });
+  }
+  ctx.y -= h;
+}
+
 export function captionLine(ctx: Ctx, label: string, value: string) {
   ensure(ctx, 12);
   drawText(ctx, label, MARGIN + 6, ctx.y - 9, { bold: true, size: 9 });
