@@ -29,9 +29,11 @@ export interface IncomeSharesSpec {
      * Round each parent's income-share percentage before applying it
      * (the State worksheet computes Line 5 from the displayed, rounded share).
      * "nearest_1pct" => AL Rule 32(C)(3); "nearest_0.01pct" => GA/LA (round the
-     * percent to two decimals, e.g. 95.24%). Omit for full precision (AR/FL/TN).
+     * percent to two decimals, e.g. 95.24%); "nearest_0.1pct" => WA (round the
+     * share to three decimals, e.g. 0.617, per the live WSCSS calculator). Omit
+     * for full precision (AR/FL/TN).
      */
-    incomeShare?: "nearest_1pct" | "nearest_0.01pct";
+    incomeShare?: "nearest_1pct" | "nearest_0.01pct" | "nearest_0.1pct";
   };
 }
 

@@ -1,0 +1,270 @@
+[
+  {
+    "id": "WA-baseline-1child",
+    "source": "CSG/01_States/WA/WA_StateSpec.json fixtures; byte-checked vs live WSCSS calculator (fortress.wa.gov) 2026-06-16. Row $6,000/1ch per-child $1,048; obligor A 0.667 share.",
+    "notes": "Net supplied directly (parentANetDeductions []). 0.667 x 1048 = 698.92 -> $699.",
+    "inputs": {
+      "parentAGrossMonthly": 4000,
+      "parentBGrossMonthly": 2000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 6000,
+      "piA": 0.667,
+      "piB": 0.333,
+      "bcso": 1048,
+      "allInMonthly": 699,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "WA-multichild-3child",
+    "source": "WA_StateSpec fixtures; per-child x N (corrected vs live tool). Row $8,000/3ch per-child $767; total BCSO 767 x 3 = 2301.",
+    "notes": "0.625 x 2301 = 1438.13 -> $1,438. Exercises valuesArePerChild.",
+    "inputs": {
+      "parentAGrossMonthly": 5000,
+      "parentBGrossMonthly": 3000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 3,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 8000,
+      "piA": 0.625,
+      "piB": 0.375,
+      "bcso": 2301,
+      "allInMonthly": 1438,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "WA-offRow-nearest100-down-1child",
+    "source": "WA_StateSpec fixtures; nearest_100 EHB 1014 (<=49 down). Combined $5,025 -> $5,000 row, per-child $951.",
+    "notes": "3-dp share: 3025/5025 = 0.602. 0.602 x 951 = 572.50 -> $573 (the corrected value; full precision would give 572).",
+    "inputs": {
+      "parentAGrossMonthly": 3025,
+      "parentBGrossMonthly": 2000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 5025,
+      "piA": 0.602,
+      "piB": 0.398,
+      "bcso": 951,
+      "allInMonthly": 573,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "WA-offRow-nearest100-up-1child",
+    "source": "WA_StateSpec fixtures; nearest_100 EHB 1014 (>=50 up). Combined $5,050 -> $5,100 row, per-child $963.",
+    "notes": "3050/5050 = 0.604. 0.604 x 963 = 581.65 -> $582.",
+    "inputs": {
+      "parentAGrossMonthly": 3050,
+      "parentBGrossMonthly": 2000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 5050,
+      "piA": 0.604,
+      "piB": 0.396,
+      "bcso": 963,
+      "allInMonthly": 582,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "WA-addons-heavy-2child",
+    "source": "WA_StateSpec fixtures; RCW 26.19.080(2)-(3) proportional add-ons. Row $10,000/2ch per-child $1,099; total 2198.",
+    "notes": "Basic 0.6 x 2198 = 1318.8; add-ons (health 400 + day care 800, paid by B) A owes 0.6 x 1200 = 720. 1318.8 + 720 = 2038.8 -> $2,039.",
+    "inputs": {
+      "parentAGrossMonthly": 6000,
+      "parentBGrossMonthly": 4000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 2,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a",
+      "addOns": [
+        { "id": "health_care", "monthly": 400, "paidBy": "parent_b" },
+        { "id": "work_related_childcare", "monthly": 800, "paidBy": "parent_b" }
+      ]
+    },
+    "expected": {
+      "combinedAGI": 10000,
+      "piA": 0.6,
+      "piB": 0.4,
+      "bcso": 2198,
+      "allInMonthly": 2039,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "WA-above-50k-2child",
+    "source": "WA_StateSpec fixtures; RCW 26.19.065(3) presumptive cap at $50,000 row. Per-child $3,058; total 6116 (per-child x N).",
+    "notes": "Combined $55,000 > $50,000 ceiling: top-row amount is the floor; 0.636 x 6116 = 3889.78 -> $3,890. Court may exceed on written findings.",
+    "inputs": {
+      "parentAGrossMonthly": 35000,
+      "parentBGrossMonthly": 20000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 2,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 55000,
+      "piA": 0.636,
+      "piB": 0.364,
+      "bcso": 6116,
+      "bcsoSource": "above_cap",
+      "allInMonthly": 3890,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "WA-ssr-binds-1child",
+    "source": "WA_StateSpec fixtures; RCW 26.19.065(2)(b) self-support reserve = 180% FPL one-person = $2,394/mo.",
+    "notes": "Row $5,100/1ch $963. Basic 0.490 x 963 = 471.87 leaves obligor net 2500 - 472 < 2394; capped to obligorNet - reserve = 2500 - 2394 = 106 (> $50 min).",
+    "inputs": {
+      "parentAGrossMonthly": 2500,
+      "parentBGrossMonthly": 2600,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 5100,
+      "piA": 0.49,
+      "piB": 0.51,
+      "bcso": 963,
+      "allInMonthly": 106,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": true,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "WA-presumptive-min-1child",
+    "source": "WA_StateSpec fixtures; RCW 26.19.065(2)(a) $50/child minimum when obligor net < 180% FPL.",
+    "notes": "Obligor A net 2000 < 2394: reserve ceiling = max(0, 2000-2394) = 0; floored to $50/child = $50.",
+    "inputs": {
+      "parentAGrossMonthly": 2000,
+      "parentBGrossMonthly": 3000,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 5000,
+      "piA": 0.4,
+      "piB": 0.6,
+      "bcso": 951,
+      "allInMonthly": 50,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": true,
+      "minimumOrderApplied": true
+    }
+  },
+  {
+    "id": "WA-below-floor-2child",
+    "source": "WA_StateSpec fixtures; RCW 26.19.020 below-$2,200 branch. Live tool uses the $2,200 row + $50/child floor.",
+    "notes": "Combined $2,100 < $2,200 -> lookup clamps to the $2,200 row (per-child $367/2ch, total 734); obligor net 1300 drives the obligation to the $50/child minimum = $100/2ch.",
+    "inputs": {
+      "parentAGrossMonthly": 1300,
+      "parentBGrossMonthly": 800,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 2,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 2100,
+      "piA": 0.619,
+      "piB": 0.381,
+      "bcso": 734,
+      "allInMonthly": 100,
+      "allInDirection": "parent_a_to_b",
+      "minimumOrderApplied": true
+    }
+  },
+  {
+    "id": "WA-deviation-residential-1child",
+    "source": "WA_StateSpec fixtures; standard calc FIRST, before any discretionary residential deviation RCW 26.19.075(1)(d).",
+    "notes": "Row $7,000/1ch $1,156. 0.643 x 1156 = 743.31 -> $743. Residential credit is discretionary, not a formula (parenting model none).",
+    "inputs": {
+      "parentAGrossMonthly": 4500,
+      "parentBGrossMonthly": 2500,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 7000,
+      "piA": 0.643,
+      "piB": 0.357,
+      "bcso": 1156,
+      "allInMonthly": 743,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  },
+  {
+    "id": "WA-imputation-1child",
+    "source": "WA_StateSpec fixtures; RCW 26.19.071(6) six-tier imputation resolved upstream to NET. Row $6,000/1ch $1,048.",
+    "notes": "Imputed obligor net $3,500; 0.583 x 1048 = 611.0 -> $611. Imputation tiers are an input-derivation step, not engine math.",
+    "inputs": {
+      "parentAGrossMonthly": 3500,
+      "parentBGrossMonthly": 2500,
+      "parentANetDeductions": [],
+      "parentBNetDeductions": [],
+      "numChildren": 1,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 6000,
+      "piA": 0.583,
+      "piB": 0.417,
+      "bcso": 1048,
+      "allInMonthly": 611,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": false,
+      "minimumOrderApplied": false
+    }
+  }
+]
