@@ -17,7 +17,7 @@ export const Route = createFileRoute("/about")({
       {
         property: "og:description",
         content:
-          "Civic legal infrastructure for Tennessee and Mississippi child support, maintained by TCB Law, PLLC. Open source, MIT licensed.",
+          "Civic legal infrastructure for child support guidelines across seven Southeastern states, maintained by TCB Law, PLLC. Open source, MIT licensed.",
       },
       { property: "og:url", content: "https://csg.tcblaw.org/about" },
     ],
@@ -38,19 +38,36 @@ function About() {
 
       <p className="mt-6 text-lg text-muted-foreground">
         The TCB child support calculators are open-source implementations of
-        the Tennessee and Mississippi child support guidelines. They are
-        free to use, free to fork, and free to audit. No signup, no paywall,
-        no telemetry.
+        state child support guidelines — seven so far: Tennessee, Mississippi,
+        Arkansas, Alabama, Louisiana, Georgia, and Florida. Free to use,
+        free to fork, free to audit. No signup, no paywall, no telemetry.
       </p>
 
       <h2 className="mt-10 font-serif text-2xl">Mission</h2>
       <p className="mt-3">
-        Good law deserves good tooling. Both Tennessee and Mississippi have
-        well-developed child support regimes, but the official tooling
-        ranges from a macro-enabled Excel file to ad-hoc spreadsheets that
-        rarely produce a worksheet a chancellor can read. This project
-        closes that gap with calculators that mirror the rule paragraph by
-        paragraph and produce filing-ready output.
+        Good law deserves good tooling. Most states have well-developed child
+        support guidelines. The tooling that delivers them often doesn't — a
+        macro-enabled Excel file one computer opens and the next can't, a
+        calculator behind a login that asks an ordinary parent for a bar number,
+        a revenue department that tells people to search Google. And the number
+        matters: by federal law a state's guideline figure isn't an estimate,
+        it's the number a court starts from, the one a judge can leave only
+        with a written finding. The law is mostly good. It rots in the layer
+        in between. This project closes that gap with calculators that trace
+        every line of math to the rule that authorizes it and produce
+        filing-ready output.
+      </p>
+
+      <h2 className="mt-10 font-serif text-2xl">Verified in the open</h2>
+      <p className="mt-3">
+        We check each calculator against the state's own official tool, not
+        against our own homework. When we get something wrong, we say so and
+        fix it where everyone can see — Louisiana had been running a superseded
+        schedule until we caught it and moved to the state's 2025 table;
+        Georgia's parenting-time calculation was corrected against the state's
+        2026 guidelines. Where a state's own tool has corrected one of ours,
+        the site says so. Trust was never that a tool is perfect. It's that
+        you can see the work, and someone fixes it when it's wrong.
       </p>
 
       <h2 className="mt-10 font-serif text-2xl">Maintenance model</h2>
@@ -97,23 +114,22 @@ function About() {
 
       <h2 className="mt-10 font-serif text-2xl">Author</h2>
       <p className="mt-3">
-        Built and maintained by Taylor Black at TCB Law, PLLC. State-specific
-        verification notes live on the per-state about pages.
+        Built and maintained by Taylor C. Berger at TCB Law, PLLC, in Memphis
+        and Oxford. State-specific verification notes live on the per-state
+        about pages.
       </p>
 
       <h2 className="mt-10 font-serif text-2xl">Roadmap</h2>
       <p className="mt-3">
-        Tennessee and Mississippi are live. Arkansas, Alabama, and Louisiana
-        are on the roadmap; the calculators share an architecture that lets
-        us add a state in a few days once the legal specification is
-        complete. See the{" "}
-        <a
-          href="/ar"
-          className="underline decoration-rule underline-offset-2 hover:text-primary hover:decoration-primary"
-        >
-          Arkansas roadmap page
-        </a>{" "}
-        for the contribution invitation.
+        Seven Southeastern states are live: Tennessee, Mississippi, Arkansas,
+        Alabama, Louisiana, Georgia, and Florida. The rest of the country is
+        next. Nearly every state runs one of three models — income shares
+        (the large majority), a percentage of one parent's income (a handful),
+        or the Melson formula (three states: Delaware, Hawaii, and Montana).
+        The engines already cover the first two; adding a state is mostly
+        data, fixtures, and verification against that state's own tool, not new
+        code. The one new engine — Melson — gets built when those three
+        states come up.
       </p>
 
       <h2 className="mt-10 font-serif text-2xl">Contact</h2>
@@ -147,6 +163,26 @@ function About() {
         {" · "}
         <a href="/ms/about" className="underline decoration-rule underline-offset-2 hover:text-primary">
           Mississippi
+        </a>
+        {" · "}
+        <a href="/ar/about" className="underline decoration-rule underline-offset-2 hover:text-primary">
+          Arkansas
+        </a>
+        {" · "}
+        <a href="/al/about" className="underline decoration-rule underline-offset-2 hover:text-primary">
+          Alabama
+        </a>
+        {" · "}
+        <a href="/la/about" className="underline decoration-rule underline-offset-2 hover:text-primary">
+          Louisiana
+        </a>
+        {" · "}
+        <a href="/ga/about" className="underline decoration-rule underline-offset-2 hover:text-primary">
+          Georgia
+        </a>
+        {" · "}
+        <a href="/fl/about" className="underline decoration-rule underline-offset-2 hover:text-primary">
+          Florida
         </a>
       </div>
     </div>
