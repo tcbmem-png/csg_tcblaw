@@ -41,6 +41,8 @@ export interface StateEntry {
   verifyStatus?: "in_verification";
   /** Hybrid/edge cases that need a model confirmation (e.g. DC). */
   confirm?: boolean;
+  /** Effective date of the state's current schedule (ISO YYYY-MM-DD). */
+  scheduleEffectiveDate?: string;
 }
 
 export const TILE_COLS = 11;
