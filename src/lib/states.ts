@@ -150,6 +150,7 @@ export const STATES: StateEntry[] = [
     modelKey: "income_shares",
     correction:
       "Updated to Louisiana's 2025 child-support schedule (we had been running the 2021 table).",
+    scheduleEffectiveDate: "2025-01-01",
   },
   {
     code: "MS",
@@ -171,6 +172,7 @@ export const STATES: StateEntry[] = [
     tile: [6, 6],
     modelKey: "income_shares",
     verifyStatus: "in_verification",
+    scheduleEffectiveDate: "2022-05-01",
   },
   {
     code: "GA",
@@ -183,6 +185,7 @@ export const STATES: StateEntry[] = [
     modelKey: "income_shares",
     correction:
       "Corrected the parenting-time (Schedule C) calculation against Georgia's 2026 guidelines.",
+    scheduleEffectiveDate: "2026-01-01",
   },
 
   // Row 7
