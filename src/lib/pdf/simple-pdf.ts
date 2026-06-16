@@ -35,11 +35,13 @@ export function cleanText(text: string) {
     .replace(/•/g, "*")
     .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'")
-    .replace(/[^	\n\r\x20-\x7E]/g, "?");
+    .replace(/[^	\n\r\x20-\x7E§]/g, "?"); // keep §; other non-ASCII -> "?"
 }
 
 function escapePdfText(text: string) {
-  return cleanText(text).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  const s = cleanText(text).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  // § -> octal \247, the "section" glyph in Helvetica's StandardEncoding.
+  return s.replace(/§/g, "\\247");
 }
 
 export function widthOfText(text: string, size: number) {
