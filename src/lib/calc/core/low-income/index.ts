@@ -13,6 +13,7 @@ import { payorGrossReserve } from "./payor-gross-reserve";
 import { economicIncentiveReserve } from "./economic-incentive-reserve";
 import { povertyGuidelineReserve } from "./poverty-guideline-reserve";
 import { lowIncomeDeviationTable } from "./low-income-deviation-table";
+import { obligorNetReserve } from "./obligor-net-reserve";
 
 export const LOW_INCOME_STRATEGIES = {
   // TN's shaded-cell SSR.
@@ -26,6 +27,8 @@ export const LOW_INCOME_STRATEGIES = {
   poverty_guideline_reserve: povertyGuidelineReserve,
   // GA's lesser-of (p)-table cap (O.C.G.A. § 19-6-15(i.1)).
   low_income_deviation_table: lowIncomeDeviationTable,
+  // WA's 45%-cap + obligor-net SSR + $50/child minimum (RCW 26.19.065).
+  obligor_net_reserve: obligorNetReserve,
 } as const;
 
 export type LowIncomeModel = keyof typeof LOW_INCOME_STRATEGIES;
@@ -44,3 +47,5 @@ export type {
   LowIncomeDeviationTableParams,
   LowIncomeDeviationTableRow,
 } from "./low-income-deviation-table";
+export { obligorNetReserve } from "./obligor-net-reserve";
+export type { ObligorNetReserveParams } from "./obligor-net-reserve";

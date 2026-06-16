@@ -94,6 +94,11 @@ export function incomeShares(
   } else if (spec.rounding.incomeShare === "nearest_0.01pct") {
     piA = Math.round(piA * 10000) / 10000;
     piB = 1 - piA;
+  } else if (spec.rounding.incomeShare === "nearest_0.1pct") {
+    // WA: each parent's share rounded to 3 decimals (0.617/0.383) before Line 6,
+    // per the live WSCSS calculator (the GA/LA defect WA must not repeat).
+    piA = Math.round(piA * 1000) / 1000;
+    piB = 1 - piA;
   }
 
   let lookup;

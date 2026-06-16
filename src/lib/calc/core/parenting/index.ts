@@ -14,12 +14,15 @@ import { tnVariableMultiplier } from "./tn-variable-multiplier";
 import { offsetDualWorksheet } from "./offset-dual-worksheet";
 import { sharedCustodyCrossMultiply } from "./shared-custody-cross-multiply";
 import { crossCredit } from "./cross-credit";
+import { noneParenting } from "./none";
 
 export const PARENTING_STRATEGIES = {
   tn_variable_multiplier: tnVariableMultiplier,
   offset_dual_worksheet: offsetDualWorksheet,
   shared_custody_cross_multiply: sharedCustodyCrossMultiply,
   cross_credit: crossCredit,
+  // WA: no residential-time formula; obligor pays straight income share.
+  none: noneParenting,
 } as const;
 
 export type ParentingModel = keyof typeof PARENTING_STRATEGIES;
@@ -33,3 +36,5 @@ export { sharedCustodyCrossMultiply } from "./shared-custody-cross-multiply";
 export type { SharedCustodyCrossMultiplyParams } from "./shared-custody-cross-multiply";
 export { crossCredit } from "./cross-credit";
 export type { CrossCreditParams } from "./cross-credit";
+export { noneParenting } from "./none";
+export type { NoneParentingParams } from "./none";
