@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { CONSTANTS_EFFECTIVE_DATE } from "@/lib/calc/data/constants";
+import { detectState } from "@/lib/states";
 
 
 
