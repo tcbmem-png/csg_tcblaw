@@ -51,6 +51,11 @@ function Index() {
             <br />
             Pick a state to begin.
           </p>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+            Your state&apos;s guideline isn&apos;t an estimate — by federal law it&apos;s{" "}
+            <span className="text-primary">the number a court starts from</span>.
+            We make that number, in the open.
+          </p>
         </div>
       </section>
 
