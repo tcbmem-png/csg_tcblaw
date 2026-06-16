@@ -236,5 +236,27 @@
       "ssrApplied": false,
       "minimumOrderApplied": false
     }
+  },
+  {
+    "id": "AL-lowincome-ssr-binds-3child",
+    "source": "Hand-derived to exercise the Rule 32(C)(5) self-support reserve (CS-42 SSR line). Obligor adjusted income $1,500.",
+    "notes": "SSR BINDS: Line 11 income-available = 1500-981 = 519; Line 12 max-after-SSR = MAX(round(0.85x519),50) = 441; standard Line 10 obligation = round(0.5 x 1011) = 506 > 441, so Line 13 = MIN(506, 441) = 441. Equal incomes 1500/1500, A is the nondomiciliary obligor.",
+    "inputs": {
+      "parentAGrossMonthly": 1500,
+      "parentBGrossMonthly": 1500,
+      "numChildren": 3,
+      "parentingType": "standard",
+      "arpForStandard": "parent_a"
+    },
+    "expected": {
+      "combinedAGI": 3000,
+      "piA": 0.5,
+      "piB": 0.5,
+      "bcso": 1011,
+      "allInMonthly": 441,
+      "allInDirection": "parent_a_to_b",
+      "ssrApplied": true,
+      "minimumOrderApplied": false
+    }
   }
 ]

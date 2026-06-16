@@ -5,10 +5,7 @@ import type { IncomeSharesInputs, IncomeSharesOutputs } from "../types";
 import { AL_INCOME_SHARES_SPEC } from "../../states/al/spec";
 
 /** Assert each present field in `expected` matches `actual` (money-tolerant). */
-function assertExpected(
-  actual: Record<string, unknown>,
-  expected: Record<string, unknown>,
-) {
+function assertExpected(actual: Record<string, unknown>, expected: Record<string, unknown>) {
   for (const [key, want] of Object.entries(expected)) {
     const got = actual[key];
     if (typeof want === "number") {
@@ -24,16 +21,13 @@ describe("AL fixtures reproduce through the generic income-shares core", () => {
     new URL("../../states/al/fixtures.json", import.meta.url),
   );
 
-  it("loaded all 10 AL fixtures", () => {
-    expect(fixtures.length).toBe(10);
+  it("loaded all 11 AL fixtures", () => {
+    expect(fixtures.length).toBe(11);
   });
 
   for (const fx of fixtures) {
     it(`${fx.id}`, () => {
-      const out = incomeShares(
-        AL_INCOME_SHARES_SPEC,
-        fx.inputs as IncomeSharesInputs,
-      );
+      const out = incomeShares(AL_INCOME_SHARES_SPEC, fx.inputs as IncomeSharesInputs);
       expect(out.errors, "errors").toEqual([]);
       assertExpected(
         out as unknown as Record<string, unknown>,

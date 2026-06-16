@@ -150,4 +150,44 @@ describe("AL CS-42 standard — form-level verification gate", () => {
       /standard-custody only/i,
     );
   });
+
+  // SSR-binding case (Rule 32(C)(5)): obligor adjusted income $1,500, equal
+  // incomes, 3 children -> standard Line 10 = round(0.5 x 1011) = 506, SSR
+  // cap Line 12 = MAX(round(0.85 x (1500-981)), 50) = 441, so Line 13 = MIN = 441.
+  const SSR_BINDS: IncomeSharesInputs = {
+    parentAGrossMonthly: 1500,
+    parentBGrossMonthly: 1500,
+    numChildren: 3,
+    parentingType: "standard",
+    arpForStandard: "parent_a",
+  };
+  const SSR_LINE11 = 1500 - 981; // 519 income available after reserve
+  const SSR_CAP = Math.max(Math.round(0.85 * SSR_LINE11), 50); // 441 (Line 12)
+  const SSR_STD = Math.round(0.5 * 1011); // 506 standard Line 10
+
+  it("(a) engine produces the lesser-of (standard, SSR cap) order", () => {
+    const o = incomeShares(AL_INCOME_SHARES_SPEC, SSR_BINDS);
+    expect(o.errors).toEqual([]);
+    expect(o.bcso).toBe(1011);
+    expect(o.ssrApplied).toBe(true);
+    expect(SSR_STD).toBeGreaterThan(SSR_CAP); // the cap actually binds
+    expect(o.allInMonthly).toBe(Math.min(SSR_STD, SSR_CAP)); // 441
+    expect(o.allInMonthly).toBe(441);
+  });
+
+  it("(b) the filled form prints Income Available, Max After SSR, and Line 13 = MIN(Line10, Line12)", async () => {
+    const o = incomeShares(AL_INCOME_SHARES_SPEC, SSR_BINDS); // obligor = parent_a
+    const printed = await fillAndReadBack(buildAlCs42Data(SSR_BINDS, o, { plaintiff: "parent_a" }));
+    // Line 11 income available after reserve, Line 12 max-after-SSR (obligor col).
+    expect(printed["Plaintiff Income Available"]).toBe(String(SSR_LINE11)); // 519
+    expect(printed["Plaintiff Max Recommended Child Support After SSR"]).toBe(String(SSR_CAP)); // 441
+    // Line 10 standard obligation before SSR consideration.
+    expect(printed["Plaintiff Obligation Before Consideration"]).toBe(String(SSR_STD)); // 506
+    // Line 13 recommended order = MIN(Line 10, Line 12) = 441 (capped, not 506).
+    expect(printed["Plaintiff Recommended Child Support AMount"]).toBe(String(SSR_CAP)); // 441
+    expect(printed["Combined Recommended Child Support Amount"]).toBe(String(SSR_CAP));
+    // The recipient column carries no SSR/recommended values.
+    expect(printed["Defendant Income Available"]).toBe("");
+    expect(printed["Defendant Recommended Child Support Amount"]).toBe("");
+  });
 });
