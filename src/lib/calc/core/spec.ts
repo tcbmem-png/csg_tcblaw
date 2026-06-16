@@ -48,7 +48,10 @@ export function roundFinal(n: number, mode: FinalRounding): number {
     case "nearest_dollar":
       return Math.round(n);
     case "round_down":
-      return Math.floor(n);
+      // Round the order DOWN to the dollar by magnitude (truncate toward zero),
+      // so a payor→payee and payee→payor order of equal size round the same way.
+      // AR AO 10 § III: "rounded down to the nearest dollar". (First user: AR.)
+      return Math.sign(n) * Math.floor(Math.abs(n));
     case "half_up":
       return Math.sign(n) * Math.floor(Math.abs(n) + 0.5);
     case "nearest_cent":
