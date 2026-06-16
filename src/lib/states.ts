@@ -41,6 +41,8 @@ export interface StateEntry {
   verifyStatus?: "in_verification";
   /** Hybrid/edge cases that need a model confirmation (e.g. DC). */
   confirm?: boolean;
+  /** Effective date of the state's current schedule (ISO YYYY-MM-DD). */
+  scheduleEffectiveDate?: string;
 }
 
 export const TILE_COLS = 11;
@@ -118,6 +120,7 @@ export const STATES: StateEntry[] = [
     tile: [4, 5],
     modelKey: "income_shares",
     verifyStatus: "in_verification",
+    scheduleEffectiveDate: "2020-07-01",
   },
   {
     code: "TN",
@@ -128,6 +131,7 @@ export const STATES: StateEntry[] = [
     route: "/tn",
     tile: [5, 5],
     modelKey: "income_shares",
+    scheduleEffectiveDate: "2021-10-01",
   },
   { code: "NC", name: "North Carolina", status: "planned", tile: [6, 5], modelKey: "income_shares" },
   { code: "SC", name: "South Carolina", status: "planned", tile: [7, 5], modelKey: "income_shares" },
@@ -146,6 +150,7 @@ export const STATES: StateEntry[] = [
     modelKey: "income_shares",
     correction:
       "Updated to Louisiana's 2025 child-support schedule (we had been running the 2021 table).",
+    scheduleEffectiveDate: "2025-01-01",
   },
   {
     code: "MS",
@@ -167,6 +172,7 @@ export const STATES: StateEntry[] = [
     tile: [6, 6],
     modelKey: "income_shares",
     verifyStatus: "in_verification",
+    scheduleEffectiveDate: "2022-05-01",
   },
   {
     code: "GA",
@@ -179,6 +185,7 @@ export const STATES: StateEntry[] = [
     modelKey: "income_shares",
     correction:
       "Corrected the parenting-time (Schedule C) calculation against Georgia's 2026 guidelines.",
+    scheduleEffectiveDate: "2026-01-01",
   },
 
   // Row 7
@@ -193,6 +200,7 @@ export const STATES: StateEntry[] = [
     tile: [8, 7],
     modelKey: "income_shares",
     verifyStatus: "in_verification",
+    scheduleEffectiveDate: "2023-07-01",
   },
 ];
 
