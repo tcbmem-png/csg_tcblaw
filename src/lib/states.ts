@@ -200,6 +200,7 @@ export const STATES: StateEntry[] = [
     tile: [8, 7],
     modelKey: "income_shares",
     verifyStatus: "in_verification",
+    scheduleEffectiveDate: "2023-07-01",
   },
 ];
 
