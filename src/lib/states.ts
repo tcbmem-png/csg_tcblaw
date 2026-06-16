@@ -1,7 +1,7 @@
 // Single source of truth for the 50-state registry that drives the homepage
 // tile-grid map, the text list, the header's active-state detection, and the
-// sitemap. Flipping a state from "planned" -> "coming_soon" -> "available"
-// here updates every surface.
+// sitemap. Flipping a state from "planned" -> "available" here updates every
+// surface.
 
 export type StateStatus = "available" | "coming_soon" | "planned";
 
@@ -11,6 +11,9 @@ export type StateStatus = "available" | "coming_soon" | "planned";
  * homepage tile + list. Single field, no per-state code paths.
  */
 export type StateReviewStatus = "verified" | "under_review";
+
+/** Calculation model used by a state guideline. Drives the tile hue. */
+export type StateModel = "income_shares" | "percentage" | "melson";
 
 export interface StateEntry {
   /** USPS 2-letter code, uppercase. */
@@ -30,61 +33,81 @@ export interface StateEntry {
   reviewStatus?: StateReviewStatus;
   /** Plain-English note shown on the /xx banner when under_review. */
   reviewNote?: string;
+  /** Calculation-model family (hue on the map). */
+  modelKey: StateModel;
+  /** Plain-English note on a recent correction; renders the corner flag (LA, GA). */
+  correction?: string;
+  /** Active verification flag; renders the diagonal hatch (AR, AL, FL). */
+  verifyStatus?: "in_verification";
+  /** Hybrid/edge cases that need a model confirmation (e.g. DC). */
+  confirm?: boolean;
 }
 
 export const TILE_COLS = 11;
 export const TILE_ROWS = 8;
 
+const MODEL_LABELS: Record<StateModel, string> = {
+  income_shares: "Income shares",
+  percentage: "Percentage of income",
+  melson: "Melson formula",
+};
+
+/** Display label for a state's model. NY is "Percentage of combined income". */
+export function modelLabel(s: StateEntry): string {
+  if (s.code === "NY") return "Percentage of combined income";
+  return MODEL_LABELS[s.modelKey];
+}
+
 export const STATES: StateEntry[] = [
   // Row 0
-  { code: "AK", name: "Alaska", status: "planned", tile: [0, 0] },
-  { code: "ME", name: "Maine", status: "planned", tile: [10, 0] },
+  { code: "AK", name: "Alaska", status: "planned", tile: [0, 0], modelKey: "percentage" },
+  { code: "ME", name: "Maine", status: "planned", tile: [10, 0], modelKey: "income_shares" },
 
   // Row 1
-  { code: "VT", name: "Vermont", status: "planned", tile: [9, 1] },
-  { code: "NH", name: "New Hampshire", status: "planned", tile: [10, 1] },
+  { code: "VT", name: "Vermont", status: "planned", tile: [9, 1], modelKey: "income_shares" },
+  { code: "NH", name: "New Hampshire", status: "planned", tile: [10, 1], modelKey: "income_shares" },
 
   // Row 2
-  { code: "WA", name: "Washington", status: "planned", tile: [0, 2] },
-  { code: "ID", name: "Idaho", status: "planned", tile: [1, 2] },
-  { code: "MT", name: "Montana", status: "planned", tile: [2, 2] },
-  { code: "ND", name: "North Dakota", status: "planned", tile: [3, 2] },
-  { code: "MN", name: "Minnesota", status: "planned", tile: [4, 2] },
-  { code: "WI", name: "Wisconsin", status: "planned", tile: [5, 2] },
-  { code: "MI", name: "Michigan", status: "planned", tile: [6, 2] },
-  { code: "NY", name: "New York", status: "planned", tile: [8, 2] },
-  { code: "MA", name: "Massachusetts", status: "planned", tile: [9, 2] },
-  { code: "RI", name: "Rhode Island", status: "planned", tile: [10, 2] },
+  { code: "WA", name: "Washington", status: "planned", tile: [0, 2], modelKey: "income_shares" },
+  { code: "ID", name: "Idaho", status: "planned", tile: [1, 2], modelKey: "income_shares" },
+  { code: "MT", name: "Montana", status: "planned", tile: [2, 2], modelKey: "melson" },
+  { code: "ND", name: "North Dakota", status: "planned", tile: [3, 2], modelKey: "percentage" },
+  { code: "MN", name: "Minnesota", status: "planned", tile: [4, 2], modelKey: "income_shares" },
+  { code: "WI", name: "Wisconsin", status: "planned", tile: [5, 2], modelKey: "percentage" },
+  { code: "MI", name: "Michigan", status: "planned", tile: [6, 2], modelKey: "income_shares" },
+  { code: "NY", name: "New York", status: "planned", tile: [8, 2], modelKey: "percentage" },
+  { code: "MA", name: "Massachusetts", status: "planned", tile: [9, 2], modelKey: "income_shares" },
+  { code: "RI", name: "Rhode Island", status: "planned", tile: [10, 2], modelKey: "income_shares" },
 
   // Row 3
-  { code: "OR", name: "Oregon", status: "planned", tile: [0, 3] },
-  { code: "NV", name: "Nevada", status: "planned", tile: [1, 3] },
-  { code: "WY", name: "Wyoming", status: "planned", tile: [2, 3] },
-  { code: "SD", name: "South Dakota", status: "planned", tile: [3, 3] },
-  { code: "IA", name: "Iowa", status: "planned", tile: [4, 3] },
-  { code: "IL", name: "Illinois", status: "planned", tile: [5, 3] },
-  { code: "IN", name: "Indiana", status: "planned", tile: [6, 3] },
-  { code: "OH", name: "Ohio", status: "planned", tile: [7, 3] },
-  { code: "PA", name: "Pennsylvania", status: "planned", tile: [8, 3] },
-  { code: "NJ", name: "New Jersey", status: "planned", tile: [9, 3] },
-  { code: "CT", name: "Connecticut", status: "planned", tile: [10, 3] },
+  { code: "OR", name: "Oregon", status: "planned", tile: [0, 3], modelKey: "income_shares" },
+  { code: "NV", name: "Nevada", status: "planned", tile: [1, 3], modelKey: "percentage" },
+  { code: "WY", name: "Wyoming", status: "planned", tile: [2, 3], modelKey: "income_shares" },
+  { code: "SD", name: "South Dakota", status: "planned", tile: [3, 3], modelKey: "income_shares" },
+  { code: "IA", name: "Iowa", status: "planned", tile: [4, 3], modelKey: "income_shares" },
+  { code: "IL", name: "Illinois", status: "planned", tile: [5, 3], modelKey: "income_shares" },
+  { code: "IN", name: "Indiana", status: "planned", tile: [6, 3], modelKey: "income_shares" },
+  { code: "OH", name: "Ohio", status: "planned", tile: [7, 3], modelKey: "income_shares" },
+  { code: "PA", name: "Pennsylvania", status: "planned", tile: [8, 3], modelKey: "income_shares" },
+  { code: "NJ", name: "New Jersey", status: "planned", tile: [9, 3], modelKey: "income_shares" },
+  { code: "CT", name: "Connecticut", status: "planned", tile: [10, 3], modelKey: "income_shares" },
 
   // Row 4
-  { code: "CA", name: "California", status: "planned", tile: [0, 4] },
-  { code: "UT", name: "Utah", status: "planned", tile: [1, 4] },
-  { code: "CO", name: "Colorado", status: "planned", tile: [2, 4] },
-  { code: "NE", name: "Nebraska", status: "planned", tile: [3, 4] },
-  { code: "MO", name: "Missouri", status: "planned", tile: [4, 4] },
-  { code: "KY", name: "Kentucky", status: "planned", tile: [5, 4] },
-  { code: "WV", name: "West Virginia", status: "planned", tile: [6, 4] },
-  { code: "VA", name: "Virginia", status: "planned", tile: [7, 4] },
-  { code: "MD", name: "Maryland", status: "planned", tile: [8, 4] },
-  { code: "DE", name: "Delaware", status: "planned", tile: [9, 4] },
+  { code: "CA", name: "California", status: "planned", tile: [0, 4], modelKey: "income_shares" },
+  { code: "UT", name: "Utah", status: "planned", tile: [1, 4], modelKey: "income_shares" },
+  { code: "CO", name: "Colorado", status: "planned", tile: [2, 4], modelKey: "income_shares" },
+  { code: "NE", name: "Nebraska", status: "planned", tile: [3, 4], modelKey: "income_shares" },
+  { code: "MO", name: "Missouri", status: "planned", tile: [4, 4], modelKey: "income_shares" },
+  { code: "KY", name: "Kentucky", status: "planned", tile: [5, 4], modelKey: "income_shares" },
+  { code: "WV", name: "West Virginia", status: "planned", tile: [6, 4], modelKey: "income_shares" },
+  { code: "VA", name: "Virginia", status: "planned", tile: [7, 4], modelKey: "income_shares" },
+  { code: "MD", name: "Maryland", status: "planned", tile: [8, 4], modelKey: "income_shares" },
+  { code: "DE", name: "Delaware", status: "planned", tile: [9, 4], modelKey: "melson" },
 
   // Row 5
-  { code: "AZ", name: "Arizona", status: "planned", tile: [1, 5] },
-  { code: "NM", name: "New Mexico", status: "planned", tile: [2, 5] },
-  { code: "KS", name: "Kansas", status: "planned", tile: [3, 5] },
+  { code: "AZ", name: "Arizona", status: "planned", tile: [1, 5], modelKey: "income_shares" },
+  { code: "NM", name: "New Mexico", status: "planned", tile: [2, 5], modelKey: "income_shares" },
+  { code: "KS", name: "Kansas", status: "planned", tile: [3, 5], modelKey: "income_shares" },
   {
     code: "AR",
     name: "Arkansas",
@@ -93,6 +116,8 @@ export const STATES: StateEntry[] = [
     status: "available",
     route: "/ar",
     tile: [4, 5],
+    modelKey: "income_shares",
+    verifyStatus: "in_verification",
   },
   {
     code: "TN",
@@ -102,13 +127,14 @@ export const STATES: StateEntry[] = [
     status: "available",
     route: "/tn",
     tile: [5, 5],
+    modelKey: "income_shares",
   },
-  { code: "NC", name: "North Carolina", status: "planned", tile: [6, 5] },
-  { code: "SC", name: "South Carolina", status: "planned", tile: [7, 5] },
+  { code: "NC", name: "North Carolina", status: "planned", tile: [6, 5], modelKey: "income_shares" },
+  { code: "SC", name: "South Carolina", status: "planned", tile: [7, 5], modelKey: "income_shares" },
 
   // Row 6
-  { code: "HI", name: "Hawaii", status: "planned", tile: [0, 6] },
-  { code: "OK", name: "Oklahoma", status: "planned", tile: [3, 6] },
+  { code: "HI", name: "Hawaii", status: "planned", tile: [0, 6], modelKey: "melson" },
+  { code: "OK", name: "Oklahoma", status: "planned", tile: [3, 6], modelKey: "income_shares" },
   {
     code: "LA",
     name: "Louisiana",
@@ -117,9 +143,9 @@ export const STATES: StateEntry[] = [
     status: "available",
     route: "/la",
     tile: [4, 6],
-    // 2025 DCFS OBWS schedule in place; all nine active fixtures re-pinned and
-    // confirmed to the cent against the live OBWS calculator (share rounding
-    // 0.01%, sub-$1,050 4%-of-combined floor). Banner cleared (verified).
+    modelKey: "income_shares",
+    correction:
+      "Updated to Louisiana's 2025 child-support schedule (we had been running the 2021 table).",
   },
   {
     code: "MS",
@@ -129,6 +155,7 @@ export const STATES: StateEntry[] = [
     status: "available",
     route: "/ms",
     tile: [5, 6],
+    modelKey: "percentage",
   },
   {
     code: "AL",
@@ -138,6 +165,8 @@ export const STATES: StateEntry[] = [
     status: "available",
     route: "/al",
     tile: [6, 6],
+    modelKey: "income_shares",
+    verifyStatus: "in_verification",
   },
   {
     code: "GA",
@@ -147,14 +176,13 @@ export const STATES: StateEntry[] = [
     status: "available",
     route: "/ga",
     tile: [7, 6],
-    // Parenting-time adjustment corrected and confirmed against the State
-    // calculator across the 1-child sweep, the high-income (95.24/4.76, cap)
-    // case, and the 2-child equal-days boundary; share-rounding matches the
-    // State worksheet. Banner cleared (verified).
+    modelKey: "income_shares",
+    correction:
+      "Corrected the parenting-time (Schedule C) calculation against Georgia's 2026 guidelines.",
   },
 
   // Row 7
-  { code: "TX", name: "Texas", status: "planned", tile: [3, 7] },
+  { code: "TX", name: "Texas", status: "planned", tile: [3, 7], modelKey: "percentage" },
   {
     code: "FL",
     name: "Florida",
@@ -163,6 +191,8 @@ export const STATES: StateEntry[] = [
     status: "available",
     route: "/fl",
     tile: [8, 7],
+    modelKey: "income_shares",
+    verifyStatus: "in_verification",
   },
 ];
 
