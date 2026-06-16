@@ -25,17 +25,19 @@ describe("LA Worksheet A reproduce", () => {
     const m = buildLaWorksheetModel(i, o, { obligorName: "Pat", custodialName: "Dana" });
     expect(m.bcso).toBe(1127);
     expect(m.order).toBeCloseTo(643.97, 2);
+    // Line 9 recommended order sits in the Combined column (matches live OBWS).
     const line9 = m.lines.find((l) => l.n === "9")!;
-    expect(line9.col1).toBe("$643.97");
+    expect(line9.combined).toBe("$643.97");
+    expect(line9.col1).toBeUndefined();
     expect(m.summary).toBe("Pat pays Dana $643.97 a month");
   });
 
-  it("obligor column binds to the obligor (parent_a here)", () => {
+  it("columns are Custodial | Non-Custodial (obligor) — matches live OBWS order", () => {
     const i = fx("LA-baseline-1child");
     const m = buildLaWorksheetModel(i, run(i));
     const line1 = m.lines.find((l) => l.n === "1")!;
-    expect(line1.col1).toBe("$4,000.00"); // obligor A gross
-    expect(line1.col2).toBe("$3,000.00");
+    expect(line1.col1).toBe("$3,000.00"); // custodial (parent_b) in column 1
+    expect(line1.col2).toBe("$4,000.00"); // non-custodial obligor (parent_a) in column 2
   });
 
   it("multichild + add-ons: Line 6 total and Line 7 obligor share reconcile", () => {
@@ -45,7 +47,7 @@ describe("LA Worksheet A reproduce", () => {
     const line6 = m.lines.find((l) => l.n === "6")!;
     const line7 = m.lines.find((l) => l.n === "7")!;
     expect(line6.combined).toBe("$2,445.00"); // 1845 + 600
-    expect(line7.col1).toBe("$1,528.13"); // round(0.625 * 2445)
+    expect(line7.col2).toBe("$1,528.13"); // obligor share in non-custodial column
     expect(m.order).toBeCloseTo(1528.13, 2);
   });
 

@@ -70,6 +70,14 @@ export function buildLaWorksheetModel(
   const piC = pick(o.piB, o.piA);
   const bcso = o.bcso;
 
+  // Add-on components (Line 5 sub-rows). The LA engine carries net child care,
+  // health insurance, and uninsured/extraordinary medical; extraordinary
+  // expenses (.6) and optional adjustments (.7) are structural rows, blank here.
+  const bucket = (m: (id: string) => boolean) =>
+    (i.addOns ?? []).filter((a) => m(a.id)).reduce((t, a) => t + (a.monthly || 0), 0);
+  const netChildCare = bucket((id) => /child\s*care|childcare/i.test(id)); // R.S. 9:315.3
+  const healthIns = bucket((id) => /health/i.test(id)); // R.S. 9:315.4
+  const extMedical = bucket((id) => /medical|uninsured/i.test(id)); // R.S. 9:315.5
   const addCombined = (i.addOns ?? []).reduce((t, a) => t + (a.monthly || 0), 0);
   const total = bcso + addCombined; // Line 6
   const share7O = Math.round(piO * total * 100) / 100; // Line 7 each parent
@@ -82,65 +90,78 @@ export function buildLaWorksheetModel(
   // Line 9 recommended order (obligor) — engine final order, OBWS-confirmed.
   const order = o.allInMonthly;
   const M = (n: number) => fmtCents(n);
+  const MZ = (n: number) => (Math.round(n * 100) === 0 ? "" : fmtCents(n));
 
+  // Column order matches the live DCFS OBWS: Custodial | Non-Custodial | Combined.
   const lines: WorksheetLine[] = [
-    { header: true, label: "", col1: obligorName, col2: custodialName, combined: "Combined" },
+    { header: true, label: "", col1: custodialName, col2: obligorName, combined: "Combined" },
     {
       n: "1",
-      label: "Monthly Gross Income",
-      col1: M(grossO),
-      col2: M(grossC),
+      label: "Monthly Gross Income — R.S. 9:315.2(A)",
+      col1: M(grossC),
+      col2: M(grossO),
       combined: M(grossO + grossC),
     },
-    ...(dedO || dedC
-      ? [
-          {
-            n: "1a/1b",
-            label: "Less preexisting child/spousal support paid",
-            col1: M(dedO),
-            col2: M(dedC),
-          } as WorksheetLine,
-        ]
-      : []),
+    {
+      n: "1A",
+      label: "Pre-existing Child Support / Spousal Support paid",
+      col1: MZ(dedC),
+      col2: MZ(dedO),
+      combined: M(dedO + dedC),
+    },
     {
       n: "2",
-      label: "Monthly Adjusted Gross Income",
-      col1: M(agiO),
-      col2: M(agiC),
+      label: "Monthly Adjusted Gross Income — R.S. 9:315.2(B)",
+      col1: M(agiC),
+      col2: M(agiO),
       combined: M(o.combinedAGI),
     },
     {
       n: "3",
-      label: "Percentage Share of Income",
-      col1: fmtPct(piO),
-      col2: fmtPct(piC),
+      label: "Percent Share of Income — R.S. 9:315.2(C)",
+      col1: fmtPct(piC),
+      col2: fmtPct(piO),
       combined: "100.00%",
     },
-    { n: "4", label: "Basic Child Support Obligation (from schedule)", combined: M(bcso) },
+    { n: "4", label: "Basic Child Support Obligation — R.S. 9:315.2(D)", combined: M(bcso) },
     {
       n: "5",
-      label: "Net child care / health insurance / extraordinary expenses",
-      combined: M(addCombined),
+      label: "Adjustments to the obligation:",
+      combined: addCombined ? M(addCombined) : "",
     },
+    { n: "5(a)", label: "Net Child Care Cost — R.S. 9:315.3", combined: MZ(netChildCare) },
+    {
+      n: "5(b)",
+      label: "Child's Health Insurance Premium — R.S. 9:315.4",
+      combined: MZ(healthIns),
+    },
+    { n: "5(c)", label: "Extraordinary Medical Expenses — R.S. 9:315.5", combined: MZ(extMedical) },
+    { n: "5(d)", label: "Extraordinary Expenses — R.S. 9:315.6", combined: "" },
+    { n: "5(e)", label: "Optional Extraordinary Adjustments — R.S. 9:315.7", combined: "" },
     {
       n: "6",
-      label: "Total Child Support Obligation (Line 4 + Line 5)",
+      label: "Total Child Support Obligation — R.S. 9:315.8",
       combined: M(total),
       emphasis: true,
     },
     {
       n: "7",
       label: "Each parent's share of the total obligation",
-      col1: M(share7O),
-      col2: M(share7C),
+      col1: M(share7C),
+      col2: M(share7O),
     },
     {
       n: "8",
-      label: "Direct payments / credit for support paid",
-      col1: paidO ? M(paidO) : "",
-      col2: paidC ? M(paidC) : "",
+      label: "Verified direct payments / credit for support paid",
+      col1: MZ(paidC),
+      col2: MZ(paidO),
     },
-    { n: "9", label: "Recommended Child Support Order", col1: M(order), emphasis: true },
+    {
+      n: "9",
+      label: "Recommended Child Support Order (Non-Custodial) — R.S. 9:315.20",
+      combined: M(order),
+      emphasis: true,
+    },
   ];
 
   return {
