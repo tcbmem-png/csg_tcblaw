@@ -1,0 +1,50 @@
+name: Lane boundary guard
+
+# Enforces CSG/04_Agent_Pipeline/Repo_Lane_Boundary.md: the Lovable /
+# gpt-engineer bot owns content/presentation and may commit direct-to-main, but
+# must NOT touch CC's gated lane (engine, state registry, state calculator
+# routes, PDF/worksheet renderer). This job fails if a bot-authored commit did.
+#
+# To make it blocking, add it as a required status check in the `main` branch
+# protection settings. As-is it surfaces violations as a red check on every
+# push/PR to main (including the bot's direct merges).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lane-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so before..after ranges resolve
+
+      - name: Resolve commit range
+        id: range
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "range=${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            before="${{ github.event.before }}"
+            after="${{ github.sha }}"
+            # New branch (all-zero before) → check just the tip commit.
+            if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+              if git rev-parse "${after}~1" >/dev/null 2>&1; then
+                echo "range=${after}~1..${after}" >> "$GITHUB_OUTPUT"
+              else
+                echo "range=${after}" >> "$GITHUB_OUTPUT"
+              fi
+            else
+              echo "range=${before}..${after}" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Self-test the path matcher
+        run: bash scripts/lane-guard.sh --selftest
+
+      - name: Check bot commits against the gated lane
+        run: bash scripts/lane-guard.sh "${{ steps.range.outputs.range }}"
