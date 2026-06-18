@@ -1,0 +1,636 @@
+{
+ "state": "WA",
+ "source": "WSCSS Worksheet (eff. 1/1/2026) + Ch. 26.19 RCW (EHB 1014, Laws 2025 ch. 272) + WAC Title 388-14A",
+ "verifiedDate": "2026-06-16",
+ "caveat": "Statutes/regs verified live on app.leg.wa.gov to the subsection. Case law verified against fetched published opinions; items marked 'cite_confirmed_quote_pending' have a confirmed reporter cite but the verbatim quote/pinpoint should be pulled from the bound reporter before quoting. Lines without cases are statute/reg-only by design (mechanical computations). [VERIFY] notes flag items for Taylor's professional confirmation. No Westlaw/Lexis used.",
+ "lines": [
+  {
+   "line": "1a",
+   "label": "Wages and Salaries",
+   "rcw": [
+    "RCW 26.19.071(3)(a)",
+    "RCW 26.19.071(3)(b)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": []
+  },
+  {
+   "line": "1b",
+   "label": "Interest and Dividend Income",
+   "rcw": [
+    "RCW 26.19.071(3)(h)",
+    "RCW 26.19.071(3)(i)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": []
+  },
+  {
+   "line": "1c",
+   "label": "Business Income (self-employment)",
+   "rcw": [
+    "RCW 26.19.071(3)(u)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": [
+    {
+     "cite": "In re Marriage of Bucklin, 70 Wn. App. 837, 855 P.2d 1197 (Div. 1 1993)",
+     "parenthetical": "self-employed obligor's income must reflect all sources; an obligor who fails to produce adequate records cannot benefit from the resulting uncertainty",
+     "pin": "70 Wn. App. at 843-46",
+     "status": "cite_confirmed_quote_pending"
+    }
+   ]
+  },
+  {
+   "line": "1d",
+   "label": "Maintenance Received",
+   "rcw": [
+    "RCW 26.19.071(3)(q)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": []
+  },
+  {
+   "line": "1e",
+   "label": "Other Income",
+   "rcw": [
+    "RCW 26.19.071(3) (remaining enumerated categories (c)-(t), e.g., commissions, overtime, bonuses, pensions, social security, workers' comp, unemployment)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": [],
+   "note": "Excluded categories are listed in RCW 26.19.071(4) (new-spouse income, child support from other relationships, gifts/prizes, TANF, SSI, ABD, food stamps, debt-retirement overtime/2nd-job)."
+  },
+  {
+   "line": "1f",
+   "label": "Imputed Income",
+   "rcw": [
+    "RCW 26.19.071(6)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": [
+    {
+     "cite": "In re Marriage of Peterson, 80 Wn. App. 148, 906 P.2d 1009 (Div. 1 1995), review denied, 129 Wn.2d 1014 (1996)",
+     "parenthetical": "income may not be imputed to a parent gainfully employed full time absent a finding the parent is purposely underemployed to reduce the support obligation; defining 'gainfully employed'",
+     "pin": "80 Wn. App. at 153-55",
+     "status": "verified"
+    },
+    {
+     "cite": "In re Marriage of Schumacher, 100 Wn. App. 208, 997 P.2d 399 (Div. 1 2000)",
+     "parenthetical": "'full time' is not fixed at 40 hours; the hours customary for the parent's occupation control",
+     "pin": "100 Wn. App. at 213-15",
+     "status": "verified"
+    },
+    {
+     "cite": "In re Marriage of Goodell, 130 Wn. App. 381, 122 P.3d 929 (Div. 2 2005)",
+     "parenthetical": "RCW 26.19.071(6) governs imputation; trial court erred in failing to impute income to a voluntarily underemployed parent",
+     "pin": "130 Wn. App. at 388-90",
+     "status": "verified"
+    }
+   ],
+   "note": "Six-tier imputation order in RCW 26.19.071(6)(a)(i)-(vi); full-time-student rule (6)(b). INCARCERATION imputation: now addressed by statute (EHB 1014 abatement to $10/mo for 6+ months' incarceration); [VERIFY: no published WA case located this pass \u2014 Taylor to confirm if a case pick is wanted]."
+  },
+  {
+   "line": "1g",
+   "label": "Total Gross Monthly Income",
+   "rcw": [
+    "RCW 26.19.071(3)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": []
+  },
+  {
+   "line": "2a",
+   "label": "Income Taxes (Federal and State)",
+   "rcw": [
+    "RCW 26.19.071(5)(a)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": [],
+   "note": "Washington has no state income tax; state component = $0 for WA residents. Worksheet takes the parent's actual/disclosed tax (no embedded estimator)."
+  },
+  {
+   "line": "2b",
+   "label": "FICA (Soc. Sec. + Medicare) / Self-Employment Taxes",
+   "rcw": [
+    "RCW 26.19.071(5)(b)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": []
+  },
+  {
+   "line": "2c",
+   "label": "Mandatory State Deductions (state insurance premiums incl. PFML and WA Cares / long-term services & supports trust)",
+   "rcw": [
+    "RCW 26.19.071(5)(e)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": [],
+   "note": "NEW line under EHB 1014 (Laws 2025 ch. 272), effective 1/1/2026. Re-letters the rest of subsection (5)."
+  },
+  {
+   "line": "2d",
+   "label": "State Industrial Insurance Deductions (L&I)",
+   "rcw": [
+    "RCW 26.19.071(5)(f)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": [],
+   "note": "Was (5)(e) before 2026; cite the current (5)(f)."
+  },
+  {
+   "line": "2e",
+   "label": "Mandatory Union/Professional Dues",
+   "rcw": [
+    "RCW 26.19.071(5)(d)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": []
+  },
+  {
+   "line": "2f",
+   "label": "Mandatory Pension Plan Payments",
+   "rcw": [
+    "RCW 26.19.071(5)(c)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": []
+  },
+  {
+   "line": "2g",
+   "label": "Voluntary Retirement Contributions",
+   "rcw": [
+    "RCW 26.19.071(5)(h)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": [],
+   "note": "Capped at up to $5,000/yr; was (5)(g) before 2026."
+  },
+  {
+   "line": "2h",
+   "label": "Maintenance Paid",
+   "rcw": [
+    "RCW 26.19.071(5)(g)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": [],
+   "note": "Court-ordered maintenance to the extent actually paid; was (5)(f) before 2026."
+  },
+  {
+   "line": "2i",
+   "label": "Normal Business Expenses (self-employed)",
+   "rcw": [
+    "RCW 26.19.071(5)(i)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": [
+    {
+     "cite": "In re Marriage of Bucklin, 70 Wn. App. 837, 855 P.2d 1197 (Div. 1 1993)",
+     "parenthetical": "self-employed obligor's income must reflect all sources; an obligor who fails to produce adequate records cannot benefit from the resulting uncertainty",
+     "pin": "70 Wn. App. at 843-46",
+     "status": "cite_confirmed_quote_pending"
+    }
+   ],
+   "note": "Was (5)(h) before 2026."
+  },
+  {
+   "line": "2j",
+   "label": "Total Deductions from Gross Income",
+   "rcw": [
+    "RCW 26.19.071(5)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": []
+  },
+  {
+   "line": "3",
+   "label": "Monthly Net Income",
+   "rcw": [
+    "RCW 26.19.071(5)"
+   ],
+   "wac": [
+    "WAC 388-14A-3205"
+   ],
+   "cases": []
+  },
+  {
+   "line": "4",
+   "label": "Combined Monthly Net Income",
+   "rcw": [
+    "RCW 26.19.020",
+    "RCW 26.19.080(1)"
+   ],
+   "wac": [
+    "WAC 388-14A-3200"
+   ],
+   "cases": []
+  },
+  {
+   "line": "5",
+   "label": "Basic Child Support Obligation (per child from the economic table x number of children)",
+   "rcw": [
+    "RCW 26.19.020"
+   ],
+   "wac": [
+    "WAC 388-14A-3200"
+   ],
+   "cases": [
+    {
+     "cite": "In re Marriage of McCausland, 159 Wn.2d 607, 152 P.3d 1013 (2007) (en banc)",
+     "parenthetical": "a court may exceed the economic table only on written findings of fact and may NOT mechanically extrapolate; must at minimum consider the Daubert/Rusch factors. NOTE: decided under the former $5,000/$7,000 thresholds; the no-extrapolation / written-findings holding remains good law for amounts above the current $50,000 ceiling, but McCausland's dollar figures are superseded by EHB 1014 (2026)",
+     "pin": "159 Wn.2d at 620-22 (\u00b6\u00b626-29)",
+     "status": "verified"
+    },
+    {
+     "cite": "State ex rel. M.M.G. v. Graham, 159 Wn.2d 623, 152 P.3d 1005 (2007)",
+     "parenthetical": "companion case to McCausland; a court must enter written findings of fact supporting any decision to exceed the economic table / any deviation or its denial",
+     "pin": "159 Wn.2d at 627-28",
+     "status": "verified"
+    }
+   ],
+   "note": "Economic table is PER CHILD; total = per-child x N. Presumptive to $50,000 combined net (RCW 26.19.065(3)); above that, written findings required (McCausland/Graham), no mechanical extrapolation."
+  },
+  {
+   "line": "6",
+   "label": "Proportional Share of Income",
+   "rcw": [
+    "RCW 26.19.080(1)"
+   ],
+   "wac": [
+    "WAC 388-14A-3200"
+   ],
+   "cases": []
+  },
+  {
+   "line": "7",
+   "label": "Each Parent's Basic Child Support Obligation (without low-income limitations)",
+   "rcw": [
+    "RCW 26.19.080(1)"
+   ],
+   "wac": [
+    "WAC 388-14A-3200"
+   ],
+   "cases": []
+  },
+  {
+   "line": "8 (SSR)",
+   "label": "Self-Support Reserve (180% of the federal poverty guideline, one-person)",
+   "rcw": [
+    "RCW 26.19.065(2)(b)"
+   ],
+   "wac": [
+    "WAC 388-14A-3400",
+    "WAC 388-14A-3410"
+   ],
+   "cases": [],
+   "note": "Raised 125%->180% by EHB 1014 (2026). [VERIFY: no published WA case located on the reserve mechanic this pass; the figure is statutory.]"
+  },
+  {
+   "line": "8a",
+   "label": "Combined net < $2,200 -> presumptive $50 per child",
+   "rcw": [
+    "RCW 26.19.020",
+    "RCW 26.19.065(2)(a)"
+   ],
+   "wac": [
+    "WAC 388-14A-3200(4)(c)"
+   ],
+   "cases": []
+  },
+  {
+   "line": "8b",
+   "label": "Parent's net income < self-support reserve -> presumptive $50 per child",
+   "rcw": [
+    "RCW 26.19.065(2)(a)",
+    "RCW 26.19.065(2)(b)"
+   ],
+   "wac": [
+    "WAC 388-14A-3400",
+    "WAC 388-14A-3410"
+   ],
+   "cases": []
+  },
+  {
+   "line": "8c",
+   "label": "Parent's net income >= self-support reserve -> subtract reserve (not below it), floor $50/child",
+   "rcw": [
+    "RCW 26.19.065(2)(c)"
+   ],
+   "wac": [
+    "WAC 388-14A-3400"
+   ],
+   "cases": [],
+   "note": "Subsection (2)(c) is NEW under EHB 1014 (2026)."
+  },
+  {
+   "line": "8d",
+   "label": "Any other biological or legal children (whole-family / other-relationship)",
+   "rcw": [
+    "RCW 26.19.075(1)(e)",
+    "RCW 26.19.065(1)"
+   ],
+   "wac": [],
+   "cases": [
+    {
+     "cite": "In re Marriage of Bell, 101 Wn. App. 366, 4 P.3d 849 (Div. 1 2000)",
+     "parenthetical": "deviation for children from other relationships must rest on the total circumstances of both households; 'child support is not a first-come, first-served proposition'",
+     "pin": "101 Wn. App. at 370-72",
+     "status": "verified"
+    }
+   ]
+  },
+  {
+   "line": "9",
+   "label": "Each parent's basic support obligation after limitations (not less than $50/child)",
+   "rcw": [
+    "RCW 26.19.065(1)",
+    "RCW 26.19.065(2)"
+   ],
+   "wac": [
+    "WAC 388-14A-3400"
+   ],
+   "cases": []
+  },
+  {
+   "line": "10a",
+   "label": "Monthly Health Insurance Premiums Paid for Child(ren)",
+   "rcw": [
+    "RCW 26.19.080(2)",
+    "RCW 26.09.105"
+   ],
+   "wac": [],
+   "cases": [],
+   "note": "Health care shared in proportion to the basic obligation (26.19.080(2)). Reasonable-cost limit on required coverage = 25% of the parent's basic support obligation (RCW 26.09.105; see line 19)."
+  },
+  {
+   "line": "10b",
+   "label": "Uninsured Monthly Health Care Expenses Paid for Child(ren)",
+   "rcw": [
+    "RCW 26.19.080(2)"
+   ],
+   "wac": [],
+   "cases": []
+  },
+  {
+   "line": "10c",
+   "label": "Total Monthly Health Care Expenses",
+   "rcw": [
+    "RCW 26.19.080(2)"
+   ],
+   "wac": [],
+   "cases": []
+  },
+  {
+   "line": "10d",
+   "label": "Combined Monthly Health Care Expenses",
+   "rcw": [
+    "RCW 26.19.080(2)"
+   ],
+   "wac": [],
+   "cases": []
+  },
+  {
+   "line": "11a",
+   "label": "Day Care Expenses",
+   "rcw": [
+    "RCW 26.19.080(3)"
+   ],
+   "wac": [],
+   "cases": [],
+   "note": "Day care/special expenses shared proportionally; 20%-overpayment reimbursement mechanic in (3); court discretion as to necessity/reasonableness (4)."
+  },
+  {
+   "line": "11b",
+   "label": "Education Expenses",
+   "rcw": [
+    "RCW 26.19.080(3)"
+   ],
+   "wac": [],
+   "cases": []
+  },
+  {
+   "line": "11c",
+   "label": "Long Distance Transportation Expenses",
+   "rcw": [
+    "RCW 26.19.080(3)"
+   ],
+   "wac": [],
+   "cases": []
+  },
+  {
+   "line": "11d",
+   "label": "Other Special Expenses",
+   "rcw": [
+    "RCW 26.19.080(3)",
+    "RCW 26.19.080(4)"
+   ],
+   "wac": [],
+   "cases": []
+  },
+  {
+   "line": "11e",
+   "label": "Total Day Care and Special Expenses",
+   "rcw": [
+    "RCW 26.19.080(3)"
+   ],
+   "wac": [],
+   "cases": []
+  },
+  {
+   "line": "12",
+   "label": "Combined Monthly Total Day Care and Special Expenses",
+   "rcw": [
+    "RCW 26.19.080(3)"
+   ],
+   "wac": [],
+   "cases": []
+  },
+  {
+   "line": "13",
+   "label": "Total Health Care, Day Care, and Special Expenses",
+   "rcw": [
+    "RCW 26.19.080(2)",
+    "RCW 26.19.080(3)"
+   ],
+   "wac": [],
+   "cases": []
+  },
+  {
+   "line": "14",
+   "label": "Each Parent's Obligation for Health Care, Day Care, and Special Expenses",
+   "rcw": [
+    "RCW 26.19.080(1)",
+    "RCW 26.19.080(4)"
+   ],
+   "wac": [],
+   "cases": []
+  },
+  {
+   "line": "15",
+   "label": "Gross Child Support Obligation (line 9 + line 14)",
+   "rcw": [
+    "RCW 26.19.080"
+   ],
+   "wac": [
+    "WAC 388-14A-3200"
+   ],
+   "cases": []
+  },
+  {
+   "line": "16",
+   "label": "Child Support Credits (health care / day care & special / other ordinary expenses credit; total)",
+   "rcw": [
+    "RCW 26.19.080(2)",
+    "RCW 26.19.080(3)"
+   ],
+   "wac": [],
+   "cases": [],
+   "note": "Credits a parent for add-on amounts that parent pays directly, so the transfer payment is net. [VERIFY: exact RCW subsection for the credit mechanic vs. AOC worksheet instructions.]"
+  },
+  {
+   "line": "17",
+   "label": "Standard Calculation / Presumptive Transfer Payment",
+   "rcw": [
+    "RCW 26.19.035(2)",
+    "RCW 26.19.075(2)"
+   ],
+   "wac": [
+    "WAC 388-14A-3200"
+   ],
+   "cases": [],
+   "note": "The standard calculation is presumptive; the court must order it unless written findings support a deviation (RCW 26.19.075(2),(3)). Agreement of the parties alone is not adequate reason to deviate (RCW 26.19.075(5))."
+  },
+  {
+   "line": "18",
+   "label": "45% of each parent's net income (informational limit)",
+   "rcw": [
+    "RCW 26.19.065(1)"
+   ],
+   "wac": [
+    "WAC 388-14A-3400"
+   ],
+   "cases": []
+  },
+  {
+   "line": "19",
+   "label": "25% of each parent's basic support obligation (informational; health-coverage reasonable-cost ceiling)",
+   "rcw": [
+    "RCW 26.09.105"
+   ],
+   "wac": [],
+   "cases": [],
+   "note": "Required health-coverage cost is 'reasonable' / can be ordered if it does not exceed 25% of the parent's basic support obligation (RCW 26.09.105). [VERIFY: exact subsection of 26.09.105 for the 25% figure.]"
+  },
+  {
+   "line": "20",
+   "label": "Household Assets (additional factors for consideration)",
+   "rcw": [
+    "RCW 26.19.075(1)(a)",
+    "RCW 26.19.075(1)(c)"
+   ],
+   "wac": [],
+   "cases": [],
+   "note": "Deviation factors: sources of income/tax planning (1)(a); debt and high expenses (1)(c)."
+  },
+  {
+   "line": "21",
+   "label": "Household Debt (additional factors for consideration)",
+   "rcw": [
+    "RCW 26.19.075(1)(c)"
+   ],
+   "wac": [],
+   "cases": []
+  },
+  {
+   "line": "VIII-other",
+   "label": "Other factors: income of children / income from child support / income from assistance programs / other income",
+   "rcw": [
+    "RCW 26.19.075(1)(a)",
+    "RCW 26.19.071(4)"
+   ],
+   "wac": [],
+   "cases": []
+  },
+  {
+   "line": "deviation-residential",
+   "label": "Deviation \u2014 residential schedule (significant time with the obligor parent)",
+   "rcw": [
+    "RCW 26.19.075(1)(d)"
+   ],
+   "wac": [],
+   "cases": [
+    {
+     "cite": "State ex rel. M.M.G. v. Graham, 159 Wn.2d 623, 152 P.3d 1005 (2007)",
+     "parenthetical": "companion case to McCausland; a court must enter written findings of fact supporting any decision to exceed the economic table / any deviation or its denial",
+     "pin": "159 Wn.2d at 627-28",
+     "status": "verified"
+    }
+   ],
+   "note": "Discretionary, NOT a formula; barred where it leaves the receiving household short of the child's basic needs or the child receives TANF (statutory). Graham supplies the written-findings requirement. [VERIFY: a residential-schedule-specific published holding was not confirmed this pass \u2014 Taylor may add one.]"
+  },
+  {
+   "line": "postsecondary",
+   "label": "Postsecondary educational support (separate from basic support)",
+   "rcw": [
+    "RCW 26.19.090"
+   ],
+   "wac": [],
+   "cases": [
+    {
+     "cite": "In re Marriage of Newell, 117 Wn. App. 711, 72 P.3d 1130 (Div. 1 2003)",
+     "parenthetical": "postsecondary educational support is discretionary; the schedule is advisory, not mandatory, for postsecondary support (RCW 26.19.090); income/proportional shares must still be computed first",
+     "pin": "117 Wn. App. at 718",
+     "status": "verified"
+    },
+    {
+     "cite": "In re Marriage of Kelly, 85 Wn. App. 785, 934 P.2d 1218 (Div. 1 1997)",
+     "parenthetical": "postsecondary educational support lies within the trial court's discretion (relied on in Newell)",
+     "pin": "85 Wn. App. at 792-94",
+     "status": "cite_confirmed_quote_pending"
+    }
+   ]
+  },
+  {
+   "line": "signatures",
+   "label": "Worksheet certification / signatures",
+   "rcw": [
+    "RCW 26.19.035(3)"
+   ],
+   "wac": [],
+   "cases": [],
+   "note": "Worksheets completed under penalty of perjury and filed in every proceeding; AOC develops the worksheets/instructions (RCW 26.19.050)."
+  }
+ ]
+}
