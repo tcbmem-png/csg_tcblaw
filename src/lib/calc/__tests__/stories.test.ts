@@ -9,7 +9,6 @@ import { calculate, defaultInputs } from "../calc";
  *
  * Story 1, 3, and 4 are marked .todo pending user-confirmed inputs
  * (health-premium / childcare values + a re-check of the Story 1 BCSO row).
- * See audit notes in .lovable/plan.md.
  */
 
 describe("Story 2 — Standard parenting, A is ARP @ 80 days", () => {
