@@ -68,8 +68,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 const SITE_URL = "https://csg.tcblaw.org";
 const SITE_NAME = "TN Child Support Calculator";
-const OG_IMAGE =
-  "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6efdae8a-fea3-4e17-a327-e9a70200a8ce/id-preview-6e78522f--82e5e86b-e638-4ac3-85c4-a30e79254546.lovable.app-1779593142024.png";
+// Relative so it resolves against whatever host serves the site (csg.tcblaw.org
+// pre-cutover, openchildsupport.org after). The relaunch copy PR finalizes the asset.
+const OG_IMAGE = "/og-image.png";
 
 const ORG_JSONLD = {
   "@context": "https://schema.org",
@@ -117,8 +118,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: "TN Child Support Calculator — TCB Law" },
       {
         name: "twitter:description",
-        content:
-          "Accurate, transparent Tennessee child support calculation under Rule 1240-02-04.",
+        content: "Accurate, transparent Tennessee child support calculation under Rule 1240-02-04.",
       },
       { name: "twitter:image", content: OG_IMAGE },
       { name: "google-site-verification", content: "Fb8iyeBlllQSRU1F9KwH7nvTsD1jInErSa1VujsNxiw" },
