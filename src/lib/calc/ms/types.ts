@@ -196,17 +196,6 @@ export interface MSPartyEntry {
   /** Signed monthly amount. Same sign convention as MSDeviation.proposedMonthly. */
   proposedMonthly: number;
   legalAuthority: string;
-  // ---------------- §1.5 attribution (audit trail) ----------------
-  /** Handoff round in which this entry was last materially edited.
-   *  1 = originator's initial send; 2 = receiver's first amendments;
-   *  3+ = subsequent re-sends. Null on legacy URLs predating attribution. */
-  handoffRound?: number | null;
-  /** ISO timestamp of the last material edit. */
-  authoredAt?: string | null;
-  /** Display name of the attorney who authored the last material edit. */
-  authoredByName?: string | null;
-  /** Firm of the attorney who authored the last material edit (optional). */
-  authoredByFirm?: string | null;
 }
 
 export interface MSDeviation {
@@ -481,60 +470,8 @@ export interface MSOutputs {
   blendedAnnualGross: number;
 }
 
-// =================================================================
-// Two-attorney handoff (frontend + URL only — no auth, no server
-// storage). Lives on the share payload, not on MSInputs, so calc /
-// reconciliation stay untouched. Slate A/B carry NO obligor/obligee
-// semantics: caption.obligorLabel/obligeeLabel plus
-// HandoffState.originatingSide drive every label and PDF attribution.
-// =================================================================
-
-export type HandoffStatus = "none" | "originated" | "in_progress" | "completed";
-export type HandoffSide = "A" | "B";
-
-export interface HandoffAttorney {
-  name: string;
-  firm: string;
-}
-
-export interface HandoffState {
-  status: HandoffStatus;
-  /** Which slate (A or B) the originating attorney filled in. */
-  originatingSide: HandoffSide;
-  originatingAttorney: HandoffAttorney | null;
-  receivingAttorney: HandoffAttorney | null;
-  /** ISO timestamp set when the originator generates the handoff URL. */
-  createdAt: string | null;
-  /** ISO timestamp bumped on each receiving-side edit. */
-  lastReceivingEditAt: string | null;
-  /** ISO timestamp set when status flips to completed (incl. PDF auto-flip). */
-  completedAt: string | null;
-  /**
-   * Stable case identity for round-trip origin detection. 16-byte / 128-bit
-   * hex token generated once at first Send and preserved verbatim on every
-   * subsequent re-generate. Null on legacy URLs predating this field; in
-   * that case origin detection falls back to fingerprint(inputs+caption).
-   */
-  caseId: string | null;
-  /**
-   * §1.5 audit-trail counter. Round 1 = originator's initial send;
-   * round 2 = receiver's first amendments; round 3+ = subsequent re-sends.
-   * Bumped via `bumpHandoffRound` at URL generation / receiver edit time.
-   * Default 0 on a brand-new state (no handoff initiated yet).
-   */
-  handoffRound: number;
-}
-
-export function defaultHandoffState(): HandoffState {
-  return {
-    status: "none",
-    originatingSide: "A",
-    originatingAttorney: null,
-    receivingAttorney: null,
-    createdAt: null,
-    lastReceivingEditAt: null,
-    completedAt: null,
-    caseId: null,
-    handoffRound: 0,
-  };
-}
+// The two-attorney URL handoff (the worksheet-into-a-shareable-URL transport)
+// was removed 2026-06-18 so the no-data floor is universal — nothing the user
+// enters leaves the device. MS is a single-user calculator: the side-by-side
+// deviation comparison (deviationsA/deviationsB) is filled by one user; there
+// is no cross-device transport, no HandoffState, no URL encoding.

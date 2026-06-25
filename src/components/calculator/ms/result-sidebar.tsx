@@ -1,10 +1,4 @@
-import { useState } from "react";
-import type {
-  HandoffSide,
-  HandoffState,
-  MSInputs,
-  MSOutputs,
-} from "@/lib/calc/ms/types";
+import type { MSInputs, MSOutputs } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
 
 function fmt(n: number) {
@@ -19,45 +13,12 @@ interface Props {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
-  handoff: HandoffState;
-  setHandoff: (next: HandoffState) => void;
-  activeSide: HandoffSide | null;
-  isReceivingSession: boolean;
   onViewWorksheet: () => void;
 }
 
-export function MSResultSidebar({
-  inputs,
-  outputs,
-  handoff,
-  setHandoff,
-  isReceivingSession,
-  onViewWorksheet,
-}: Props) {
+export function MSResultSidebar({ inputs, outputs, onViewWorksheet }: Props) {
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && outputs.positionB;
-
-  /**
-   * PDF auto-completion (addition #1): if this is the receiving session
-   * and the worksheet is still in_progress, flip status → completed and
-   * stamp completedAt before rendering. The originator generating a PDF
-   * pre-handoff is unchanged (status stays "none").
-   */
-  const maybeCompleteForPdf = (): HandoffState => {
-    if (
-      isReceivingSession &&
-      handoff.status === "in_progress"
-    ) {
-      const next: HandoffState = {
-        ...handoff,
-        status: "completed",
-        completedAt: new Date().toISOString(),
-      };
-      setHandoff(next);
-      return next;
-    }
-    return handoff;
-  };
 
   return (
     <div className="rounded-lg border border-rule bg-card p-5 shadow-sm">
@@ -150,7 +111,6 @@ export function MSResultSidebar({
         <button
           type="button"
           onClick={() => {
-            maybeCompleteForPdf();
             onViewWorksheet();
             setTimeout(() => window.print(), 100);
           }}
@@ -158,7 +118,6 @@ export function MSResultSidebar({
         >
           Print / Save PDF
         </button>
-        <CopyLinkButton />
       </div>
 
       <p className="mt-3 text-[10px] text-muted-foreground">
@@ -177,29 +136,3 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function CopyLinkButton() {
-  const [status, setStatus] = useState<"idle" | "copied" | "error">("idle");
-  const onClick = async () => {
-    if (typeof window === "undefined") return;
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setStatus("copied");
-    } catch {
-      setStatus("error");
-    }
-    setTimeout(() => setStatus("idle"), 1800);
-  };
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-full rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent/40"
-    >
-      {status === "copied"
-        ? "✓ Link copied"
-        : status === "error"
-          ? "Copy failed — select URL bar"
-          : "Copy shareable link"}
-    </button>
-  );
-}

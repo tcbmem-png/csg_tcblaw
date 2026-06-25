@@ -37,7 +37,6 @@ import type {
   MSInputs,
   MSOutputs,
   MSFactorLetter,
-  HandoffState,
 } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import {
@@ -429,9 +428,8 @@ export function renderMSSensitivityHtml(args: {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
-  handoff?: HandoffState;
 }): string {
-  const { inputs, outputs, caption, handoff } = args;
+  const { inputs, outputs, caption } = args;
   const report = buildReconciliation(inputs);
   const decisions =
     inputs.chancellorDecisions ?? defaultChancellorDecisions();
@@ -510,11 +508,6 @@ export function renderMSSensitivityHtml(args: {
     ? `${caption.matterName} \u2014 MS \u00a7 43-19-103 Deviation Sensitivity Analysis`
     : "MS \u00a7 43-19-103 Deviation Sensitivity Analysis";
 
-  const handoffFooter =
-    handoff && handoff.status !== "none"
-      ? `<p>Two-attorney handoff \u2014 round ${handoff.handoffRound}. Originating counsel: ${esc(handoff.originatingAttorney?.name || "(unnamed)")}${handoff.originatingAttorney?.firm ? ` (${esc(handoff.originatingAttorney.firm)})` : ""}. Receiving counsel: ${esc(handoff.receivingAttorney?.name || "(unnamed)")}${handoff.receivingAttorney?.firm ? ` (${esc(handoff.receivingAttorney.firm)})` : ""}.</p>`
-      : "";
-
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -556,7 +549,6 @@ ${imputationSection}
 
 <footer class="notes">
   <p>Sensitivity analysis produced by the Mississippi deviation calculator at csg.tcblaw.org/ms. The presumptive amount and the per-decision contribution math are mechanical; the chancellor's actual ruling is a matter of judgment. This document is a planning tool, not legal advice, and not an official MDHS form.</p>
-  ${handoffFooter}
 </footer>
 
 </div>
@@ -569,7 +561,6 @@ export function downloadMSSensitivityHtml(args: {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
-  handoff?: HandoffState;
   filename?: string;
 }) {
   const html = renderMSSensitivityHtml(args);

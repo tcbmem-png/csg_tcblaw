@@ -18,7 +18,6 @@ import type {
   MSFactorLetter,
   MSPartyEntry,
   MSPartyPosition,
-  HandoffAttorney,
 } from "@/lib/calc/ms/types";
 import {
   FACTOR_STATUTORY_TEXT,
@@ -27,7 +26,6 @@ import {
   summarizeRow,
   type FactorInPlay,
 } from "@/lib/calc/ms/reconciliation";
-import { stampPartyEdit } from "@/lib/calc/ms/share";
 import { inPlayPresentation } from "@/lib/calc/ms/in-play-labels";
 import {
   Field,
@@ -90,12 +88,6 @@ interface BlockProps {
   obligeeLabel: string;
   sideBySide: boolean;
   buildContextInputs: () => Parameters<typeof buildReconciliation>[0];
-  /** Two-attorney handoff lock — read-only slate for the originating side. */
-  obligorLocked?: boolean;
-  obligeeLocked?: boolean;
-  /** §1.5 attribution context for stamping author + handoff round. */
-  handoffRound?: number;
-  currentAuthor?: HandoffAttorney | null;
 }
 
 export function MSPartyFactorBlock({
@@ -108,10 +100,6 @@ export function MSPartyFactorBlock({
   obligeeLabel,
   sideBySide,
   buildContextInputs,
-  obligorLocked = false,
-  obligeeLocked = false,
-  handoffRound = 0,
-  currentAuthor = null,
 }: BlockProps) {
   const inPlay = inPlayFrom(obligor, obligee);
 
@@ -196,44 +184,26 @@ export function MSPartyFactorBlock({
           }
         >
           {(inPlay === "obligor" || inPlay === "both") && (
-            <div className={obligorLocked ? "pointer-events-none opacity-60" : ""}>
-              {obligorLocked && (
-                <div className="mb-1 text-[11px] text-muted-foreground">
-                  Locked — from originating counsel
-                </div>
-              )}
-              <PartyColumn
-                header={obligorLabel}
-                accent="obligor"
-                factorLetter={letter}
-                deviation={obligor}
-                onChange={setObligor}
-                showDetailDisclosure
-                handoffRound={handoffRound}
-                currentAuthor={currentAuthor}
-              />
-            </div>
+            <PartyColumn
+              header={obligorLabel}
+              accent="obligor"
+              factorLetter={letter}
+              deviation={obligor}
+              onChange={setObligor}
+              showDetailDisclosure
+            />
           )}
           {sideBySide &&
             setObligee &&
             obligee &&
             (inPlay === "obligee" || inPlay === "both") && (
-              <div className={obligeeLocked ? "pointer-events-none opacity-60" : ""}>
-                {obligeeLocked && (
-                  <div className="mb-1 text-[11px] text-muted-foreground">
-                    Locked — from originating counsel
-                  </div>
-                )}
-                <PartyColumn
-                  header={obligeeLabel}
-                  accent="obligee"
-                  factorLetter={letter}
-                  deviation={obligee}
-                  onChange={setObligee}
-                  handoffRound={handoffRound}
-                  currentAuthor={currentAuthor}
-                />
-              </div>
+              <PartyColumn
+                header={obligeeLabel}
+                accent="obligee"
+                factorLetter={letter}
+                deviation={obligee}
+                onChange={setObligee}
+              />
             )}
         </div>
       )}
@@ -264,8 +234,6 @@ function PartyColumn({
   deviation,
   onChange,
   showDetailDisclosure = false,
-  handoffRound = 0,
-  currentAuthor = null,
 }: {
   header: string;
   accent: "obligor" | "obligee";
@@ -273,27 +241,15 @@ function PartyColumn({
   deviation: MSDeviation;
   onChange: (n: MSDeviation) => void;
   showDetailDisclosure?: boolean;
-  handoffRound?: number;
-  currentAuthor?: HandoffAttorney | null;
 }) {
   const [showDetail, setShowDetail] = useState(false);
   const party = deviation.party ?? defaultParty();
 
-  // §1.5 stamping — substantive changes only. stampPartyEdit is a no-op
-  // when the material fields (position, factsAsserted, documentationReferenced,
-  // proposedMonthly, legalAuthority) are unchanged, so a focus/blur or a
-  // re-render with identical content does NOT bump authoredAt / handoffRound.
-  // Round 0 means "no handoff initiated yet" — skip stamping entirely so
-  // single-attorney drafting doesn't pollute the audit trail.
   const updateParty = (patch: Partial<MSPartyEntry>) => {
     const merged = { ...party, ...patch };
-    const stamped =
-      handoffRound > 0
-        ? stampPartyEdit(party, merged, { handoffRound, author: currentAuthor })
-        : merged;
     onChange({
       ...deviation,
-      party: stamped,
+      party: merged,
       // Keep MSDeviation.proposedMonthly in sync — this is the field
       // calculateMS reads from for the obligor-side total.
       proposedMonthly:
@@ -316,14 +272,6 @@ function PartyColumn({
         <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           {header}
         </div>
-        {/* §1.5 attribution line. Renders only for amendments — round 1 is
-            the initial draft and is implicit from the column header itself. */}
-        {party.handoffRound && party.handoffRound > 1 ? (
-          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/80">
-            Amended in round {party.handoffRound}
-            {party.authoredByName ? ` by ${party.authoredByName}` : ""}
-          </div>
-        ) : null}
       </div>
 
       <div className="space-y-3">

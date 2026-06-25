@@ -13,7 +13,7 @@
  *   4. Proposed Final Order (blank findings + signature line)
  *   5. Footer (disclaimer, authority, repo)
  */
-import type { MSInputs, MSOutputs, MSFactorLetter, HandoffState } from "@/lib/calc/ms/types";
+import type { MSInputs, MSOutputs, MSFactorLetter } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
 import {
   buildReconciliation,
@@ -193,41 +193,6 @@ const POSITION_LABEL: Record<string, string> = {
   "": "(no position recorded)",
 };
 
-/**
- * Per-row attribution string for one side of the deviation worksheet.
- *
- * Role-led format: chancellor reads "Per counsel for {role} — {name}
- * ({firm})" rather than a slate letter. The role label ("Obligor" /
- * "Obligee") comes from the inputs, which derive from the case caption
- * and are the terms a court cares about. Slate ("A"/"B") is only used
- * internally to look up which attorney filled in this column.
- *
- * Returns `null` when there is no handoff (single-attorney workflow);
- * the column header is then just the party label, unchanged from the
- * pre-handoff PDF.
- */
-function attributionFor(
-  handoff: HandoffState | undefined,
-  slate: "A" | "B",
-  roleLabel: string,
-): string | null {
-  if (!handoff || handoff.status === "none") return null;
-  const isOriginating = slate === handoff.originatingSide;
-  const prefix = isOriginating
-    ? `Per counsel for ${roleLabel}`
-    : `Per opposing counsel for ${roleLabel}`;
-  const att = isOriginating
-    ? handoff.originatingAttorney
-    : handoff.receivingAttorney;
-  const name = att?.name?.trim();
-  const firm = att?.firm?.trim();
-  if (!name && !firm) {
-    return isOriginating ? prefix : `${prefix} (name not provided)`;
-  }
-  if (name && firm) return `${prefix} — ${name} (${firm})`;
-  return `${prefix} — ${name || firm}`;
-}
-
 function partyColumn(
   ctx: Ctx,
   sideLabel: string,
@@ -333,7 +298,6 @@ function factorBlock(
   row: ReconciliationRow,
   inputs: MSInputs,
   sideBySide: boolean,
-  handoff: HandoffState | undefined,
 ) {
   ensure(ctx, 80);
 
@@ -365,8 +329,9 @@ function factorBlock(
     return;
   }
 
-  const obligorAttribution = attributionFor(handoff, "A", inputs.obligorLabel || "Obligor");
-  const obligeeAttribution = attributionFor(handoff, "B", inputs.obligeeLabel || "Obligee");
+  // Single-user worksheet: no per-counsel attribution byline.
+  const obligorAttribution: string | null = null;
+  const obligeeAttribution: string | null = null;
 
   // Per-party columns
   if (sideBySide) {
@@ -659,9 +624,8 @@ export function renderMSDeviationPdf(args: {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
-  handoff?: HandoffState;
 }): Uint8Array {
-  const { inputs, outputs, caption, handoff } = args;
+  const { inputs, outputs, caption } = args;
   const report = buildReconciliation(inputs);
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && !!inputs.deviationsB;
@@ -694,7 +658,7 @@ export function renderMSDeviationPdf(args: {
   for (const letter of letters) {
     const row = report.rows.find((r) => r.letter === letter);
     if (!row) continue;
-    factorBlock(ctx, row, inputs, sideBySide, handoff);
+    factorBlock(ctx, row, inputs, sideBySide);
   }
 
   newPage(ctx);
@@ -706,20 +670,6 @@ export function renderMSDeviationPdf(args: {
 
   ctx.y -= 4;
   rule(ctx);
-
-  // Handoff completion footer (addition #3 — labeled to avoid being
-  // misread as filing or signature date).
-  if (handoff && handoff.status === "completed") {
-    const origName = handoff.originatingAttorney?.name || "originating counsel";
-    const recvName =
-      handoff.receivingAttorney?.name ||
-      "opposing counsel (name not provided)";
-    paragraph(
-      ctx,
-      `Two-attorney handoff. Originating counsel: ${origName}${handoff.originatingAttorney?.firm ? ` (${handoff.originatingAttorney.firm})` : ""}. Receiving counsel: ${recvName}${handoff.receivingAttorney?.firm ? ` (${handoff.receivingAttorney.firm})` : ""}. Worksheet completed in calculator: ${fmtDate(handoff.completedAt)}.`,
-      { size: 8, color: MUTED },
-    );
-  }
 
   paragraph(
     ctx,
@@ -735,7 +685,6 @@ export function downloadMSDeviationPdf(args: {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
-  handoff?: HandoffState;
   filename?: string;
 }) {
   const bytes = renderMSDeviationPdf(args);

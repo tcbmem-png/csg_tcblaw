@@ -30,7 +30,6 @@ import type {
   MSInputs,
   MSOutputs,
   MSFactorLetter,
-  HandoffState,
   MSPartyEntry,
   MSDeviation,
 } from "@/lib/calc/ms/types";
@@ -508,34 +507,20 @@ function fmtMoneyCell(n: number, applicable: boolean): string {
 }
 
 // D-017 attribution — mirrors the HTML helper exactly.
+// Single-user column header \u2014 "Per counsel for {role} \u2014 {preparer}" from the
+// case caption's preparedBy (the worksheet's pre-handoff behavior). The
+// two-attorney round / authored-by amendment attribution was removed with the
+// handoff feature.
 function attributionFor(args: {
   roleLabel: string;
-  entry: MSPartyEntry | undefined;
   caption: CaseCaption;
 }): { header: string; amendmentLine: string | null } {
-  const { roleLabel, entry, caption } = args;
-  const rawName = entry?.authoredByName?.trim() || "";
-  const rawFirm = entry?.authoredByFirm?.trim() || "";
-  const round = entry?.handoffRound ?? null;
-  const fallbackPreparer = caption.preparedBy?.trim() || "";
-  const effectiveName =
-    rawName || (round === null || round <= 1 ? fallbackPreparer : "");
-
-  let header: string;
-  if (effectiveName && rawFirm) {
-    header = `Per counsel for ${roleLabel} \u2014 ${effectiveName}, ${rawFirm}`;
-  } else if (effectiveName) {
-    header = `Per counsel for ${roleLabel} \u2014 ${effectiveName}`;
-  } else {
-    header = `Per counsel for ${roleLabel}`;
-  }
-
-  let amendmentLine: string | null = null;
-  if (round && round >= 2) {
-    const who = rawName || fallbackPreparer || "opposing counsel";
-    amendmentLine = `Amended in round ${round} by ${who}`;
-  }
-  return { header, amendmentLine };
+  const { roleLabel, caption } = args;
+  const preparer = caption.preparedBy?.trim() || "";
+  const header = preparer
+    ? `Per counsel for ${roleLabel} \u2014 ${preparer}`
+    : `Per counsel for ${roleLabel}`;
+  return { header, amendmentLine: null };
 }
 
 const STATUS_PILL: Record<
@@ -590,11 +575,7 @@ function PartyBlock({
   caption: CaseCaption;
 }) {
   const party = entry?.party;
-  const { header, amendmentLine } = attributionFor({
-    roleLabel,
-    entry: party,
-    caption,
-  });
+  const { header, amendmentLine } = attributionFor({ roleLabel, caption });
 
   const partyStyle = side === "obligor" ? styles.partyObligor : styles.partyObligee;
   const containerStyle =
@@ -913,12 +894,10 @@ function MemoDocument({
   inputs,
   outputs,
   caption,
-  handoff,
 }: {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
-  handoff?: HandoffState;
 }) {
   const report = buildReconciliation(inputs);
   const decisions = inputs.chancellorDecisions ?? defaultChancellorDecisions();
@@ -1167,20 +1146,6 @@ function MemoDocument({
               ))}
             </>
           )}
-          {handoff && handoff.status !== "none" && (
-            <Text style={styles.disclaimer}>
-              Two-attorney handoff — round {handoff.handoffRound}. Originating
-              counsel: {handoff.originatingAttorney?.name || "(unnamed)"}
-              {handoff.originatingAttorney?.firm
-                ? ` (${handoff.originatingAttorney.firm})`
-                : ""}
-              . Receiving counsel: {handoff.receivingAttorney?.name || "(unnamed)"}
-              {handoff.receivingAttorney?.firm
-                ? ` (${handoff.receivingAttorney.firm})`
-                : ""}
-              .
-            </Text>
-          )}
           <Text style={styles.disclaimer}>
             This memorandum is a structured statement of both parties' positions
             on the § 43-19-103 deviation analysis, produced by the calculator at
@@ -1220,7 +1185,6 @@ export async function downloadMSDeviationMemoPdf(args: {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
-  handoff?: HandoffState;
   filename?: string;
 }): Promise<void> {
   if (typeof window === "undefined") {
@@ -1231,7 +1195,6 @@ export async function downloadMSDeviationMemoPdf(args: {
       inputs={args.inputs}
       outputs={args.outputs}
       caption={args.caption}
-      handoff={args.handoff}
     />
   );
   const blob = await pdf(doc).toBlob();
