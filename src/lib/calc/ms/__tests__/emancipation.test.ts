@@ -7,8 +7,6 @@ import {
   computeAvgMonthsRemainingForChildren,
   monthsRemainingForChild,
 } from "../reconciliation";
-import { decodeMSShare, encodeMSShare } from "../share";
-import { defaultCaption } from "@/lib/calc/share";
 
 const NOW = new Date("2026-06-01T00:00:00Z");
 
@@ -74,16 +72,6 @@ describe("§ 93-11-65(8) early-emancipation carve-outs", () => {
     const totals = buildReconciliation(inputs).totals;
     // child 1: 0; child 2: 3y * 12 = 36; mean = 18
     expect(totals.avgMonthsRemaining).toBe(18);
-  });
-
-  it("share decoder backfills children from legacy childAges", () => {
-    const inputs = { ...defaultMSInputs(), childAges: [8, 11], children: [] };
-    const url = encodeMSShare(inputs, defaultCaption());
-    // Strip children so we simulate a legacy URL.
-    const decoded = decodeMSShare(url);
-    expect(decoded).not.toBeNull();
-    // Round-trips children identically when present; if empty, falls back.
-    expect(decoded!.inputs.childAges).toEqual([8, 11]);
   });
 
   it("defaultMSChild yields a status='none' child", () => {

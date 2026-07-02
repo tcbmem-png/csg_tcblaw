@@ -27,8 +27,6 @@ import type {
   MSInputs,
   MSOutputs,
   MSFactorLetter,
-  HandoffState,
-  MSPartyEntry,
   MSDeviation,
 } from "@/lib/calc/ms/types";
 import type { CaseCaption } from "@/lib/calc/share";
@@ -101,49 +99,21 @@ export function behindTheScenesFilename(caption: CaseCaption): string {
 // ───────────────────────────── attribution ─────────────────────────
 
 /**
- * D-017 per-position attribution. Returns the column-header byline plus
- * an optional amendment line for round > 1 entries.
- *
- * Rules:
- *   - When entry is non-applicable and has no party data: returns null
- *     for both (caller renders generic "Per counsel for {role}" header).
- *   - When authoredByName is empty AND handoffRound <= 1: fall back to
- *     caption.preparedBy (originator default).
- *   - When handoffRound >= 2 and authoredByName present: render the
- *     "Amended in round N by {name}" sub-line.
+ * Single-user column header — "Per counsel for {role} — {preparer}" from the
+ * case caption's preparedBy (the worksheet's pre-handoff behavior). The
+ * two-attorney round / authored-by amendment attribution was removed with the
+ * handoff feature.
  */
 function attributionFor(args: {
   roleLabel: string;
-  entry: MSPartyEntry | undefined;
   caption: CaseCaption;
-  handoff: HandoffState | undefined;
 }): { header: string; amendmentLine: string | null } {
-  const { roleLabel, entry, caption } = args;
-  const rawName = entry?.authoredByName?.trim() || "";
-  const rawFirm = entry?.authoredByFirm?.trim() || "";
-  const round = entry?.handoffRound ?? null;
-
-  // Resolve the display name with round-1 preparer fallback.
-  const fallbackPreparer = caption.preparedBy?.trim() || "";
-  const effectiveName =
-    rawName || (round === null || round <= 1 ? fallbackPreparer : "");
-
-  let header: string;
-  if (effectiveName && rawFirm) {
-    header = `Per counsel for ${roleLabel} — ${effectiveName}, ${rawFirm}`;
-  } else if (effectiveName) {
-    header = `Per counsel for ${roleLabel} — ${effectiveName}`;
-  } else {
-    header = `Per counsel for ${roleLabel}`;
-  }
-
-  let amendmentLine: string | null = null;
-  if (round && round >= 2) {
-    const who = rawName || fallbackPreparer || "opposing counsel";
-    amendmentLine = `Amended in round ${round} by ${who}`;
-  }
-
-  return { header, amendmentLine };
+  const { roleLabel, caption } = args;
+  const preparer = caption.preparedBy?.trim() || "";
+  const header = preparer
+    ? `Per counsel for ${roleLabel} — ${preparer}`
+    : `Per counsel for ${roleLabel}`;
+  return { header, amendmentLine: null };
 }
 
 // ───────────────────────────── status pill ─────────────────────────
@@ -185,16 +155,10 @@ function renderParty(args: {
   amount: number;
   entry: MSDeviation | undefined;
   caption: CaseCaption;
-  handoff: HandoffState | undefined;
 }): string {
-  const { side, roleLabel, applicable, amount, entry, caption, handoff } = args;
+  const { side, roleLabel, applicable, amount, entry, caption } = args;
   const party = entry?.party;
-  const { header, amendmentLine } = attributionFor({
-    roleLabel,
-    entry: party,
-    caption,
-    handoff,
-  });
+  const { header, amendmentLine } = attributionFor({ roleLabel, caption });
 
   const amountCls =
     !applicable ? "neutral" : amount < 0 ? "negative" : amount > 0 ? "positive" : "neutral";
@@ -296,11 +260,10 @@ function renderFactorCard(args: {
   row: ReconciliationRow;
   inputs: MSInputs;
   caption: CaseCaption;
-  handoff: HandoffState | undefined;
   decision: MSChancellorDecision;
   avgMonths: number | null;
 }): string {
-  const { row, inputs, caption, handoff, decision, avgMonths } = args;
+  const { row, inputs, caption, decision, avgMonths } = args;
   const pill = statusPill(row.inPlay);
   const obligorRole = inputs.obligorLabel || "Obligor";
   const obligeeRole = inputs.obligeeLabel || "Obligee";
@@ -312,7 +275,6 @@ function renderFactorCard(args: {
     amount: row.obligor.amount,
     entry: row.obligor.entry,
     caption,
-    handoff,
   });
   const obligeeBlock = renderParty({
     side: "obligee",
@@ -321,7 +283,6 @@ function renderFactorCard(args: {
     amount: row.obligee.amount,
     entry: row.obligee.entry,
     caption,
-    handoff,
   });
 
   const gapAbs = Math.abs(row.gapMonthly);
@@ -753,9 +714,8 @@ export function renderMSBehindTheScenesHtml(args: {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
-  handoff?: HandoffState;
 }): string {
-  const { inputs, outputs, caption, handoff } = args;
+  const { inputs, outputs, caption } = args;
   const report = buildReconciliation(inputs);
   const decisions =
     inputs.chancellorDecisions ?? defaultChancellorDecisions();
@@ -772,7 +732,6 @@ export function renderMSBehindTheScenesHtml(args: {
         row,
         inputs,
         caption,
-        handoff,
         decision: decisions[row.letter],
         avgMonths,
       }),
@@ -816,11 +775,6 @@ export function renderMSBehindTheScenesHtml(args: {
   const title = caption.matterName
     ? `${caption.matterName} — MS § 43-19-103 Deviation Worksheet`
     : "MS § 43-19-103 Deviation Worksheet";
-
-  const handoffFooter =
-    handoff && handoff.status !== "none"
-      ? `<p style="margin-top: 1rem; font-size: .78rem; color: var(--ink-muted); font-style: italic;">Two-attorney handoff — round ${handoff.handoffRound}. Originating counsel: ${esc(handoff.originatingAttorney?.name || "(unnamed)")}${handoff.originatingAttorney?.firm ? ` (${esc(handoff.originatingAttorney.firm)})` : ""}. Receiving counsel: ${esc(handoff.receivingAttorney?.name || "(unnamed)")}${handoff.receivingAttorney?.firm ? ` (${esc(handoff.receivingAttorney.firm)})` : ""}.</p>`
-      : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -912,7 +866,6 @@ $${Math.round(outputs.monthlyAGI).toLocaleString("en-US")} × ${(outputs.statuto
   </ul>
   ${caseList}
   ${exhibitList}
-  ${handoffFooter}
   <p style="margin-top: 1.25rem; font-style: italic; color: var(--ink-muted);">This document is a structured statement of both parties' positions on the § 43-19-103 deviation analysis, produced by the calculator at csg.tcblaw.org/ms. The presumptive amount, the gap quantification, and the chancellor's-decision logic are mechanical; the positions, supporting facts, legal authority, and the chancellor's ultimate ruling are matters of judgment that the document captures but does not predetermine.</p>
 </footer>
 
@@ -927,7 +880,6 @@ export function downloadMSBehindTheScenesHtml(args: {
   inputs: MSInputs;
   outputs: MSOutputs;
   caption: CaseCaption;
-  handoff?: HandoffState;
   filename?: string;
 }) {
   const html = renderMSBehindTheScenesHtml(args);

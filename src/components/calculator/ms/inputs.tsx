@@ -1,8 +1,6 @@
 import type {
   MSInputs,
   MSDeviation,
-  HandoffSide,
-  HandoffAttorney,
 } from "@/lib/calc/ms/types";
 import { calculateMS, defaultDeviation } from "@/lib/calc/ms/calc";
 import {
@@ -39,17 +37,9 @@ const ALL_LETTERS: MSInputs["deviationsA"][number]["letter"][] = [
 export function MSCalculatorInputs({
   inputs,
   setInputs,
-  lockedSide = null,
-  handoffRound = 0,
-  currentAuthor = null,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
-  /** When non-null, the named slate is read-only (two-attorney handoff). */
-  lockedSide?: HandoffSide | null;
-  /** §1.5 audit-trail context — propagates to MSPartyFactorBlock for stamping. */
-  handoffRound?: number;
-  currentAuthor?: HandoffAttorney | null;
 }) {
   const u = (patch: Partial<MSInputs>) => setInputs({ ...inputs, ...patch });
   const suspensionApplies = calculateMS(inputs).suspensionApplies;
@@ -220,13 +210,7 @@ export function MSCalculatorInputs({
         )}
       </Section>
 
-      <MSDeviationsSection
-        inputs={inputs}
-        setInputs={setInputs}
-        lockedSide={lockedSide}
-        handoffRound={handoffRound}
-        currentAuthor={currentAuthor}
-      />
+      <MSDeviationsSection inputs={inputs} setInputs={setInputs} />
     </div>
   );
 }
@@ -234,15 +218,9 @@ export function MSCalculatorInputs({
 function MSDeviationsSection({
   inputs,
   setInputs,
-  lockedSide,
-  handoffRound,
-  currentAuthor,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
-  lockedSide: HandoffSide | null;
-  handoffRound: number;
-  currentAuthor: HandoffAttorney | null;
 }) {
   const updateMode = (m: typeof inputs.comparisonMode) => {
     if (m === "side_by_side" && !inputs.deviationsB) {
@@ -290,20 +268,12 @@ function MSDeviationsSection({
         <MSDeviationWalkthrough
           inputs={inputs}
           setInputs={setInputs}
-          handoffRound={handoffRound}
-          currentAuthor={currentAuthor}
           onFinish={() => {
             /* no-op: walkthrough flips itself; user can scroll on */
           }}
         />
       ) : (
-        <DeviationPickList
-          inputs={inputs}
-          setInputs={setInputs}
-          lockedSide={lockedSide}
-          handoffRound={handoffRound}
-          currentAuthor={currentAuthor}
-        />
+        <DeviationPickList inputs={inputs} setInputs={setInputs} />
       )}
 
       {/*
@@ -324,15 +294,9 @@ function MSDeviationsSection({
 function DeviationPickList({
   inputs,
   setInputs,
-  lockedSide,
-  handoffRound,
-  currentAuthor,
 }: {
   inputs: MSInputs;
   setInputs: Setter;
-  lockedSide: HandoffSide | null;
-  handoffRound: number;
-  currentAuthor: HandoffAttorney | null;
 }) {
   const sideBySide =
     inputs.comparisonMode === "side_by_side" && !!inputs.deviationsB;
@@ -376,10 +340,6 @@ function DeviationPickList({
             obligeeLabel={inputs.obligeeLabel || "Obligee"}
             sideBySide={sideBySide}
             buildContextInputs={() => inputs}
-            obligorLocked={lockedSide === "A"}
-            obligeeLocked={lockedSide === "B"}
-            handoffRound={handoffRound}
-            currentAuthor={currentAuthor}
           />
         );
       })}

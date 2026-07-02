@@ -74,26 +74,17 @@ function williamsLike(): MSInputs {
   return base;
 }
 
-describe("renderMSBehindTheScenesHtml — D-017 attribution", () => {
+describe("renderMSBehindTheScenesHtml", () => {
   const inputs = williamsLike();
   const outputs = calculateMS(inputs);
   const caption = { ...defaultCaption(), matterName: "Williams v. Williams", preparedBy: "Test Counsel" };
   const html = renderMSBehindTheScenesHtml({ inputs, outputs, caption });
 
-  it("emits per-position attribution bylines for each side", () => {
-    // Obligor side — John Anderson byline rendered
-    expect(html).toContain("John Anderson");
-    expect(html).toContain("Anderson &amp; Wells");
-    // Obligee side — Maria Lopez byline rendered
-    expect(html).toContain("Maria Lopez");
-    expect(html).toContain("Lopez Law");
-    // Both should appear inside the "Per counsel for" header construction
-    expect(html).toMatch(/Per counsel for [^<]*John Anderson/);
-    expect(html).toMatch(/Per counsel for [^<]*Maria Lopez/);
-  });
-
-  it("surfaces the round-2 amendment marker for the obligee entry", () => {
-    expect(html).toMatch(/Amended in round 2 by Maria Lopez/);
+  it("uses the preparedBy single-user column header", () => {
+    // Single-user worksheet: header byline is "Per counsel for {role} — {preparedBy}";
+    // the two-attorney round/authored-by attribution was removed with the handoff.
+    expect(html).toMatch(/Per counsel for [^<]*Test Counsel/);
+    expect(html).not.toContain("Amended in round");
   });
 
   it("renderer surfaces engine values and exposes recompute hooks", () => {
